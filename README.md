@@ -5,11 +5,11 @@
 | Name        | CCID   | GitHub Username |
 | ----------- | ------ | --------------- |
 | [Full Name] | [CCID] | [@username]     |
+| Kathan Ashishkumar Shah | kathanas | kathan-205   |
 | [Full Name] | [CCID] | [@username]     |
+| Natalie Lysenko | nlysenko | NataliiaLysenko    |
 | [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
-| Fatin Ahmed | fatin2 | fatin2343     |
-| [Full Name] | [CCID] | [@username]     |
+| Cyril John Maliakal | cyriljo1 | cyriluoa     |
 
 ## Project Description
 
