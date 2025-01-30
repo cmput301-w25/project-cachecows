@@ -7,7 +7,7 @@
 | Ronith Bose | ronith | Ronith2005     |
 | Snigdha Mehta | mehta5 | snigdha-0902     |
 | Fatin Ahmed | fatin2 | fatin2343     | 
-| [Full Name] | [CCID] | [@username]     |
+| Cyril John Maliakal | cyriljo1 | cyriluoa     |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
 
