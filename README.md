@@ -8,7 +8,7 @@
 | Snigdha Mehta | mehta5 | snigdha-0902     |
 | Fatin Ahmed | fatin2 | fatin2343     | 
 | Cyril John Maliakal | cyriljo1 | cyriluoa     |
-| [Full Name] | [CCID] | [@username]     |
+| Kathan Ashishkumar Shah| kathanas| kathan-205    |
 | [Full Name] | [CCID] | [@username]     |
 
 ## Project Description
