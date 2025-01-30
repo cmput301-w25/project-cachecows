@@ -1,4 +1,4 @@
-# CMPUT 301 W25 - Team [Team Name]
+# CMPUT 301 W25 - Team CacheCows
 
 ## Team Members
 
@@ -6,7 +6,7 @@
 | ----------- | ------ | --------------- |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
+| Snigdha Mehta | mehta5 | snigdha-0902     |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
