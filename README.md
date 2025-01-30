@@ -4,7 +4,7 @@
 
 | Name        | CCID   | GitHub Username |
 | ----------- | ------ | --------------- |
-|  | [CCID] | [@username]     |
+| Ronith Bose | ronith | Ronith2005     |
 | Snigdha Mehta | mehta5 | snigdha-0902     |
 | Kathan Ashishkumar Shah| kathanas| kathan-205 |
 | [Full Name] | [CCID] | [@username]     |
