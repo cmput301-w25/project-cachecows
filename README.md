@@ -1,15 +1,15 @@
-# CMPUT 301 W25 - Team CacheCows
+# CMPUT 301 W25 - Team [Team Name]
 
 ## Team Members
 
 | Name        | CCID   | GitHub Username |
 | ----------- | ------ | --------------- |
 | [Full Name] | [CCID] | [@username]     |
+| Kathan Ashishkumar Shah | kathanas | kathan-205   |
+| Snigdha Mehta | mehta5 | snigdha-0902 |
+| Natalie Lysenko | nlysenko | NataliiaLysenko    |
 | [Full Name] | [CCID] | [@username]     |
-| Snigdha Mehta | mehta5 | snigdha-0902     |
-| [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
+| Cyril John Maliakal | cyriljo1 | cyriluoa     |
 
 ## Project Description
 
