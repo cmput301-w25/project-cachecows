@@ -8,7 +8,7 @@
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
+| Fatin Ahmed | fatin2 | fatin2343     |
 | [Full Name] | [CCID] | [@username]     |
 
 ## Project Description
