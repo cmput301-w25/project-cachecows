@@ -2,14 +2,14 @@
 
 ## Team Members
 
-| Name                    | CCID     | GitHub Username |
-|-------------------------|----------|-----------------|
-| [Full Name]             | [CCID]   | [@username]     |
-| Kathan Ashishkumar Shah | kathanas | kathan-205      |
+| Name        | CCID   | GitHub Username |
+| ----------- | ------ | --------------- |
+| Ronith Bose | ronith | Ronith2005      |
+| Kathan Ashishkumar Shah | kathanas | kathan-205   |
 | Snigdha Mehta           | mehta5   | snigdha-0902    |
-| Natalie Lysenko         | nlysenko | NataliiaLysenko |
+| Natalie Lysenko | nlysenko | NataliiaLysenko    |
 | Fatin Ahmed             | fatin2   | fatin2343       |
-| Cyril John Maliakal     | cyriljo1 | cyriluoa        |
+| Cyril John Maliakal | cyriljo1 | cyriluoa     |
 
 ## Project Description
 
