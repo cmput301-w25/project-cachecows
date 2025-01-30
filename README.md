@@ -4,7 +4,7 @@
 
 | Name        | CCID   | GitHub Username |
 | ----------- | ------ | --------------- |
-| Ronith Bose | ronith | Ronith2005     |
+|   Ronith Bose | ronith | Ronith2005     |
 | Snigdha Mehta | mehta5 | snigdha-0902     |
 | Fatin Ahmed | fatin2 | fatin2343     | 
 | Cyril John Maliakal | cyriljo1 | cyriluoa     |
