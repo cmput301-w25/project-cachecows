@@ -6,7 +6,7 @@
 |-------------------------|----------|-----------------|
 | [Full Name]             | [CCID]   | [@username]     |
 | Kathan Ashishkumar Shah | kathanas | kathan-205      |
-| [Full Name]             | [CCID]   | [@username]     |
+| Snigdha Mehta           | mehta5   | snigdha-0902    |
 | Natalie Lysenko         | nlysenko | NataliiaLysenko |
 | Fatin Ahmed             | fatin2   | fatin2343       |
 | Cyril John Maliakal     | cyriljo1 | cyriluoa        |
