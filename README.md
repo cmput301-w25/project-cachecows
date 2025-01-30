@@ -6,7 +6,7 @@
 | ----------- | ------ | --------------- |
 | Ronith Bose | ronith | Ronith2005     |
 | Snigdha Mehta | mehta5 | snigdha-0902     |
-| [Full Name] | [CCID] | [@username]     | 
+| Fatin Ahmed | [CCID] | [@username]     | 
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
