@@ -9,7 +9,7 @@
 | [Full Name] | [CCID] | [@username]     |
 | Natalie Lysenko | nlysenko | NataliiaLysenko    |
 | [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
+| Cyril John Maliakal | cyriljo1 | cyriluoa     |
 
 ## Project Description
 
