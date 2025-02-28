@@ -10,6 +10,8 @@ import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.FirebaseApp;
+
 /**
  * Entry point of the application
  * It displays the main screen with options to log in or create an account
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-
+        FirebaseApp.initializeApp(this);
         TextView appName = findViewById(R.id.app_name);
         loginButton = findViewById(R.id.button_login);
         createAccountButton = findViewById(R.id.button_create_account);
