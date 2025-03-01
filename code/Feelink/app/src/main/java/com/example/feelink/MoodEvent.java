@@ -9,9 +9,13 @@ public class MoodEvent {
     private String trigger;
     private String socialSituation;
 
+    private String reason;
+    private String userId;  // Added to support authentication later
+
     // Default constructor
     public MoodEvent() {
         this.timestamp = new Date(); // Set current date and time by default
+        this.userId = "default_user"; // Default user ID until auth is implemented
     }
 
     // Constructor with required field
@@ -26,13 +30,28 @@ public class MoodEvent {
         this.trigger = trigger;
     }
 
-
     // Full constructor
     public MoodEvent(String emotionalState, String trigger, String socialSituation) {
         this();
         this.emotionalState = emotionalState;
         this.trigger = trigger;
         this.socialSituation = socialSituation;
+    }
+
+    public MoodEvent(String emotionalState, String trigger, String socialSituation, String reason) {
+        this();
+        this.emotionalState = emotionalState;
+        this.trigger = trigger;
+        this.socialSituation = socialSituation;
+        this.reason = reason;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     // Getters and setters
@@ -74,5 +93,13 @@ public class MoodEvent {
 
     public void setSocialSituation(String socialSituation) {
         this.socialSituation = socialSituation;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

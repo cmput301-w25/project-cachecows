@@ -20,6 +20,15 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/tvDateTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="16sp"
+        android:textColor="@android:color/darker_gray"
+        android:text="Thursday, February 27, 2025 at 10:00 AM" />
+
+    <TextView
         android:id="@+id/tvQuestion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
