@@ -33,12 +33,13 @@ public class FirestoreManager {
     private static final String COLLECTION_MOOD_EVENTS = "mood_events";
 
     // Default user ID (until auth system is implemented)
-    private static final String DEFAULT_USER_ID = "default_user";
+    private String userId; // Add this
 
     private FirebaseFirestore db;
 
-    public FirestoreManager() {
+    public FirestoreManager(String userId) { // Modified constructor
         db = FirebaseFirestore.getInstance();
+        this.userId = userId;
     }
 
     /**
@@ -49,7 +50,7 @@ public class FirestoreManager {
     public void addMoodEvent(MoodEvent moodEvent, final OnMoodEventListener listener) {
         // Convert MoodEvent to Map
         Map<String, Object> moodData = new HashMap<>();
-        moodData.put("userId", DEFAULT_USER_ID);
+        moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
         moodData.put("reason",moodEvent.getReason());
@@ -71,6 +72,8 @@ public class FirestoreManager {
                     public void onSuccess(DocumentReference documentReference) {
                         // Set ID in the mood event
                         moodEvent.setId(documentReference.getId().hashCode());
+
+
                         Log.d(TAG, "Mood event added with ID: " + documentReference.getId());
                         if (listener != null) {
                             listener.onSuccess(moodEvent);
@@ -80,6 +83,7 @@ public class FirestoreManager {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
+                        Log.d("FirestoreManager", "Mood Data: " + moodData.toString());
                         Log.w(TAG, "Error adding mood event", e);
                         if (listener != null) {
                             listener.onFailure(e.getMessage());
@@ -94,7 +98,7 @@ public class FirestoreManager {
      */
     public void getMoodEvents(final OnMoodEventsListener listener) {
         db.collection(COLLECTION_MOOD_EVENTS)
-                .whereEqualTo("userId", DEFAULT_USER_ID)
+                .whereEqualTo("userId", this.userId)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -130,6 +134,9 @@ public class FirestoreManager {
                 });
     }
 
+
+
+
     /**
      * Delete a mood event
      * @param moodEventId The ID of the mood event to delete
@@ -137,7 +144,7 @@ public class FirestoreManager {
      */
     public void deleteMoodEvent(final long moodEventId, final OnDeleteListener listener) {
         db.collection(COLLECTION_MOOD_EVENTS)
-                .whereEqualTo("userId", DEFAULT_USER_ID)
+                .whereEqualTo("userId", this.userId)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
