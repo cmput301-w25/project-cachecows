@@ -134,6 +134,9 @@ public class FirestoreManager {
                 });
     }
 
+
+
+
     /**
      * Delete a mood event
      * @param moodEventId The ID of the mood event to delete
