@@ -1,55 +1,62 @@
 package com.example.feelink;
 
 import android.content.Intent;
+import android.graphics.LinearGradient;
+import android.graphics.Shader;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import com.google.firebase.auth.FirebaseAuth;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.feelink.R;
+import com.google.firebase.FirebaseApp;
 
+/**
+ * Entry point of the application
+ * It displays the main screen with options to log in or create an account
+ *
+ * Navigates to Logic and Create Account screens
+ */
 public class MainActivity extends AppCompatActivity {
+    private Button loginButton, createAccountButton;
 
-
-    private FloatingActionButton fabAddMood;
-
+    /**
+     * Called when activity is created
+     * Initializes UI components and event listeners
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down then this Bundle contains the data it most
+     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
+     *
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+        FirebaseApp.initializeApp(this);
+        TextView appName = findViewById(R.id.app_name);
+        loginButton = findViewById(R.id.button_login);
+        createAccountButton = findViewById(R.id.button_create_account);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+        //Applies a gradient shader to the app name text.
+        //Based on a StackOverflow answer by Dustin:
+        //https://stackoverflow.com/questions/2680607/text-with-gradient-in-android
+        Shader shader = new LinearGradient(0,0,0,appName.getLineHeight(),
+                0xA9B0D8DA, 0xA9C79BE7, Shader.TileMode.REPEAT);
+        appName.getPaint().setShader(shader);
+
+
+        loginButton.setOnClickListener(v -> {
+            Intent i = new Intent(MainActivity.this, com.example.feelink.Login.class);
+            startActivity(i);
         });
 
-        // Initialize views
-        fabAddMood = findViewById(R.id.fabAddMood);
-
-        FirebaseAuth.getInstance().signInAnonymously()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d("Auth", "Anonymous user ID: " +
-                                FirebaseAuth.getInstance().getCurrentUser().getUid());
-                    }
-                });
-
-        // Set click listener for add mood button
-        fabAddMood.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Navigate to AddMoodEvent activity
-                Intent intent = new Intent(MainActivity.this, AddMoodEventActivity.class);
-                startActivity(intent);
-            }
+        createAccountButton.setOnClickListener(v -> {
+            Intent i = new Intent(MainActivity.this, com.example.feelink.CreateAccount.class);
+            startActivity(i);
         });
+
     }
 }

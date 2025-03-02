@@ -10,6 +10,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -32,7 +35,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
         setContentView(R.layout.add_mood_event);
 
         // Initialize Firestore manager
-        firestoreManager = new FirestoreManager();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            firestoreManager = new FirestoreManager(user.getUid()); // Pass real UID
+        }
 
 
 
