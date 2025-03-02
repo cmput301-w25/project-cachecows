@@ -217,9 +217,11 @@ public class CreateAccount extends AppCompatActivity {
         batch.set(userRef, userData);
 
         // 2. Create username reference
+        // Inside addUserToFirestore()
         DocumentReference usernameRef = db.collection("usernames").document(username);
         Map<String, Object> usernameData = new HashMap<>();
         usernameData.put("uid", user.getUid());
+        usernameData.put("email", email); // Add email here
         batch.set(usernameRef, usernameData);
 
         // Commit batch
