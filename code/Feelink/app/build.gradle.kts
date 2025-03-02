@@ -42,7 +42,11 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
     implementation ("com.google.firebase:firebase-firestore:24.10.1")
     implementation(libs.firebase.auth)
+    implementation(libs.espresso.intents)
     testImplementation(libs.junit)
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
