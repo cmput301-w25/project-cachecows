@@ -20,16 +20,29 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     private Context context;
 
     // Map mood types to emoji icons
-    private final Map<String, String> moodEmojiMap = new HashMap<String, String>() {{
-        put("Happy", "😊");
-        put("Sad", "😢");
-        put("Angry", "😠");
-        put("Surprised", "😲");
-        put("Confused", "😕");
-        put("Disgusted", "🤢");
-        put("Fear", "😨");
-        put("Shame", "😳");
+    // Map mood types to drawable resources (matching add_mood_event.xml)
+    private final Map<String, Integer> moodIconMap = new HashMap<String, Integer>() {{
+        put("Happy", R.drawable.ic_mood_happy);
+        put("Sad", R.drawable.ic_mood_sad);
+        put("Angry", R.drawable.ic_mood_angry);
+        put("Surprised", R.drawable.ic_mood_surprised);
+        put("Confused", R.drawable.ic_mood_confused);
+        put("Disgusted", R.drawable.ic_mood_disgusted);
+        put("Fear", R.drawable.ic_mood_fear);
+        put("Shame", R.drawable.ic_mood_shame);
     }};
+
+    private final Map<String, String> moodColorMap = new HashMap<String, String>() {{
+        put("Happy", "#FFD700");
+        put("Sad", "#1E90FF");
+        put("Angry", "#DC143C");
+        put("Surprised", "#FFA500");
+        put("Confused", "#800080");
+        put("Disgusted", "#556B2F");
+        put("Fear", "#2F4F4F");
+        put("Shame", "#CD5C5C");
+    }};
+
 
     public MoodEventAdapter(List<MoodEvent> moodEvents, Context context) {
         this.moodEvents = moodEvents;
@@ -51,23 +64,17 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         // Set reason/description
         holder.tvMoodDescription.setText(moodEvent.getReason());
 
-        // Set emoji based on mood type
-        String emoji = moodEmojiMap.getOrDefault(moodEvent.getEmotionalState(), "😐");
-        holder.tvMoodEmoji.setText(emoji);
+        // Get mood icon from map
+        Integer moodIcon = moodIconMap.get(moodEvent.getEmotionalState());
 
-        // Handle photo if available (not implemented in current MoodEvent class)
-        // If you add photo support later, uncomment this
-        /*
-        if (moodEvent.hasPhoto()) {
+        if (moodIcon != null) {
             holder.moodImage.setVisibility(View.VISIBLE);
-            // Load photo using your preferred image loading library
-            // Glide.with(context).load(moodEvent.getPhotoUrl()).into(holder.moodImage);
+            holder.moodImage.setImageResource(moodIcon);
         } else {
             holder.moodImage.setVisibility(View.GONE);
         }
-        */
 
-        // Set up click listeners for reactions
+        // Handle like & comment actions
         holder.btnLike.setOnClickListener(v -> {
             // Handle like action
         });
@@ -76,6 +83,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             // Handle comment action
         });
     }
+
 
     @Override
     public int getItemCount() {
@@ -89,18 +97,17 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
 
     static class MoodEventViewHolder extends RecyclerView.ViewHolder {
         TextView tvMoodDescription;
-        TextView tvMoodEmoji;
-        ImageView moodImage;
+        ImageView moodImage;  // Updated to hold mood icon
         View btnLike;
         View btnComment;
 
         public MoodEventViewHolder(@NonNull View itemView) {
             super(itemView);
             tvMoodDescription = itemView.findViewById(R.id.tvMoodDescription);
-            tvMoodEmoji = itemView.findViewById(R.id.tvMoodEmoji);
-            moodImage = itemView.findViewById(R.id.moodImage);
+            moodImage = itemView.findViewById(R.id.ivMoodIcon);  // Use ivMoodIcon
             btnLike = itemView.findViewById(R.id.btnLike);
             btnComment = itemView.findViewById(R.id.btnComment);
         }
     }
+
 }
