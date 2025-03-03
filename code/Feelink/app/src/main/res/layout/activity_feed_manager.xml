@@ -5,66 +5,103 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_background">
+    android:background="@color/white">
 
-    <TextView
-        android:id="@+id/tvAppTitle"
-        android:layout_width="wrap_content"
+    <!-- Tab Selection Layout -->
+    <LinearLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="FeelInk"
-        android:textColor="#FFFFFF"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
+        <Button
+            android:id="@+id/btnTheirMood"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#9FE2DD"
+            android:text="Their Mood"
+            android:layout_marginEnd="8dp"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnMyMood"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#9FE2DD"
+            android:text="My Mood"
+            android:layout_marginStart="8dp"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
+    <!-- Share information -->
     <TextView
-        android:id="@+id/tvSubtitle"
+        android:id="@+id/tvShareInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:text="Track your moods and emotions"
-        android:textColor="#CCFFFFFF"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="Shared by 'soul inspirer'..."
+        android:textColor="#666666"
+        android:textSize="12sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvAppTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout" />
 
-    <TextView
-        android:id="@+id/tvEmptyState"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="No mood entries yet.\nTap the + button to add one."
-        android:textAlignment="center"
-        android:textColor="#FFFFFF"
-        android:gravity="center"
-        android:textSize="16sp"
+    <!-- Filter Button -->
+    <ImageButton
+        android:id="@+id/btnFilter"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Filter"
+        android:src="@drawable/ic_filter"
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerMoodEvents" />
+
+    <!-- RecyclerView for mood events -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerMoodEvents"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/tvShareInfo"
+        tools:listitem="@layout/item_mood_event" />
 
+    <!-- Floating Action Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddMood"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="80dp"
-        android:backgroundTint="#FFFFFF"
+        android:backgroundTint="#9FE2DD"
         android:contentDescription="Add new mood"
         android:src="@android:drawable/ic_input_add"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:tint="#6200EE" />
+        app:tint="#FFFFFF" />
 
     <!-- Bottom Navigation -->
     <LinearLayout
         android:id="@+id/layoutBottomNav"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#30FFFFFF"
+        android:background="#FFFFFF"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -93,7 +130,7 @@
             android:layout_height="24dp"
             android:layout_weight="1"
             android:src="@drawable/ic_nav_chats"
-            android:contentDescription="Profile tab" />
+            android:contentDescription="Chats tab" />
 
         <ImageView
             android:id="@+id/navProfile"

@@ -4,4 +4,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="cerulean">#B0D8DA</color>
     <color name="grey_violet">#80604B64</color>
+    <color name="selected_tab_color">#9FE2DD</color> <!-- Your selected color -->
+    <color name="unselected_tab_color">#FFFFFF</color> <!-- Your unselected color -->
 </resources>
