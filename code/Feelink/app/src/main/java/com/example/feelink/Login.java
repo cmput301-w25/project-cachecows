@@ -16,6 +16,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentReference;
 
@@ -77,11 +78,11 @@ public class Login extends AppCompatActivity {
     /**
      * log in the user by retrieving their email from Firestore
      */
-    private void loginUserAccount(){
+    private void loginUserAccount() {
         String username = usernameTextView.getText().toString().trim();
         String password = passwordTextView.getText().toString().trim();
 
-        if (username.isEmpty() || password.isEmpty()){
+        if (username.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Please fill all fields!", Toast.LENGTH_LONG).show();
             return;
         }
@@ -90,17 +91,18 @@ public class Login extends AppCompatActivity {
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
                         String uid = document.getString("uid");
-                        // Get user doc from UID
-                        db.collection("users").document(uid).get()
-                                .addOnSuccessListener(userDoc -> {
-                                    String email = userDoc.getString("email");
-                                    logInWithEmail(email, password);
-                                });
+                        String email = document.getString("email"); // Retrieve email from usernames
+                        if (email != null && !email.isEmpty()) {
+                            logInWithEmail(email, password);
+                        } else {
+                            Toast.makeText(this, "Invalid user data", Toast.LENGTH_SHORT).show();
+                        }
                     } else {
                         Toast.makeText(this, "Invalid username", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
+
 
     //https://firebase.google.com/docs/auth/android/password-auth#java
 
