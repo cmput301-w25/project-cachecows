@@ -1,6 +1,8 @@
 package com.example.feelink;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -73,11 +75,45 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
         // Input fields
         etReason = findViewById(R.id.etReason);
+        etReason.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Not needed
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                validateReasonField(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Not needed
+            }
+        });
         etTrigger = findViewById(R.id.etTrigger);
         etSocialSituation = findViewById(R.id.etSocialSituation);
 
         // Button
         btnAddMood = findViewById(R.id.btnAddMood);
+    }
+
+    private void validateReasonField(String text) {
+        // Check character limit
+        boolean exceedsCharLimit = text.length() > 20;
+
+        // Check word limit
+        String[] words = text.trim().split("\\s+");
+        boolean exceedsWordLimit = text.trim().length() > 0 && words.length > 3;
+
+        // Show error if either limit is exceeded
+        if (exceedsCharLimit || exceedsWordLimit) {
+            etReason.setError("Reason must be limited to 20 characters or 3 words");
+            btnAddMood.setEnabled(false);
+        } else {
+            etReason.setError(null);
+            btnAddMood.setEnabled(true);
+        }
     }
 
     private void setupMoodSelectors() {
@@ -150,6 +186,12 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
                 // Get input values
                 String reason = etReason.getText().toString().trim();
+                // Validate reason field one more time before proceeding
+                if (reason.length() > 20 || (reason.split("\\s+").length > 3 && !reason.isEmpty())) {
+                    etReason.setError("Reason must be limited to 20 characters or 3 words");
+                    return;
+                }
+
                 String trigger = etTrigger.getText().toString().trim();
                 String socialSituation = etSocialSituation.getText().toString().trim();
 
