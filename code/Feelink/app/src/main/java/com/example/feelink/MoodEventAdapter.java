@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -25,6 +26,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
 
     private List<MoodEvent> moodEvents;
     private Context context;
+
+    private boolean isMyMoodSection = false;
 
     // Map mood types to emoji icons
     // Map mood types to drawable resources (matching add_mood_event.xml)
@@ -49,6 +52,10 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         put("Fear", R.color.mood_fear);
         put("Shame", R.color.mood_shame);
     }};
+
+    public void setMyMoodSection(boolean isMyMood) {
+        this.isMyMoodSection = isMyMood;
+    }
 
 
     public MoodEventAdapter(List<MoodEvent> moodEvents, Context context) {
@@ -103,6 +110,14 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         holder.btnExpand.setOnClickListener(v -> {
             showDetailsDialog(moodEvent);
         });
+
+        if (isMyMoodSection) {
+            holder.btnEdit.setVisibility(View.VISIBLE);
+            holder.btnDelete.setVisibility(View.VISIBLE);
+        } else {
+            holder.btnEdit.setVisibility(View.GONE);
+            holder.btnDelete.setVisibility(View.GONE);
+        }
     }
     private void showDetailsDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -224,6 +239,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         CardView cardView;
         View btnExpand;
 
+        ImageButton btnEdit, btnDelete;
+
 
         public MoodEventViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -234,6 +251,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             btnComment = itemView.findViewById(R.id.btnComment);
             cardView = itemView.findViewById(R.id.cardView);
             btnExpand = itemView.findViewById(R.id.btnExpand);
+            btnEdit = itemView.findViewById(R.id.btnEdit);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }
 
