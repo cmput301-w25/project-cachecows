@@ -4,9 +4,11 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,10 +23,12 @@ import java.util.Locale;
 
 public class AddMoodEventActivity extends AppCompatActivity {
 
-    private TextView tvGreeting, tvDateTime;
+    private TextView tvGreeting;
     private LinearLayout moodHappy, moodSad, moodAngry, moodSurprised,
             moodConfused, moodDisgusted, moodShame, moodFear;
-    private EditText etReason, etTrigger, etSocialSituation;
+    private EditText etReason, etTrigger;
+
+    private Spinner socialSituationSpinner;
     private Button btnAddMood;
 
     private String selectedMood = null;
@@ -47,6 +51,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         // Initialize views
         initializeViews();
         setupMoodSelectors();
+        setupSocialSituationSpinner();
         setupAddButton();
 
         // Set greeting with username (this would normally come from user data)
@@ -54,14 +59,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
         tvGreeting.setText("Hey " + username + "!");
         currentDateTime = new Date();
 
-        // Set current date and time
-        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy 'at' h:mm a", Locale.getDefault());
-        tvDateTime.setText(sdf.format(currentDateTime));
     }
 
     private void initializeViews() {
         tvGreeting = findViewById(R.id.tvGreeting);
-        tvDateTime = findViewById(R.id.tvDateTime);
 
         // Mood selectors
         moodHappy = findViewById(R.id.moodHappy);
@@ -92,7 +93,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
             }
         });
         etTrigger = findViewById(R.id.etTrigger);
-        etSocialSituation = findViewById(R.id.etSocialSituation);
+        socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
 
         // Button
         btnAddMood = findViewById(R.id.btnAddMood);
@@ -171,6 +172,27 @@ public class AddMoodEventActivity extends AppCompatActivity {
         moodFear.setBackgroundResource(android.R.color.transparent);
     }
 
+    private void setupSocialSituationSpinner() {
+        String[] options = {
+                "None",
+                "Alone",
+                "With one other person",
+                "With two to several people",
+                "With a crowd"
+        };
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                options
+        );
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        socialSituationSpinner.setAdapter(adapter);
+        socialSituationSpinner.setSelection(0);
+    }
+
+
     private void setupAddButton() {
         btnAddMood.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -193,7 +215,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 }
 
                 String trigger = etTrigger.getText().toString().trim();
-                String socialSituation = etSocialSituation.getText().toString().trim();
+                String selectedValue = socialSituationSpinner.getSelectedItem().toString();
+                String socialSituation = selectedValue.equals("None") ? "" : selectedValue;
 
                 // Create a new mood event with the current timestamp
                 MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation,reason);
