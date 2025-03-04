@@ -1,10 +1,14 @@
 package com.example.feelink;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,10 +23,12 @@ import java.util.Locale;
 
 public class AddMoodEventActivity extends AppCompatActivity {
 
-    private TextView tvGreeting, tvDateTime;
+    private TextView tvGreeting;
     private LinearLayout moodHappy, moodSad, moodAngry, moodSurprised,
             moodConfused, moodDisgusted, moodShame, moodFear;
-    private EditText etReason, etTrigger, etSocialSituation;
+    private EditText etReason, etTrigger;
+
+    private Spinner socialSituationSpinner;
     private Button btnAddMood;
 
     private String selectedMood = null;
@@ -45,6 +51,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         // Initialize views
         initializeViews();
         setupMoodSelectors();
+        setupSocialSituationSpinner();
         setupAddButton();
 
         // Set greeting with username (this would normally come from user data)
@@ -52,14 +59,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
         tvGreeting.setText("Hey " + username + "!");
         currentDateTime = new Date();
 
-        // Set current date and time
-        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy 'at' h:mm a", Locale.getDefault());
-        tvDateTime.setText(sdf.format(currentDateTime));
     }
 
     private void initializeViews() {
         tvGreeting = findViewById(R.id.tvGreeting);
-        tvDateTime = findViewById(R.id.tvDateTime);
 
         // Mood selectors
         moodHappy = findViewById(R.id.moodHappy);
@@ -73,11 +76,45 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
         // Input fields
         etReason = findViewById(R.id.etReason);
+        etReason.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Not needed
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                validateReasonField(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Not needed
+            }
+        });
         etTrigger = findViewById(R.id.etTrigger);
-        etSocialSituation = findViewById(R.id.etSocialSituation);
+        socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
 
         // Button
         btnAddMood = findViewById(R.id.btnAddMood);
+    }
+
+    private void validateReasonField(String text) {
+        // Check character limit
+        boolean exceedsCharLimit = text.length() > 20;
+
+        // Check word limit
+        String[] words = text.trim().split("\\s+");
+        boolean exceedsWordLimit = text.trim().length() > 0 && words.length > 3;
+
+        // Show error if either limit is exceeded
+        if (exceedsCharLimit || exceedsWordLimit) {
+            etReason.setError("Reason must be limited to 20 characters or 3 words");
+            btnAddMood.setEnabled(false);
+        } else {
+            etReason.setError(null);
+            btnAddMood.setEnabled(true);
+        }
     }
 
     private void setupMoodSelectors() {
@@ -135,6 +172,27 @@ public class AddMoodEventActivity extends AppCompatActivity {
         moodFear.setBackgroundResource(android.R.color.transparent);
     }
 
+    private void setupSocialSituationSpinner() {
+        String[] options = {
+                "None",
+                "Alone",
+                "With one other person",
+                "With two to several people",
+                "With a crowd"
+        };
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                options
+        );
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        socialSituationSpinner.setAdapter(adapter);
+        socialSituationSpinner.setSelection(0);
+    }
+
+
     private void setupAddButton() {
         btnAddMood.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -150,8 +208,15 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
                 // Get input values
                 String reason = etReason.getText().toString().trim();
+                // Validate reason field one more time before proceeding
+                if (reason.length() > 20 || (reason.split("\\s+").length > 3 && !reason.isEmpty())) {
+                    etReason.setError("Reason must be limited to 20 characters or 3 words");
+                    return;
+                }
+
                 String trigger = etTrigger.getText().toString().trim();
-                String socialSituation = etSocialSituation.getText().toString().trim();
+                String selectedValue = socialSituationSpinner.getSelectedItem().toString();
+                String socialSituation = selectedValue.equals("None") ? "" : selectedValue;
 
                 // Create a new mood event with the current timestamp
                 MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation,reason);
