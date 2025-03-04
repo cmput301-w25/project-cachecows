@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- User profile circle and info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+           <!-- <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/profileImage"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/default_profile"
+                app:civ_border_color="#EEEEEE"
+                app:civ_border_width="1dp" />-->
+        </LinearLayout>
+
+        <!-- Photo/Image placeholder -->
+        <FrameLayout
+            android:id="@+id/photoContainer"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="#F0F0F0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Photograph"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/moodImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <!-- Mood description -->
+        <TextView
+            android:id="@+id/tvMoodDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="description (caption)..."
+            android:textColor="#666666" />
+
+        <!-- Reaction section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <!-- Like button -->
+            <ImageButton
+                android:id="@+id/btnLike"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_heart"
+                android:contentDescription="Like" />
+
+            <!-- Comment button -->
+            <ImageButton
+                android:id="@+id/btnComment"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="16dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_comment"
+                android:contentDescription="Comment" />
+
+
+            <ImageButton
+                android:id="@+id/btnExpand"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="7dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="View"
+                android:src="@drawable/ic_expand" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <!-- Mood emoji -->
+            <!-- Mood emoji (changed to ImageView for consistency) -->
+            <ImageView
+                android:id="@+id/ivMoodIcon"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="end"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/ic_mood_happy"
+                android:contentDescription="Mood Icon" />
+
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

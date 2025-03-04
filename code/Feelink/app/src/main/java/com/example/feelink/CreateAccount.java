@@ -224,6 +224,7 @@ public class CreateAccount extends AppCompatActivity {
         usernameData.put("email", email); // Add email here
         batch.set(usernameRef, usernameData);
 
+
         // Commit batch
         batch.commit()
                 .addOnSuccessListener(unused -> {
