@@ -133,50 +133,6 @@ public class FirestoreManager {
                     }
                 });
     }
-    /**
-     * Get mood events shared by other users
-     * @param listener Callback with the list of mood events
-     */
-    public void getSharedMoodEvents(final OnMoodEventsListener listener) {
-        // Query all mood events not belonging to current user
-        db.collection(COLLECTION_MOOD_EVENTS)
-                .whereNotEqualTo("userId", this.userId)
-//                .orderBy("userId")  // Required for the not equals query to work
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .orderBy("userId", Query.Direction.DESCENDING)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            List<MoodEvent> moodEvents = new ArrayList<>();
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                String id = document.getId();
-                                Date timestamp = document.getDate("timestamp");
-                                String emotionalState = document.getString("emotionalState");
-                                String trigger = document.getString("trigger");
-                                String socialSituation = document.getString("socialSituation");
-                                String reason = document.getString("reason");
-
-                                MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
-                                moodEvent.setId(id.hashCode());
-                                moodEvent.setTimestamp(timestamp);
-
-                                moodEvents.add(moodEvent);
-                            }
-
-                            if (listener != null) {
-                                listener.onSuccess(moodEvents);
-                            }
-                        } else {
-                            Log.w(TAG, "Error getting shared mood events", task.getException());
-                            if (listener != null) {
-                                listener.onFailure(task.getException().getMessage());
-                            }
-                        }
-                    }
-                });
-    }
 
 
 

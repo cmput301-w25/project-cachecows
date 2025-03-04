@@ -103,7 +103,6 @@ public class Login extends AppCompatActivity {
                 });
     }
 
-
     //https://firebase.google.com/docs/auth/android/password-auth#java
 
     /**
