@@ -1,6 +1,7 @@
 package com.example.feelink;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.HashMap;
@@ -32,15 +35,15 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         put("Shame", R.drawable.ic_mood_shame);
     }};
 
-    private final Map<String, String> moodColorMap = new HashMap<String, String>() {{
-        put("Happy", "#FFD700");
-        put("Sad", "#1E90FF");
-        put("Angry", "#DC143C");
-        put("Surprised", "#FFA500");
-        put("Confused", "#800080");
-        put("Disgusted", "#556B2F");
-        put("Fear", "#2F4F4F");
-        put("Shame", "#CD5C5C");
+    private final Map<String, Integer> moodColorMap = new HashMap<String, Integer>() {{
+        put("Happy", R.color.mood_happy);
+        put("Sad", R.color.mood_sad);
+        put("Angry", R.color.mood_angry);
+        put("Surprised", R.color.mood_surprised);
+        put("Confused", R.color.mood_confused);
+        put("Disgusted", R.color.mood_disgusted);
+        put("Fear", R.color.mood_fear);
+        put("Shame", R.color.mood_shame);
     }};
 
 
@@ -60,6 +63,17 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     @Override
     public void onBindViewHolder(@NonNull MoodEventViewHolder holder, int position) {
         MoodEvent moodEvent = moodEvents.get(position);
+
+        int colorRes = moodColorMap.getOrDefault(moodEvent.getEmotionalState(), R.color.white);
+        holder.cardView.setCardBackgroundColor(ContextCompat.getColor(context, colorRes));
+
+        // Replace the color check with:
+        int color = ContextCompat.getColor(context, colorRes);
+        if (isDarkColor(color)) {
+            holder.tvMoodDescription.setTextColor(ContextCompat.getColor(context, R.color.white));
+        } else {
+            holder.tvMoodDescription.setTextColor(ContextCompat.getColor(context, R.color.black));
+        }
 
         // Set reason/description
         holder.tvMoodDescription.setText(moodEvent.getReason());
@@ -84,6 +98,13 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         });
     }
 
+    // Helper method to check color brightness
+    // Change the parameter to use color integers
+    private boolean isDarkColor(int color) {
+        double darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
+        return darkness >= 0.5;
+    }
+
 
     @Override
     public int getItemCount() {
@@ -97,16 +118,19 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
 
     static class MoodEventViewHolder extends RecyclerView.ViewHolder {
         TextView tvMoodDescription;
-        ImageView moodImage;  // Updated to hold mood icon
+        ImageView moodImage;
         View btnLike;
         View btnComment;
+        CardView cardView;
 
         public MoodEventViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvMoodDescription = itemView.findViewById(R.id.tvMoodDescription);
-            moodImage = itemView.findViewById(R.id.ivMoodIcon);  // Use ivMoodIcon
+            // Initialize all views
+            tvMoodDescription = itemView.findViewById(R.id.tvMoodDescription); // Critical fix
+            moodImage = itemView.findViewById(R.id.ivMoodIcon); // Ensure this matches XML
             btnLike = itemView.findViewById(R.id.btnLike);
             btnComment = itemView.findViewById(R.id.btnComment);
+            cardView = itemView.findViewById(R.id.cardView);
         }
     }
 
