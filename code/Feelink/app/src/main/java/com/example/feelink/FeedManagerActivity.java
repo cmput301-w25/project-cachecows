@@ -119,7 +119,7 @@ public class FeedManagerActivity extends AppCompatActivity {
 
     private void updateTabSelection(boolean showMyMood) {
         isShowingMyMood = showMyMood;
-
+        adapter.setMyMoodSection(showMyMood);
         // Get color state lists for selected and unselected states
         ColorStateList selectedColor = ColorStateList.valueOf(getResources().getColor(R.color.selected_tab_color)); // Replace with your selected color
         ColorStateList unselectedColor = ColorStateList.valueOf(getResources().getColor(R.color.unselected_tab_color)); // Replace with your unselected color

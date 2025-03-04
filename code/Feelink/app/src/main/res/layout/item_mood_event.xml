@@ -13,20 +13,37 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- User profile circle and info -->
+<!--         User profile circle and info -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="8dp">
+            android:padding="2dp">
 
-           <!-- <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/profileImage"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/default_profile"
-                app:civ_border_color="#EEEEEE"
-                app:civ_border_width="1dp" />-->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="24dp"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/btnEdit"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"
+                android:src="@drawable/ic_edit"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Edit mood"/>
+
+            <ImageButton
+                android:id="@+id/btnDelete"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp"
+                android:visibility="gone"
+                android:src="@drawable/ic_delete"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Delete mood"/>
         </LinearLayout>
 
         <!-- Photo/Image placeholder -->
