@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
@@ -70,8 +71,8 @@
             <!-- Like button -->
             <ImageButton
                 android:id="@+id/btnLike"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_heart"
                 android:contentDescription="Like" />
@@ -79,21 +80,40 @@
             <!-- Comment button -->
             <ImageButton
                 android:id="@+id/btnComment"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="16dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_comment"
+                android:contentDescription="Comment" />
+
+
+            <ImageButton
+                android:id="@+id/btnExpand"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginStart="16dp"
+                android:layout_marginTop="7dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_nav_chats"
-                android:contentDescription="Comment" />
+                android:contentDescription="View"
+                android:src="@drawable/ic_expand" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
 
             <!-- Mood emoji -->
-            <TextView
-                android:id="@+id/tvMoodEmoji"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <!-- Mood emoji (changed to ImageView for consistency) -->
+            <ImageView
+                android:id="@+id/ivMoodIcon"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="end"
                 android:layout_marginStart="16dp"
-                android:textSize="20sp"
-                android:text="😊" />
+                android:src="@drawable/ic_mood_happy"
+                android:contentDescription="Mood Icon" />
+
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
