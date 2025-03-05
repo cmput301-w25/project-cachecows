@@ -113,8 +113,10 @@ public class FirestoreManager {
                                 String trigger = document.getString("trigger");
                                 String socialSituation = document.getString("socialSituation");
                                 String reason = document.getString("reason");
+                                String userId = document.getString("userId");
 
                                 MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+                                moodEvent.setUserId(userId);
                                 moodEvent.setId(id.hashCode());
                                 moodEvent.setTimestamp(timestamp);
 
@@ -126,6 +128,53 @@ public class FirestoreManager {
                             }
                         } else {
                             Log.w(TAG, "Error getting mood events", task.getException());
+                            if (listener != null) {
+                                listener.onFailure(task.getException().getMessage());
+                            }
+                        }
+                    }
+                });
+    }
+    /**
+     * Get mood events shared by other users
+     * @param listener Callback with the list of mood events
+     */
+    public void getSharedMoodEvents(final OnMoodEventsListener listener) {
+        // Query all mood events not belonging to current user
+        db.collection(COLLECTION_MOOD_EVENTS)
+                .whereNotEqualTo("userId", this.userId)
+//                .orderBy("userId")  // Required for the not equals query to work
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .orderBy("userId", Query.Direction.DESCENDING)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            List<MoodEvent> moodEvents = new ArrayList<>();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                String id = document.getId();
+                                Date timestamp = document.getDate("timestamp");
+                                String emotionalState = document.getString("emotionalState");
+                                String trigger = document.getString("trigger");
+                                String socialSituation = document.getString("socialSituation");
+                                String reason = document.getString("reason");
+                                String userId = document.getString("userId");
+
+
+                                MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+                                moodEvent.setUserId(userId);
+                                moodEvent.setId(id.hashCode());
+                                moodEvent.setTimestamp(timestamp);
+
+                                moodEvents.add(moodEvent);
+                            }
+
+                            if (listener != null) {
+                                listener.onSuccess(moodEvents);
+                            }
+                        } else {
+                            Log.w(TAG, "Error getting shared mood events", task.getException());
                             if (listener != null) {
                                 listener.onFailure(task.getException().getMessage());
                             }
@@ -187,6 +236,27 @@ public class FirestoreManager {
                     }
                 });
     }
+    /**
+     * Get a username from Firestore based on userId
+     * @param userId The ID of the user to look up
+     * @param callback Callback with the username
+     */
+    public void getUsernameById(String userId, OnUsernameListener callback) {
+        // First try to get from the usernames collection
+        db.collection("usernames")
+                .whereEqualTo("uid", userId)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                        // The document ID is the username
+                        String username = task.getResult().getDocuments().get(0).getId();
+                        callback.onSuccess(username);
+                    } else {
+                        // Fall back to userId if no username found
+                        callback.onFailure(userId);
+                    }
+                });
+    }
 
     // Add this interface to the FirestoreManager class
     public interface OnDeleteListener {
@@ -203,5 +273,9 @@ public class FirestoreManager {
     public interface OnMoodEventsListener {
         void onSuccess(List<MoodEvent> moodEvents);
         void onFailure(String errorMessage);
+    }
+    public interface OnUsernameListener {
+        void onSuccess(String username);
+        void onFailure(String fallbackName);
     }
 }

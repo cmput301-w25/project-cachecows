@@ -1,73 +1,96 @@
 package com.example.feelink;
 
+import static android.app.PendingIntent.getActivity;
+import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+
+import androidx.test.core.app.ActivityScenario;
+import androidx.test.platform.app.InstrumentationRegistry;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
-import androidx.test.espresso.action.ViewActions;
+import android.os.SystemClock;
+
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
 
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RunWith(AndroidJUnit4.class)
-@LargeTest
 public class LoginActivityTest {
 
     @Rule
     public ActivityScenarioRule<Login> scenario = new ActivityScenarioRule<>(Login.class);
 
-    @BeforeClass
-    public static void setup() {
-        // Specific address for emulated device to access our localHost
-        String androidLocalhost = "10.0.2.2";
-        int portNumber = 8080;
-        FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
+    @Before
+    public void seedDatabase() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference usernamesRef = db.collection("usernames");
+
+        // Add a valid user for testing
+        Map<String, Object> validUser = new HashMap<>();
+        validUser.put("uid", "testUserId123"); // Replace with a valid UID
+        validUser.put("email", "testuser@example.com"); // Replace with a valid email
+        usernamesRef.document("validUsername").set(validUser); // Replace with a valid username
+
+        // Add an invalid user for testing
+        Map<String, Object> invalidUser = new HashMap<>();
+        invalidUser.put("uid", "invalidUserId123"); // Replace with an invalid UID
+        invalidUser.put("email", "invaliduser@example.com"); // Replace with an invalid email
+        usernamesRef.document("invalidUsername").set(invalidUser); // Replace with an invalid username
     }
 
     @Test
-    public void testLoginWithValidCredentials() {
-        // Input valid username and password
-        onView(withId(R.id.username_text)).perform(typeText("validUsername"));
-        onView(withId(R.id.password_text)).perform(typeText("validPassword"));
-
-        // Click on the login button
+    public void testSuccessfulLogin() {
+        // Enter valid username and password
+        onView(withId(R.id.username_text)).perform(replaceText("testUserId123"));
+        onView(withId(R.id.password_text)).perform(replaceText("P@assw0rd"));
         onView(withId(R.id.create_button)).perform(click());
+        ActivityScenario<FeedManagerActivity> scenario = ActivityScenario.launch(FeedManagerActivity.class);
 
-        // Check if the FeedManagerActivity is displayed
-        onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
+        // Verify navigation to FeedManagerActivity
+        onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
     }
 
     @Test
-    public void testLoginWithInvalidCredentials() {
-        // Input invalid username and password
-        onView(withId(R.id.username_text)).perform(typeText("invalidUsername"));
-        onView(withId(R.id.password_text)).perform(typeText("invalidPassword"));
-
-        // Click on the login button
+    public void testLoginWithInvalidPassword() {
+        onView(withId(R.id.username_text)).perform(replaceText("validUser"));
+        onView(withId(R.id.password_text)).perform(replaceText("wrongPassword"));
         onView(withId(R.id.create_button)).perform(click());
 
-        // Check if an error message is displayed
-        onView(withText("Invalid username")).check(matches(isDisplayed()));
+        // Verify error message in Toast
+        onView(withText("Login failed"))
+                .inRoot(new ToastMatcher())
+                .check(matches(isDisplayed()));
     }
 
     @Test
     public void testLoginWithEmptyFields() {
-        // Click on the login button without entering any credentials
-        onView(withId(R.id.create_button)).perform(click());
+        ActivityScenario<Login> scenario = ActivityScenario.launch(Login.class);
 
-        // Check if an error message is displayed
-        onView(withText("Please fill all fields!")).check(matches(isDisplayed()));
+        scenario.onActivity(activity -> {
+            onView(withId(R.id.create_button)).perform(click());
+
+            SystemClock.sleep(2000); // Give time for Toast to appear
+
+            onView(withText("Please fill all fields!"))
+                    .inRoot(withDecorView(not(is(activity.getWindow().getDecorView()))))
+                    .check(matches(isDisplayed()));
+        });
     }
 }

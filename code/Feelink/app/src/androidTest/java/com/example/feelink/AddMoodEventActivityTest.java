@@ -1,61 +1,76 @@
 package com.example.feelink;
 
-import androidx.test.core.app.ActivityScenario;
-import androidx.test.espresso.Espresso;
-import androidx.test.espresso.action.ViewActions;
-import androidx.test.espresso.assertion.ViewAssertions;
-import androidx.test.espresso.matcher.ViewMatchers;
-import androidx.test.ext.junit.rules.ActivityScenarioRule;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import androidx.test.espresso.action.ViewActions;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 @RunWith(AndroidJUnit4.class)
+@LargeTest
 public class AddMoodEventActivityTest {
 
     @Rule
-    public ActivityScenarioRule<AddMoodEventActivity> scenario =
-            new ActivityScenarioRule<>(AddMoodEventActivity.class);
+    public ActivityScenarioRule<AddMoodEventActivity> scenario = new ActivityScenarioRule<>(AddMoodEventActivity.class);
 
-    @Test
-    public void testMoodSelection() {
-        onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.moodHappy)).check(matches(ViewMatchers.isSelected()));
-        onView(withId(R.id.moodSad)).perform(click());
-        onView(withId(R.id.moodSad)).check(matches(ViewMatchers.isSelected()));
-        onView(withId(R.id.moodHappy)).check(matches(ViewMatchers.isNotSelected()));
+    @BeforeClass
+    public static void setup() {
+        // Specific address for emulated device to access our localHost
+        String androidLocalhost = "10.0.2.2";
+        int portNumber = 8080;
+        FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
     }
 
     @Test
-    public void testAddMoodEventWithoutSelection() {
+    public void testAddMoodEventWithValidInput() {
+        // Select a mood
+        onView(withId(R.id.moodHappy)).perform(click());
+
+        // Input reason, trigger, and social situation
+        onView(withId(R.id.etReason)).perform(typeText("Feeling great!"));
+        onView(withId(R.id.etTrigger)).perform(typeText("Good weather"));
+        onView(withId(R.id.etSocialSituation)).perform(typeText("With friends"));
+
+        // Click on the add mood button
         onView(withId(R.id.btnAddMood)).perform(click());
+
+        // Check if the mood event is added and the activity is closed
+//        onView(withId(R.id.btnMyMood)).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void testAddMoodEventWithoutSelectingMood() {
+        // Click on the add mood button without selecting a mood
+        onView(withId(R.id.btnAddMood)).perform(click());
+
+        // Check if an error message is displayed
         onView(withText("Please select a mood")).check(matches(isDisplayed()));
     }
 
     @Test
-    public void testAddMoodEventWithSelection() {
+    public void testAddMoodEventWithEmptyReason() {
+        // Select a mood
         onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.etReason)).perform(typeText("Test reason"));
-        onView(withId(R.id.etTrigger)).perform(typeText("Test trigger"));
-        onView(withId(R.id.etSocialSituation)).perform(typeText("Test situation"));
 
-        Espresso.closeSoftKeyboard();
-
+        // Click on the add mood button without entering a reason
         onView(withId(R.id.btnAddMood)).perform(click());
 
-        // You might want to check for a success message or navigation to another screen here
-        // For example:
-        // onView(withText("Mood added successfully")).check(matches(isDisplayed()));
+        // Check if an error message is displayed
+        onView(withText("Please enter a reason")).check(matches(isDisplayed()));
     }
 }

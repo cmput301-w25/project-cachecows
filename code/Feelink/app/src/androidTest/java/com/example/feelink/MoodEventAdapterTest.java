@@ -1,7 +1,6 @@
 package com.example.feelink;
 
 import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
@@ -21,7 +20,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class FeedManagerActivityTest {
+public class MoodEventAdapterTest {
 
     @Rule
     public ActivityScenarioRule<FeedManagerActivity> scenario = new ActivityScenarioRule<>(FeedManagerActivity.class);
@@ -35,32 +34,20 @@ public class FeedManagerActivityTest {
     }
 
     @Test
-    public void testLoadTheirMoodEvents() {
-        // Check if the "Their Mood" tab is displayed by default
-        onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
-
-        // Check if mood events are loaded
+    public void testMoodEventDisplay() {
+        // Check if the mood event is displayed in the RecyclerView
         onView(withText("Sample Mood Event")).check(matches(isDisplayed()));
     }
 
     @Test
-    public void testSwitchToMyMoodEvents() {
-        // Click on the "My Mood" tab
-        onView(withId(R.id.btnMyMood)).perform(click());
-
-        // Check if the "My Mood" tab is displayed
-        onView(withId(R.id.btnMyMood)).check(matches(isDisplayed()));
-
-        // Check gitif mood events are loaded
-        onView(withText("My Mood Event")).check(matches(isDisplayed()));
+    public void testMoodEventColor() {
+        // Check if the mood event color is displayed correctly
+        onView(withId(R.id.cardView)).check(matches(isDisplayed()));
     }
 
     @Test
-    public void testAddMoodEvent() {
-        // Click on the add mood event button
-        onView(withId(R.id.fabAddMood)).perform(click());
-
-        // Check if the AddMoodEventActivity is displayed
-        onView(withId(R.id.tvGreeting)).check(matches(isDisplayed()));
+    public void testMoodEventIcon() {
+        // Check if the mood event icon is displayed correctly
+        onView(withId(R.id.ivMoodIcon)).check(matches(isDisplayed()));
     }
 }
