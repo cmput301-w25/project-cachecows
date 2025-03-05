@@ -2,6 +2,7 @@ package com.example.feelink;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
@@ -53,6 +54,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         put("Fear", R.color.mood_fear);
         put("Shame", R.color.mood_shame);
     }};
+
 
     public void setMyMoodSection(boolean isMyMood) {
         this.isMyMoodSection = isMyMood;
@@ -123,6 +125,20 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             holder.btnEdit.setVisibility(View.GONE);
             holder.btnDelete.setVisibility(View.GONE);
         }
+
+        // Handle edit button click
+        holder.btnEdit.setOnClickListener(v -> {
+            // Navigate to AddMoodEventActivity with the mood event's data
+            Intent intent = new Intent(context, AddMoodEventActivity.class);
+            intent.putExtra("EDIT_MODE", true);
+            intent.putExtra("MOOD_EVENT_ID", moodEvent.getId());
+            intent.putExtra("DOCUMENT_ID", moodEvent.getDocumentId());
+            intent.putExtra("EMOTIONAL_STATE", moodEvent.getEmotionalState());
+            intent.putExtra("REASON", moodEvent.getReason());
+            intent.putExtra("TRIGGER", moodEvent.getTrigger());
+            intent.putExtra("SOCIAL_SITUATION", moodEvent.getSocialSituation());
+            context.startActivity(intent);
+        });
     }
 
     private void showDeleteConfirmationDialog(MoodEvent moodEvent) {

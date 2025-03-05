@@ -10,6 +10,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentId;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -130,7 +131,7 @@ public class FirestoreManager {
                                 moodEvent.setUserId(userId);
                                 moodEvent.setId(id.hashCode());
                                 moodEvent.setTimestamp(timestamp);
-
+                                moodEvent.setDocumentId(id);
                                 moodEvents.add(moodEvent);
                             }
 
@@ -248,6 +249,46 @@ public class FirestoreManager {
                 });
     }
 
+    public void updateMoodEvent(MoodEvent moodEvent, String documentId, final OnMoodEventListener listener) {
+        if (documentId == null || documentId.isEmpty()) {
+            if (listener != null) {
+                listener.onFailure("Document ID is null or empty");
+            }
+            return;
+        }
+
+
+        Map<String, Object> moodData = new HashMap<>();
+        moodData.put("emotionalState", moodEvent.getEmotionalState());
+        if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
+            moodData.put("reason", moodEvent.getReason());
+        }
+
+        if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
+            moodData.put("trigger", moodEvent.getTrigger());
+        }
+
+        if (moodEvent.getSocialSituation() != null && !moodEvent.getSocialSituation().isEmpty()) {
+            moodData.put("socialSituation", moodEvent.getSocialSituation());
+        }
+
+
+
+        // Update the document using the documentId
+        db.collection(COLLECTION_MOOD_EVENTS)
+                .document(documentId) // Use the Firestore document ID
+                .update(moodData)
+                .addOnSuccessListener(aVoid -> {
+                    if (listener != null) {
+                        listener.onSuccess(moodEvent);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (listener != null) {
+                        listener.onFailure(e.getMessage());
+                    }
+                });
+    }
     /**
      * Get a username from Firestore based on userId
      * @param userId The ID of the user to look up
