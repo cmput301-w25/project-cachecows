@@ -95,6 +95,14 @@ public class FirestoreManager {
                 });
     }
 
+    // Add this method to FirestoreManager.java
+    public void updateUserEmail(String username, String newEmail, OnSuccessListener<Void> success, OnFailureListener failure) {
+        db.collection("usernames").document(username)
+                .update("email", newEmail)
+                .addOnSuccessListener(success)
+                .addOnFailureListener(failure);
+    }
+
     /**
      * Get all mood events for the current user
      * @param listener Callback with the list of mood events
@@ -239,6 +247,7 @@ public class FirestoreManager {
                     }
                 });
     }
+
     /**
      * Get a username from Firestore based on userId
      * @param userId The ID of the user to look up
