@@ -260,18 +260,9 @@ public class FirestoreManager {
 
         Map<String, Object> moodData = new HashMap<>();
         moodData.put("emotionalState", moodEvent.getEmotionalState());
-        if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
-            moodData.put("reason", moodEvent.getReason());
-        }
-
-        if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
-            moodData.put("trigger", moodEvent.getTrigger());
-        }
-
-        if (moodEvent.getSocialSituation() != null && !moodEvent.getSocialSituation().isEmpty()) {
-            moodData.put("socialSituation", moodEvent.getSocialSituation());
-        }
-
+        moodData.put("reason", moodEvent.getReason());
+        moodData.put("trigger", moodEvent.getTrigger());
+        moodData.put("socialSituation", moodEvent.getSocialSituation());
 
 
         // Update the document using the documentId
