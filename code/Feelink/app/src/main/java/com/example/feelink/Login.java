@@ -103,6 +103,7 @@ public class Login extends AppCompatActivity {
                 });
     }
 
+
     //https://firebase.google.com/docs/auth/android/password-auth#java
 
     /**
@@ -110,20 +111,40 @@ public class Login extends AppCompatActivity {
      * @param email     email registered with the username
      * @param password  The user's password
      */
-    private void logInWithEmail(String email, String password){
+    private void logInWithEmail(String email, String password) {
+        // Initial login attempt - clear cached credentials
+        mAuth.signOut();
+        attemptLogin(email, password);
+    }
+
+    private void attemptLogin(String email, String password) {
         mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(Login.this, "Login successful!", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(Login.this, com.example.feelink.FeedManagerActivity.class));
-                            finish();
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(Login.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(Login.this, FeedManagerActivity.class));
+                        finish();
+                    } else {
+                        if (task.getException().getMessage().contains("INVALID_LOGIN_CREDENTIALS")) {
+                            handleInvalidCredentials(email, password);
                         } else {
-                            // If sign in fails, display a message to the user.
-                            Toast.makeText(Login.this,
-                                    "Login failed" ,
-                                    Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Login.this, "Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    private void handleInvalidCredentials(String originalEmail, String password) {
+        db.collection("usernames").document(usernameTextView.getText().toString().trim())
+                .get()
+                .addOnSuccessListener(document -> {
+                    if (document.exists()) {
+                        String updatedEmail = document.getString("email");
+                        if (updatedEmail != null && !updatedEmail.equals(originalEmail)) {
+                            // Retry without signing out
+                            attemptLogin(updatedEmail, password);
+                        } else {
+                            Toast.makeText(Login.this, "Invalid credentials", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

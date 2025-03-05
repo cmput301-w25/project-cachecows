@@ -53,9 +53,12 @@ public class FirestoreManager {
         moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
-        moodData.put("reason",moodEvent.getReason());
 
         // Only add optional fields if they're not null or empty
+        if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
+            moodData.put("reason", moodEvent.getReason());
+        }
+
         if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
             moodData.put("trigger", moodEvent.getTrigger());
         }
@@ -90,6 +93,14 @@ public class FirestoreManager {
                         }
                     }
                 });
+    }
+
+    // Add this method to FirestoreManager.java
+    public void updateUserEmail(String username, String newEmail, OnSuccessListener<Void> success, OnFailureListener failure) {
+        db.collection("usernames").document(username)
+                .update("email", newEmail)
+                .addOnSuccessListener(success)
+                .addOnFailureListener(failure);
     }
 
     /**

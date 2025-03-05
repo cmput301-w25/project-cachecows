@@ -29,6 +29,7 @@
         <activity android:name=".Login" />
         <activity android:name=".CreateAccount" />
         <activity android:name=".AddMoodEventActivity" />
+        <activity android:name=".ForgotPasswordActivity"/>
     </application>
 
 </manifest>
