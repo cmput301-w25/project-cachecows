@@ -12,11 +12,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
@@ -70,7 +67,7 @@ public class CreateAccount extends AppCompatActivity {
         passwordEditText = findViewById(R.id.create_user_password_text);
         repeatedPasswordEditText = findViewById(R.id.repeat_user_password_text);
         usernameFeedbackText = findViewById(R.id.create_username_feedback);
-        createButton = findViewById(R.id.create_button);
+        createButton = findViewById(R.id.btnImageBack);
         backButton = findViewById(R.id.back_button);
 
         //real-time username validation using textWatcher
