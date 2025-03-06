@@ -41,11 +41,11 @@ public class CreateAccountActivityTest {
     public void testCreateAccountWithValidInput() {
         // Input valid account details
         onView(withId(R.id.create_name_text)).perform(typeText("John Doe"));
-        onView(withId(R.id.create_username_text)).perform(typeText("johndoe123"));
+        onView(withId(R.id.create_username_text)).perform(typeText("johndoes"));
         onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"));
-        onView(withId(R.id.create_email_text)).perform(typeText("johndoe12@example.com"));
-        onView(withId(R.id.create_user_password_text)).perform(typeText("Password123"));
-        onView(withId(R.id.repeat_user_password_text)).perform(typeText("Password123"));
+        onView(withId(R.id.create_email_text)).perform(typeText("johndoes12@example.com"));
+        onView(withId(R.id.create_user_password_text)).perform(typeText("P@ssword123"));
+        onView(withId(R.id.repeat_user_password_text)).perform(typeText("P@ssword123"));
 
         // Click on the create account button
         onView(withId(R.id.create_button)).perform(click());
@@ -69,6 +69,10 @@ public class CreateAccountActivityTest {
 
     @Test
     public void testCreateAccountWithMismatchedPasswords() {
+        onView(withId(R.id.create_name_text)).perform(typeText("John Doe"));
+        onView(withId(R.id.create_username_text)).perform(typeText("johndoes"));
+        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"));
+        onView(withId(R.id.create_email_text)).perform(typeText("johndoes123@example.com"));
         // Input mismatched passwords
         onView(withId(R.id.create_user_password_text)).perform(typeText("P@ssword123"));
         onView(withId(R.id.repeat_user_password_text)).perform(typeText("P@ssword456"));

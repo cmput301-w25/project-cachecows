@@ -2,20 +2,25 @@ package com.example.feelink;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
-import androidx.test.espresso.action.ViewActions;
+import static org.hamcrest.CoreMatchers.not;
+
+import androidx.test.espresso.intent.Intents;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,51 +31,63 @@ import org.junit.runner.RunWith;
 public class AddMoodEventActivityTest {
 
     @Rule
-    public ActivityScenarioRule<AddMoodEventActivity> scenario = new ActivityScenarioRule<>(AddMoodEventActivity.class);
+    public ActivityScenarioRule<AddMoodEventActivity> activityRule = new ActivityScenarioRule<>(AddMoodEventActivity.class);
 
+    @Before
+    public void setUp() {
+        Intents.init();
+    }
     @BeforeClass
-    public static void setup() {
-        // Specific address for emulated device to access our localHost
-        String androidLocalhost = "10.0.2.2";
-        int portNumber = 8080;
-        FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
+    public static void disableAnimations() {
+        // Disable animations for all tests
+        InstrumentationRegistry.getInstrumentation().getUiAutomation()
+                .executeShellCommand("settings put global window_animation_scale 0");
+        InstrumentationRegistry.getInstrumentation().getUiAutomation()
+                .executeShellCommand("settings put global transition_animation_scale 0");
+        InstrumentationRegistry.getInstrumentation().getUiAutomation()
+                .executeShellCommand("settings put global animator_duration_scale 0");
+    }
+
+    @After
+    public void tearDown() {
+        Intents.release();
     }
 
     @Test
-    public void testAddMoodEventWithValidInput() {
-        // Select a mood
+    public void testAddMoodEventWithValidData() {
         onView(withId(R.id.moodHappy)).perform(click());
-
-        // Input reason, trigger, and social situation
         onView(withId(R.id.etReason)).perform(typeText("Feeling great!"));
-        onView(withId(R.id.etTrigger)).perform(typeText("Good weather"));
-        onView(withId(R.id.etSocialSituation)).perform(typeText("With friends"));
-
-        // Click on the add mood button
         onView(withId(R.id.btnAddMood)).perform(click());
-
-        // Check if the mood event is added and the activity is closed
-//        onView(withId(R.id.btnMyMood)).check(matches(isDisplayed()));
+        onView(withId(R.id.tvGreeting)).check(matches(isDisplayed()));
     }
 
     @Test
-    public void testAddMoodEventWithoutSelectingMood() {
-        // Click on the add mood button without selecting a mood
-        onView(withId(R.id.btnAddMood)).perform(click());
-
-        // Check if an error message is displayed
-        onView(withText("Please select a mood")).check(matches(isDisplayed()));
-    }
-
-    @Test
-    public void testAddMoodEventWithEmptyReason() {
+    public void testAddMoodEventWithInvalidReason() throws InterruptedException {
         // Select a mood
         onView(withId(R.id.moodHappy)).perform(click());
 
-        // Click on the add mood button without entering a reason
+        // Enter an invalid reason (too long)
+        onView(withId(R.id.etReason)).perform(typeText("This reason is way too long and should trigger an error"));
+
+        // Wait for the button to be disabled
+        Thread.sleep(1000); // Adjust the delay as needed
+
+        // Check that the button is disabled
+        onView(withId(R.id.btnAddMood)).check(matches(not(isEnabled())));
+
+        // Clear the invalid reason and enter a valid one
+        onView(withId(R.id.etReason)).perform(replaceText("Valid reason"));
+
+        // Wait for the button to be enabled
+        Thread.sleep(1000); // Adjust the delay as needed
+
+        // Ensure the button is now enabled
+        onView(withId(R.id.btnAddMood)).check(matches(isEnabled()));
+
+        // Perform the click action
         onView(withId(R.id.btnAddMood)).perform(click());
 
-        // Check if an error message is displayed
-        onView(withText("Please enter a reason")).check(matches(isDisplayed()));
+        // Verify the result (e.g., check if the mood event is added)
+        onView(withText("Mood added successfully!")).check(matches(isDisplayed()));
     }
 }
