@@ -229,7 +229,7 @@ public class CreateAccount extends AppCompatActivity {
         batch.commit()
                 .addOnSuccessListener(unused -> {
                     startActivity(new Intent(CreateAccount.this, FeedManagerActivity.class));
-                    finish();
+//                    finish();
                 })
                 .addOnFailureListener(e -> {
                     // Rollback auth user if Firestore fails
