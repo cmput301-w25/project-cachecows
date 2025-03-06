@@ -1,8 +1,10 @@
 package com.example.feelink;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -22,8 +24,8 @@ import java.util.Date;
 import java.util.Locale;
 
 public class AddMoodEventActivity extends AppCompatActivity {
-
-    private TextView tvGreeting;
+    private static final int IMAGE_REQUEST_CODE = 200;
+    private TextView tvGreeting, tvAddPhoto;
     private LinearLayout moodHappy, moodSad, moodAngry, moodSurprised,
             moodConfused, moodDisgusted, moodShame, moodFear;
     private EditText etReason, etTrigger;
@@ -32,6 +34,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private Button btnAddMood;
 
     private String selectedMood = null;
+    private String uploadedImageUrl = null;
     private FirestoreManager firestoreManager;
     private Date currentDateTime;
 
@@ -97,6 +100,15 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
         // Button
         btnAddMood = findViewById(R.id.btnAddMood);
+
+        //Add Photo
+        tvAddPhoto = findViewById(R.id.tvAddPhoto);
+        tvAddPhoto.setOnClickListener(v -> {
+            Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
+            startActivityForResult(intent, IMAGE_REQUEST_CODE);
+        });
+
+
     }
 
     private void validateReasonField(String text) {
@@ -222,6 +234,11 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation,reason);
                 moodEvent.setTimestamp(currentDateTime);
 
+                //If we have an uploaded image url
+                if (uploadedImageUrl != null) {
+                    moodEvent.setImageUrl(uploadedImageUrl);
+                }
+
                 // Save to Firestore
                 firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
                     @Override
@@ -240,5 +257,18 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            String downloadedUrl = data.getStringExtra("imageUrl");
+            Log.d("AddMoodEventActivity", "downloadedUrl="+downloadedUrl);
+            if (downloadedUrl != null) {
+                Toast.makeText(this, "Image uploaded! URL:\n" + downloadedUrl, Toast.LENGTH_SHORT).show();
+                this.uploadedImageUrl = downloadedUrl;
+            }
+        }
     }
 }

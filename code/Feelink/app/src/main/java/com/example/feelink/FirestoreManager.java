@@ -67,6 +67,10 @@ public class FirestoreManager {
             moodData.put("socialSituation", moodEvent.getSocialSituation());
         }
 
+        if (moodEvent.getImageUrl() != null && !moodEvent.getImageUrl().isEmpty()) {
+            moodData.put("imageUrl", moodEvent.getImageUrl());
+        }
+
         // Add to Firestore
         db.collection(COLLECTION_MOOD_EVENTS)
                 .add(moodData)
@@ -125,11 +129,13 @@ public class FirestoreManager {
                                 String socialSituation = document.getString("socialSituation");
                                 String reason = document.getString("reason");
                                 String userId = document.getString("userId");
+                                String imageUrl = document.getString("imageUrl");
 
                                 MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
                                 moodEvent.setUserId(userId);
                                 moodEvent.setId(id.hashCode());
                                 moodEvent.setTimestamp(timestamp);
+                                moodEvent.setImageUrl(imageUrl);
 
                                 moodEvents.add(moodEvent);
                             }
