@@ -16,10 +16,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.Target;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -146,11 +148,14 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         String imageUrl = moodEvent.getImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()){
             holder.photoContainer.setVisibility(View.VISIBLE);
-            holder.tvMoodDescription.setVisibility(View.GONE);
+            //holder.tvMoodDescription.setVisibility(View.VISIBLE);
             holder.moodPostedImage.setVisibility(View.VISIBLE);
+            holder.tvPhotoPlaceholder.setVisibility(View.GONE);
 
             Glide.with(context)
                     .load(imageUrl)
+                    .override(Target.SIZE_ORIGINAL)
+                    .fitCenter()
                     .into(holder.moodPostedImage);
         } else {
             //No image
@@ -304,9 +309,10 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     }
 
     static class MoodEventViewHolder extends RecyclerView.ViewHolder {
-        TextView tvMoodDescription;
+        ConstraintLayout photoContainer;
+        TextView tvMoodDescription, tvPhotoPlaceholder;
         ImageView moodImage, moodPostedImage;
-        FrameLayout photoContainer;
+        //FrameLayout photoContainer;
         View btnLike;
         View btnComment;
         CardView cardView;
@@ -328,6 +334,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             btnDelete = itemView.findViewById(R.id.btnDelete);
             photoContainer = itemView.findViewById(R.id.photoContainer);
             moodPostedImage = itemView.findViewById(R.id.moodImage);
+            tvPhotoPlaceholder = itemView.findViewById(R.id.tvPhotoPlaceholder);
         }
     }
 
