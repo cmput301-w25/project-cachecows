@@ -8,9 +8,11 @@ public class MoodEvent {
     private String emotionalState;
     private String trigger;
     private String socialSituation;
-
+    private String documentId;
     private String reason;
     private String userId;  // Added to support authentication later
+
+    private String imageUrl;
 
     // Default constructor
     public MoodEvent() {
@@ -101,5 +103,19 @@ public class MoodEvent {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getImageUrl(){return imageUrl;}
+
+    public void setImageUrl(String imageUrl){
+        this.imageUrl = imageUrl;
+    }
+
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
+    }
+
+    public String getDocumentId() {
+        return documentId;
     }
 }
