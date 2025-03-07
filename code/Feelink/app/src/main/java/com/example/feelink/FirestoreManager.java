@@ -10,7 +10,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentId;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -130,7 +132,7 @@ public class FirestoreManager {
                                 moodEvent.setUserId(userId);
                                 moodEvent.setId(id.hashCode());
                                 moodEvent.setTimestamp(timestamp);
-
+                                moodEvent.setDocumentId(id);
                                 moodEvents.add(moodEvent);
                             }
 
@@ -244,6 +246,59 @@ public class FirestoreManager {
                                         task.getException().getMessage() : "Failed to query mood events");
                             }
                         }
+                    }
+                });
+    }
+
+    public void updateMoodEvent(MoodEvent moodEvent, String documentId, final OnMoodEventListener listener) {
+        if (documentId == null || documentId.isEmpty()) {
+            if (listener != null) {
+                listener.onFailure("Document ID is null or empty");
+            }
+            return;
+        }
+
+
+        Map<String, Object> moodData = new HashMap<>();
+        String emotionalState = moodEvent.getEmotionalState();
+        if (emotionalState != null && !emotionalState.isEmpty()) {
+            moodData.put("emotionalState", emotionalState);
+        } else {
+            moodData.put("emotionalState", FieldValue.delete());
+        }
+
+        String reason = moodEvent.getReason();
+        if (reason != null && !reason.isEmpty()) {
+            moodData.put("reason", reason);
+        } else {
+            moodData.put("reason", FieldValue.delete());
+        }
+
+        String trigger = moodEvent.getTrigger();
+        if (trigger != null && !trigger.isEmpty()) {
+            moodData.put("trigger", trigger);
+        } else {
+            moodData.put("trigger", FieldValue.delete());
+        }
+
+        String socialSituation = moodEvent.getSocialSituation();
+        if (socialSituation != null && !socialSituation.isEmpty()) {
+            moodData.put("socialSituation", socialSituation);
+        } else {
+            moodData.put("socialSituation", FieldValue.delete());
+        }
+
+        db.collection(COLLECTION_MOOD_EVENTS)
+                .document(documentId)
+                .update(moodData)
+                .addOnSuccessListener(aVoid -> {
+                    if (listener != null) {
+                        listener.onSuccess(moodEvent);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (listener != null) {
+                        listener.onFailure(e.getMessage());
                     }
                 });
     }
