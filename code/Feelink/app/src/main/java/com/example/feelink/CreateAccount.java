@@ -10,13 +10,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class CreateAccount extends AppCompatActivity {
     private EditText nameEditText, usernameEditText, dobEditText,
-        emailEditText, passwordEditText, repeatedPasswordEditText;
+            emailEditText, passwordEditText, repeatedPasswordEditText;
     private TextView usernameFeedbackText;
     private Button createButton;
     private ImageView backButton;
@@ -148,7 +148,7 @@ public class CreateAccount extends AppCompatActivity {
 
         if (name.isEmpty() || username.isEmpty() || dob.isEmpty() ||
                 email.isEmpty() || password.isEmpty() || repeatedPassword.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields!", Toast.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(android.R.id.content), "Please fill all fields!", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
@@ -156,27 +156,26 @@ public class CreateAccount extends AppCompatActivity {
         //Based on a StackOverflow answer by gaurav jain:
         //https://stackoverflow.com/questions/77226668/how-allow-email-using-email-validation-regex-in-android
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this, "Invalid email format!", Toast.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(android.R.id.content), "Invalid email format!", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
         if (!isValidPassword(password)) {
-            Toast.makeText(this, "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number.", Toast.LENGTH_LONG).show();
+            Snackbar.make(findViewById(android.R.id.content), "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number.", Snackbar.LENGTH_LONG).show();
             return;
         }
 
         if (!password.equals(repeatedPassword)) {
-            Toast.makeText(this, "Passwords do not match!", Toast.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(android.R.id.content), "Passwords do not match!", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
         if (!usernameAvailable) {
-            Toast.makeText(this, "Username not available.", Toast.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(android.R.id.content), "Username not available.", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
-
-       // Create user with Firebase Authentication
+        // Create user with Firebase Authentication
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
@@ -185,10 +184,9 @@ public class CreateAccount extends AppCompatActivity {
                         addUserToFirestore(user, name, username, dob, email);
                     } else {
                         Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                        Toast.makeText(CreateAccount.this, "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + task.getException().getMessage(), Snackbar.LENGTH_LONG).show();
                     }
                 });
-
     }
 
     //Adapted from:
@@ -224,7 +222,6 @@ public class CreateAccount extends AppCompatActivity {
         usernameData.put("email", email); // Add email here
         batch.set(usernameRef, usernameData);
 
-
         // Commit batch
         batch.commit()
                 .addOnSuccessListener(unused -> {
@@ -234,7 +231,7 @@ public class CreateAccount extends AppCompatActivity {
                 .addOnFailureListener(e -> {
                     // Rollback auth user if Firestore fails
                     user.delete();
-                    Toast.makeText(this, "Registration failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show();
                 });
     }
 }
