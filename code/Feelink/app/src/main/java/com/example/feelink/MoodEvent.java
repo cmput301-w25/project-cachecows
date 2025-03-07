@@ -12,6 +12,8 @@ public class MoodEvent {
     private String reason;
     private String userId;  // Added to support authentication later
 
+    private String imageUrl;
+
     // Default constructor
     public MoodEvent() {
         this.timestamp = new Date(); // Set current date and time by default
@@ -101,6 +103,12 @@ public class MoodEvent {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getImageUrl(){return imageUrl;}
+
+    public void setImageUrl(String imageUrl){
+        this.imageUrl = imageUrl;
     }
 
     public void setDocumentId(String documentId) {

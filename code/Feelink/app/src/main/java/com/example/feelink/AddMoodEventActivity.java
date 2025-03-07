@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -23,16 +24,19 @@ import java.util.Date;
 import java.util.Locale;
 
 public class AddMoodEventActivity extends AppCompatActivity {
+    private static final int IMAGE_REQUEST_CODE = 200;
 
-    private TextView tvGreeting;
+    // UI references
+    private TextView tvGreeting, tvAddPhoto;
     private LinearLayout moodHappy, moodSad, moodAngry, moodSurprised,
             moodConfused, moodDisgusted, moodShame, moodFear;
     private EditText etReason, etTrigger;
-
     private Spinner socialSituationSpinner;
     private Button btnAddMood;
 
+    //State
     private String selectedMood = null;
+    private String uploadedImageUrl = null;
     private FirestoreManager firestoreManager;
     private Date currentDateTime;
     private boolean isEditMode = false;
@@ -95,6 +99,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 }
             }
         }
+
+        //uploadedImageUrl = imageUrl;
     }
 
     private void highlightSelectedMood(String emotionalState) {
@@ -129,6 +135,11 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
     private void initializeViews() {
         tvGreeting = findViewById(R.id.tvGreeting);
+        etReason = findViewById(R.id.etReason);
+        etTrigger = findViewById(R.id.etTrigger);
+        socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
+        btnAddMood = findViewById(R.id.btnAddMood);
+        tvAddPhoto = findViewById(R.id.tvAddPhoto);
 
         // Mood selectors
         moodHappy = findViewById(R.id.moodHappy);
@@ -140,8 +151,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         moodShame = findViewById(R.id.moodShame);
         moodFear = findViewById(R.id.moodFear);
 
-        // Input fields
-        etReason = findViewById(R.id.etReason);
+
         etReason.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -158,11 +168,12 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 // Not needed
             }
         });
-        etTrigger = findViewById(R.id.etTrigger);
-        socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
 
-        // Button
-        btnAddMood = findViewById(R.id.btnAddMood);
+        tvAddPhoto.setOnClickListener(v -> {
+            Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
+            startActivityForResult(intent, IMAGE_REQUEST_CODE);
+        });
+
     }
 
     private void validateReasonField(String text) {
@@ -287,6 +298,11 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
                 moodEvent.setTimestamp(currentDateTime);
 
+                //If we have an uploaded image url
+                if (uploadedImageUrl != null) {
+                    moodEvent.setImageUrl(uploadedImageUrl);
+                }
+
                 if (isEditMode) {
                     // Get the document ID from the intent
                     String documentId = getIntent().getStringExtra("DOCUMENT_ID");
@@ -330,5 +346,18 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            String downloadedUrl = data.getStringExtra("imageUrl");
+            Log.d("AddMoodEventActivity", "downloadedUrl="+downloadedUrl);
+            if (downloadedUrl != null) {
+                Toast.makeText(this, "Image uploaded! URL:\n" + downloadedUrl, Toast.LENGTH_SHORT).show();
+                this.uploadedImageUrl = downloadedUrl;
+            }
+        }
     }
 }

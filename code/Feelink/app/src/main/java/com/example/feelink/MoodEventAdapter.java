@@ -8,6 +8,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -17,6 +18,8 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -139,6 +142,20 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             intent.putExtra("SOCIAL_SITUATION", moodEvent.getSocialSituation());
             context.startActivity(intent);
         });
+
+        String imageUrl = moodEvent.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()){
+            holder.photoContainer.setVisibility(View.VISIBLE);
+            holder.tvMoodDescription.setVisibility(View.GONE);
+            holder.moodPostedImage.setVisibility(View.VISIBLE);
+
+            Glide.with(context)
+                    .load(imageUrl)
+                    .into(holder.moodPostedImage);
+        } else {
+            //No image
+            holder.photoContainer.setVisibility(View.GONE);
+        }
     }
 
     private void showDeleteConfirmationDialog(MoodEvent moodEvent) {
@@ -172,6 +189,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
                 Toast.makeText(context, "Failed to delete mood event: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
+
     }
     private void showDetailsDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -287,7 +305,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
 
     static class MoodEventViewHolder extends RecyclerView.ViewHolder {
         TextView tvMoodDescription;
-        ImageView moodImage;
+        ImageView moodImage, moodPostedImage;
+        FrameLayout photoContainer;
         View btnLike;
         View btnComment;
         CardView cardView;
@@ -307,6 +326,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             btnExpand = itemView.findViewById(R.id.btnExpand);
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
+            photoContainer = itemView.findViewById(R.id.photoContainer);
+            moodPostedImage = itemView.findViewById(R.id.moodImage);
         }
     }
 
