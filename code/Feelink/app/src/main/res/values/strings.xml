@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">ProjectCacheCows</string>
     <string name="app_name_text">Feelink</string>
+    <string name="empty_field">Please fill all fields!</string>
+    <string name="invalid_cred">Invalid credentials</string>
+
 </resources>

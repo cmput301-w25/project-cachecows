@@ -2,6 +2,7 @@ package com.example.feelink;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
@@ -55,6 +57,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         put("Fear", R.color.mood_fear);
         put("Shame", R.color.mood_shame);
     }};
+
 
     public void setMyMoodSection(boolean isMyMood) {
         this.isMyMoodSection = isMyMood;
@@ -113,6 +116,10 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         holder.btnExpand.setOnClickListener(v -> {
             showDetailsDialog(moodEvent);
         });
+        // Handle delete button click
+        holder.btnDelete.setOnClickListener(v -> {
+            showDeleteConfirmationDialog(moodEvent);
+        });
 
         if (isMyMoodSection) {
             holder.btnEdit.setVisibility(View.VISIBLE);
@@ -121,6 +128,20 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             holder.btnEdit.setVisibility(View.GONE);
             holder.btnDelete.setVisibility(View.GONE);
         }
+
+        // Handle edit button click
+        holder.btnEdit.setOnClickListener(v -> {
+            // Navigate to AddMoodEventActivity with the mood event's data
+            Intent intent = new Intent(context, AddMoodEventActivity.class);
+            intent.putExtra("EDIT_MODE", true);
+            intent.putExtra("MOOD_EVENT_ID", moodEvent.getId());
+            intent.putExtra("DOCUMENT_ID", moodEvent.getDocumentId());
+            intent.putExtra("EMOTIONAL_STATE", moodEvent.getEmotionalState());
+            intent.putExtra("REASON", moodEvent.getReason());
+            intent.putExtra("TRIGGER", moodEvent.getTrigger());
+            intent.putExtra("SOCIAL_SITUATION", moodEvent.getSocialSituation());
+            context.startActivity(intent);
+        });
 
         String imageUrl = moodEvent.getImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()){
@@ -135,6 +156,40 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             //No image
             holder.photoContainer.setVisibility(View.GONE);
         }
+    }
+
+    private void showDeleteConfirmationDialog(MoodEvent moodEvent) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Delete Mood Event");
+        builder.setMessage("Are you sure you want to delete this mood event?");
+        builder.setPositiveButton("Delete", (dialog, which) -> {
+            // User confirmed, delete the mood event
+            deleteMoodEvent(moodEvent);
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            // User cancelled, do nothing
+            dialog.dismiss();
+        });
+        builder.show();
+    }
+
+    private void deleteMoodEvent(MoodEvent moodEvent) {
+        FirestoreManager firestoreManager = new FirestoreManager(moodEvent.getUserId());
+        firestoreManager.deleteMoodEvent(moodEvent.getId(), new FirestoreManager.OnDeleteListener() {
+            @Override
+            public void onSuccess() {
+                // Remove the mood event from the list and notify the adapter
+                moodEvents.remove(moodEvent);
+                notifyDataSetChanged();
+                Toast.makeText(context, "Mood event deleted successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(context, "Failed to delete mood event: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
     private void showDetailsDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);

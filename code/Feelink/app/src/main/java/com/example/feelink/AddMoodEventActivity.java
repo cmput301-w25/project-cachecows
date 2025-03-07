@@ -25,18 +25,22 @@ import java.util.Locale;
 
 public class AddMoodEventActivity extends AppCompatActivity {
     private static final int IMAGE_REQUEST_CODE = 200;
+
+    // UI references
     private TextView tvGreeting, tvAddPhoto;
     private LinearLayout moodHappy, moodSad, moodAngry, moodSurprised,
             moodConfused, moodDisgusted, moodShame, moodFear;
     private EditText etReason, etTrigger;
-
     private Spinner socialSituationSpinner;
     private Button btnAddMood;
 
+    //State
     private String selectedMood = null;
     private String uploadedImageUrl = null;
     private FirestoreManager firestoreManager;
     private Date currentDateTime;
+    private boolean isEditMode = false;
+    private long moodEventId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,12 +54,25 @@ public class AddMoodEventActivity extends AppCompatActivity {
         }
 
 
-
         // Initialize views
         initializeViews();
         setupMoodSelectors();
         setupSocialSituationSpinner();
         setupAddButton();
+
+        Intent intent = getIntent();
+        if (intent != null && intent.getBooleanExtra("EDIT_MODE", false)) {
+            isEditMode = true;
+            btnAddMood.setText("Save Changes");
+            moodEventId = intent.getLongExtra("MOOD_EVENT_ID", -1);
+            String emotionalState = intent.getStringExtra("EMOTIONAL_STATE");
+            String reason = intent.getStringExtra("REASON");
+            String trigger = intent.getStringExtra("TRIGGER");
+            String socialSituation = intent.getStringExtra("SOCIAL_SITUATION");
+
+            // Pre-fill the fields
+            preFillFields(emotionalState, reason, trigger, socialSituation);
+        }
 
         // Set greeting with username (this would normally come from user data)
         String username = "User"; // Replace with actual username later
@@ -64,8 +81,65 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
     }
 
+    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation) {
+        // Set the selected mood
+        selectedMood = emotionalState;
+        highlightSelectedMood(emotionalState);
+
+        // Set reason and trigger
+        etReason.setText(reason);
+        etTrigger.setText(trigger);
+
+        // Set social situation in spinner
+        if (socialSituation != null && !socialSituation.isEmpty()) {
+            for (int i = 0; i < socialSituationSpinner.getCount(); i++) {
+                if (socialSituationSpinner.getItemAtPosition(i).toString().equals(socialSituation)) {
+                    socialSituationSpinner.setSelection(i);
+                    break;
+                }
+            }
+        }
+
+        //uploadedImageUrl = imageUrl;
+    }
+
+    private void highlightSelectedMood(String emotionalState) {
+        resetMoodSelections();
+        switch (emotionalState) {
+            case "Happy":
+                moodHappy.setBackgroundResource(R.drawable.selected_mood_background);
+                break;
+            case "Sad":
+                moodSad.setBackgroundResource(R.drawable.selected_mood_background);
+                break;
+            case "Angry":
+                moodAngry.setBackgroundResource(R.drawable.selected_mood_background);
+                break;
+            case "Surprised":
+                moodSurprised.setBackgroundResource(R.drawable.selected_mood_background);
+                break;
+            case "Confused":
+                moodConfused.setBackgroundResource(R.drawable.selected_mood_background);
+                break;
+            case "Disgusted":
+                moodDisgusted.setBackgroundResource(R.drawable.selected_mood_background);
+                break;
+            case "Fear":
+                moodFear.setBackgroundResource(R.drawable.selected_mood_background);
+                break;
+            case "Shame":
+                moodShame.setBackgroundResource(R.drawable.selected_mood_background);
+                break;
+        }
+    }
+
     private void initializeViews() {
         tvGreeting = findViewById(R.id.tvGreeting);
+        etReason = findViewById(R.id.etReason);
+        etTrigger = findViewById(R.id.etTrigger);
+        socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
+        btnAddMood = findViewById(R.id.btnAddMood);
+        tvAddPhoto = findViewById(R.id.tvAddPhoto);
 
         // Mood selectors
         moodHappy = findViewById(R.id.moodHappy);
@@ -77,8 +151,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         moodShame = findViewById(R.id.moodShame);
         moodFear = findViewById(R.id.moodFear);
 
-        // Input fields
-        etReason = findViewById(R.id.etReason);
+
         etReason.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -95,19 +168,11 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 // Not needed
             }
         });
-        etTrigger = findViewById(R.id.etTrigger);
-        socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
 
-        // Button
-        btnAddMood = findViewById(R.id.btnAddMood);
-
-        //Add Photo
-        tvAddPhoto = findViewById(R.id.tvAddPhoto);
         tvAddPhoto.setOnClickListener(v -> {
             Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
         });
-
 
     }
 
@@ -230,8 +295,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 String selectedValue = socialSituationSpinner.getSelectedItem().toString();
                 String socialSituation = selectedValue.equals("None") ? "" : selectedValue;
 
-                // Create a new mood event with the current timestamp
-                MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation,reason);
+                MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
                 moodEvent.setTimestamp(currentDateTime);
 
                 //If we have an uploaded image url
@@ -239,22 +303,47 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     moodEvent.setImageUrl(uploadedImageUrl);
                 }
 
-                // Save to Firestore
-                firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
-                    @Override
-                    public void onSuccess(MoodEvent moodEvent) {
-                        // Show success message and return to previous activity
-                        Toast.makeText(AddMoodEventActivity.this, "Mood added successfully!", Toast.LENGTH_SHORT).show();
-                        finish();
+                if (isEditMode) {
+                    // Get the document ID from the intent
+                    String documentId = getIntent().getStringExtra("DOCUMENT_ID");
+
+                    if (documentId == null) {
+                        Toast.makeText(AddMoodEventActivity.this, "Error: Cannot find mood event", Toast.LENGTH_SHORT).show();
+                        btnAddMood.setEnabled(true);
+                        return;
                     }
 
-                    @Override
-                    public void onFailure(String errorMessage) {
-                        // Show error and re-enable button
-                        Toast.makeText(AddMoodEventActivity.this, "Error: " + errorMessage, Toast.LENGTH_SHORT).show();
-                        btnAddMood.setEnabled(true);
-                    }
-                });
+                    // Update the existing mood event
+                    moodEvent.setId(moodEventId);
+                    firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
+                        @Override
+                        public void onSuccess(MoodEvent moodEvent) {
+                            Toast.makeText(AddMoodEventActivity.this, "Mood updated successfully!", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+
+                        @Override
+                        public void onFailure(String errorMessage) {
+                            Toast.makeText(AddMoodEventActivity.this, "Error: " + errorMessage, Toast.LENGTH_SHORT).show();
+                            btnAddMood.setEnabled(true);
+                        }
+                    });
+                } else {
+                    // Save a new mood event (existing code remains the same)
+                    firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
+                        @Override
+                        public void onSuccess(MoodEvent moodEvent) {
+                            Toast.makeText(AddMoodEventActivity.this, "Mood added successfully!", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+
+                        @Override
+                        public void onFailure(String errorMessage) {
+                            Toast.makeText(AddMoodEventActivity.this, "Error: " + errorMessage, Toast.LENGTH_SHORT).show();
+                            btnAddMood.setEnabled(true);
+                        }
+                    });
+                }
             }
         });
     }
