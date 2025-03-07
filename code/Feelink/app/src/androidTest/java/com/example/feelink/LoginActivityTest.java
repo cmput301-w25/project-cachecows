@@ -24,6 +24,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +38,14 @@ public class LoginActivityTest {
     @Rule
     public ActivityScenarioRule<Login> scenario = new ActivityScenarioRule<>(Login.class);
 
+//    @BeforeClass
+//    public static void setup(){
+//        // Specific address for emulated device to access our localHost
+//        String androidLocalhost = "10.0.2.2";
+//        int portNumber = 8080;
+//        FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
+//
+//    }
     @Before
     public void seedDatabase() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -46,12 +55,14 @@ public class LoginActivityTest {
         Map<String, Object> validUser = new HashMap<>();
         validUser.put("uid", "testUserId123"); // Replace with a valid UID
         validUser.put("email", "testuser@example.com"); // Replace with a valid email
+        validUser.put("password", "P@ssw0rd");
         usernamesRef.document("validUsername").set(validUser); // Replace with a valid username
 
         // Add an invalid user for testing
         Map<String, Object> invalidUser = new HashMap<>();
         invalidUser.put("uid", "invalidUserId123"); // Replace with an invalid UID
         invalidUser.put("email", "invaliduser@example.com"); // Replace with an invalid email
+        invalidUser.put("password","password");
         usernamesRef.document("invalidUsername").set(invalidUser); // Replace with an invalid username
     }
 
@@ -69,28 +80,19 @@ public class LoginActivityTest {
 
     @Test
     public void testLoginWithInvalidPassword() {
-        onView(withId(R.id.username_text)).perform(replaceText("validUser"));
+        onView(withId(R.id.username_text)).perform(replaceText("testUserId123"));
         onView(withId(R.id.password_text)).perform(replaceText("wrongPassword"));
         onView(withId(R.id.create_button)).perform(click());
 
         // Verify error message in Toast
-        onView(withText("Login failed"))
-                .inRoot(new ToastMatcher())
-                .check(matches(isDisplayed()));
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+                .check(matches(withText(R.string.invalid_cred)));
     }
 
     @Test
     public void testLoginWithEmptyFields() {
-        ActivityScenario<Login> scenario = ActivityScenario.launch(Login.class);
-
-        scenario.onActivity(activity -> {
-            onView(withId(R.id.create_button)).perform(click());
-
-            SystemClock.sleep(2000); // Give time for Toast to appear
-
-            onView(withText("Please fill all fields!"))
-                    .inRoot(withDecorView(not(is(activity.getWindow().getDecorView()))))
-                    .check(matches(isDisplayed()));
-        });
+        onView(withId(R.id.create_button)).perform(click());
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+                .check(matches(withText(R.string.empty_field)));
     }
 }
