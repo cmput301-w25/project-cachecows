@@ -76,7 +76,7 @@ public class LoginActivityTest {
         onView(withId(R.id.username_text)).perform(replaceText("testUserId123"));
         onView(withId(R.id.password_text)).perform(replaceText("P@assw0rd"));
         onView(withId(R.id.create_button)).perform(click());
-        ActivityScenario<FeedManagerActivity> scenario = ActivityScenario.launch(FeedManagerActivity.class);
+//        ActivityScenario<FeedManagerActivity> scenario = ActivityScenario.launch(FeedManagerActivity.class);
 //
 //        // Verify navigation to FeedManagerActivity
 //        onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
@@ -85,7 +85,7 @@ public class LoginActivityTest {
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.successful_login)));
 
-        SystemClock.sleep(9000);
+//        SystemClock.sleep(9000);
     }
 
     @Test
