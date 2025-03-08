@@ -4,10 +4,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -158,26 +160,31 @@ public class UploadImageActivity extends AppCompatActivity {
             }
 
             // Check file size by counting bytes
+            int fileSize;
             try (InputStream is = getContentResolver().openInputStream(uri)) {
                 if (is == null) {
                     Toast.makeText(this, "Cannot read image data.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                int fileSize = is.available();
-                if (fileSize > MAX_FILE_SIZE) {
-                    Toast.makeText(this, "Image cannot exceed 65 KB (yours: " + fileSize + ")", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                fileSize = is.available();
             }
-
-            // Passed checks
-            pendingUri = uri;
-            pendingBitmap = null;
-            pendingExtensionType = extensionType;
-
-            // Show preview
-            ivPreview.setVisibility(android.view.View.VISIBLE);
-            ivPreview.setImageURI(uri);
+            if (fileSize > MAX_FILE_SIZE) {
+                InputStream is = getContentResolver().openInputStream(uri);
+                Bitmap originalBitmap = BitmapFactory.decodeStream(is);
+                Bitmap compressedBitmap = compressBitmap(originalBitmap);
+                pendingBitmap = compressedBitmap;
+                pendingUri = null;
+                pendingExtensionType = "image/jpeg";
+                ivPreview.setVisibility(View.VISIBLE);
+                ivPreview.setImageBitmap(compressedBitmap);
+            } else{
+                // Image is small enough
+                pendingUri = uri;
+                pendingBitmap = null;
+                pendingExtensionType = extensionType;
+                ivPreview.setVisibility(View.VISIBLE);
+                ivPreview.setImageURI(uri);
+            }
 
             // Show confirm/cancel
             btnConfirm.setVisibility(android.view.View.VISIBLE);
@@ -188,26 +195,28 @@ public class UploadImageActivity extends AppCompatActivity {
             Toast.makeText(this, "Error validating gallery image.", Toast.LENGTH_SHORT).show();
         }
     }
+
     //Adapted with the help of:
     //https://stackoverflow.com/questions/4989182/converting-java-bitmap-to-byte-array
     private void validateCameraBitmap(Bitmap photo) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-        byte[] dataBytes = stream.toByteArray();
 
-        if (dataBytes.length > MAX_FILE_SIZE) {
-            Toast.makeText(this, "Photo too large (>65 KB).", Toast.LENGTH_SHORT).show();
-            return;
+        if (stream.toByteArray().length > MAX_FILE_SIZE){
+            Bitmap compressedBitmap = compressBitmap(photo);
+            pendingBitmap = compressedBitmap;
+            pendingUri = null;
+            pendingExtensionType = "image/jpeg";
+            ivPreview.setVisibility(View.VISIBLE);
+            ivPreview.setImageBitmap(compressedBitmap);
+        } else {
+            // Good -> store
+            pendingBitmap = photo;
+            pendingUri = null;
+            pendingExtensionType = "image/jpeg";
+            ivPreview.setVisibility(View.VISIBLE);
+            ivPreview.setImageBitmap(photo);
         }
-
-        // Good -> store
-        pendingBitmap = photo;
-        pendingUri = null;
-        pendingExtensionType = "image/jpeg";
-
-        // Image preview
-        ivPreview.setVisibility(android.view.View.VISIBLE);
-        ivPreview.setImageBitmap(photo);
 
         // Show confirm/cancel
         btnConfirm.setVisibility(android.view.View.VISIBLE);
@@ -281,6 +290,77 @@ public class UploadImageActivity extends AppCompatActivity {
         return false;
     }
 
+    private Bitmap compressBitmap(Bitmap bitmap){
+        int quality = 100;
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream);
+        byte[] data  = stream.toByteArray();
+
+        // If quality was good enough, return the original bitmap.
+        if (data.length <= UploadImageActivity.MAX_FILE_SIZE) {
+            return bitmap;
+        }
+
+        //Reducing quality until it fits or gets too low
+        while (data.length > UploadImageActivity.MAX_FILE_SIZE && quality > 10){
+            stream.reset();
+            quality -= 5;
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream);
+            data = stream.toByteArray();
+        }
+
+        //if quality loss didn't help, rescale the dimensions
+        ImageDimensions dims = calculateNewDimensionsForBitmap(bitmap);
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, dims.width, dims.height, true);
+
+        // reset quality and compress the now scaled bitmap.
+        quality = 100;
+        stream.reset();
+        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream);
+        data = stream.toByteArray();
+
+
+        while (data.length > UploadImageActivity.MAX_FILE_SIZE && quality > 10) {
+            stream.reset();
+            quality -= 5;
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream);
+            data = stream.toByteArray();
+        }
+
+        return scaledBitmap;
+    }
+    //Adapted from answer by Jason Evans
+    //https://codereview.stackexchange.com/questions/70908/resizing-image-but-keeping-aspect-ratio
+    /**
+     * Calculates new dimensions for the bitmap based on a target "box" width.
+     *
+     * @param original the original Bitmap
+     * @return an ImageDimensions object with new width and height values.
+     */
+    private ImageDimensions calculateNewDimensionsForBitmap(Bitmap original) {
+        final int BOX_WIDTH = 100;
+        int originalWidth = original.getWidth();
+        int originalHeight = original.getHeight();
+
+        // Calculate the aspect ratio.
+        float aspect = (float) originalWidth / originalHeight;
+        int newWidth = (int) (BOX_WIDTH * aspect);
+        int newHeight = (int) (newWidth / aspect);
+
+        // If one dimension exceeds the BOX_WIDTH, adjust the dimensions.
+        if (newWidth > BOX_WIDTH || newHeight > BOX_WIDTH) {
+            if (newWidth > newHeight) {
+                newWidth = BOX_WIDTH;
+                newHeight = (int) (newWidth / aspect);
+            } else {
+                newHeight = BOX_WIDTH;
+                newWidth = (int) (newHeight * aspect);
+            }
+        }
+
+        return new ImageDimensions(newWidth, newHeight);
+    }
+
     // camera permission for personal device testing
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -293,6 +373,19 @@ public class UploadImageActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Camera permission is required to take a photo.", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    /**
+     * Simple class for image dimensions.
+     */
+    private class ImageDimensions {
+        int width;
+        int height;
+
+        ImageDimensions(int width, int height) {
+            this.width = width;
+            this.height = height;
         }
     }
 }
