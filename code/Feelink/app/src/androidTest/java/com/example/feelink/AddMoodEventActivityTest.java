@@ -2,9 +2,11 @@ package com.example.feelink;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
@@ -13,6 +15,9 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import static org.hamcrest.CoreMatchers.not;
 
+import android.content.Intent;
+
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.intent.Intents;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -62,33 +67,47 @@ public class AddMoodEventActivityTest {
     } // working
 
     @Test
-    public void testAddMoodEventWithInvalidReason() throws InterruptedException {
+    public void testAddMoodEventWithInvalidReason() {
         // Select a mood
         onView(withId(R.id.moodHappy)).perform(click());
 
         // Enter an invalid reason (too long)
-        onView(withId(R.id.etReason)).perform(typeText("This reason is way too long and should trigger an error"));
+        onView(withId(R.id.etReason)).perform(typeText("This reason is way too long and should trigger an error"),
+                closeSoftKeyboard());
 
-        // Wait for the button to be disabled
-//        Thread.sleep(5000); // Adjust the delay as needed
+        // Check that there's an error message on the reason field
+        onView(withId(R.id.etReason)).check(matches(hasErrorText("Reason must be limited to 20 characters or 3 words")));
 
         // Check that the button is disabled
         onView(withId(R.id.btnAddMood)).check(matches(not(isEnabled())));
 
         // Clear the invalid reason and enter a valid one
-        onView(withId(R.id.etReason)).perform(replaceText("Valid reason"));
-
-        // Wait for the button to be enabled
-//        Thread.sleep(5000); // Adjust the delay as needed
+        onView(withId(R.id.etReason)).perform(replaceText("Valid"), closeSoftKeyboard());
 
         // Ensure the button is now enabled
         onView(withId(R.id.btnAddMood)).check(matches(isEnabled()));
+    } // working, now only checks if btnAddMood is enabled once all valid entries are in
 
-        // Perform the click action
+    @Test
+    public void testMoodEventAppearsInFeed() {
+        // 1. Add a mood in AddMoodEventActivity
+        onView(withId(R.id.moodHappy)).perform(click());
+        onView(withId(R.id.etReason)).perform(typeText("Test mood"), closeSoftKeyboard());
         onView(withId(R.id.btnAddMood)).perform(click());
 
-        // Verify the result (e.g., check if the mood event is added)
-        onView(withId(com.google.android.material.R.id.snackbar_text))
-                .check(matches(withText("Mood added successfully!")));
+        // 2. Wait for the operation to complete and activity to finish
+        // You might need to use idling resources for this
+
+        // 3. Launch FeedManagerActivity
+        Intent feedIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+                FeedManagerActivity.class);
+        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(feedIntent);
+
+        // 4. Switch to "My Mood" tab
+        onView(withId(R.id.btnMyMood)).perform(click());
+
+        // 5. Verify the mood appears in the RecyclerView
+        onView(withId(R.id.recyclerMoodEvents))
+                .check(matches(hasDescendant(withText("Test mood"))));
     }
 }
