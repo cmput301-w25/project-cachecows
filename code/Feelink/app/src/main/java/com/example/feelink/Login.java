@@ -8,23 +8,18 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentReference;
 
-/**
- * Implements login functionality using Firestore
- * Users log in with their username and password, after which corresponding email is retrieved to perform Firebase Authentication
- * Navigation to Forgot Username and Forgot Password Activities
- */
 public class Login extends AppCompatActivity {
     private EditText usernameTextView, passwordTextView;
     private Button loginButton;
@@ -35,14 +30,6 @@ public class Login extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
-    /**
-     * Called when activity is created
-     * Initializes UI components, Firebase & event listeners
-     * @param savedInstanceState If the activity is being re-initialized after
-     *     previously being shut down then this Bundle contains the data it most
-     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
-     *
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,7 +48,7 @@ public class Login extends AppCompatActivity {
 
         loginButton.setOnClickListener(v -> loginUserAccount());
 
-        //Navigation to Forgot username/password activities or return back
+        // Navigation to Forgot username/password activities or return back
         forgotUsername.setOnClickListener(v -> {
             startActivity(new Intent(Login.this, com.example.feelink.ForgotUsernameActivity.class));
         });
@@ -70,23 +57,19 @@ public class Login extends AppCompatActivity {
             startActivity(new Intent(Login.this, com.example.feelink.ForgotPasswordActivity.class));
         });
 
-        backButton.setOnClickListener(v->{
+        backButton.setOnClickListener(v -> {
             startActivity(new Intent(Login.this, com.example.feelink.MainActivity.class));
         });
     }
-
-    /**
-     * log in the user by retrieving their email from Firestore
-     */
+    // changing warning messages to "invalid credentials"
     private void loginUserAccount() {
         String username = usernameTextView.getText().toString().trim();
         String password = passwordTextView.getText().toString().trim();
 
         if (username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields!", Toast.LENGTH_LONG).show();
+            Snackbar.make(findViewById(android.R.id.content), R.string.empty_field, Snackbar.LENGTH_LONG).show();
             return;
         }
-
         db.collection("usernames").document(username).get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
@@ -95,22 +78,14 @@ public class Login extends AppCompatActivity {
                         if (email != null && !email.isEmpty()) {
                             logInWithEmail(email, password);
                         } else {
-                            Toast.makeText(this, "Invalid user data", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).show(); // invalid user data
                         }
                     } else {
-                        Toast.makeText(this, "Invalid username", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).show(); // invalid username
                     }
                 });
     }
 
-
-    //https://firebase.google.com/docs/auth/android/password-auth#java
-
-    /**
-     * Authenticates the user with Firebase using the email and password.
-     * @param email     email registered with the username
-     * @param password  The user's password
-     */
     private void logInWithEmail(String email, String password) {
         // Initial login attempt - clear cached credentials
         mAuth.signOut();
@@ -121,14 +96,14 @@ public class Login extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        Toast.makeText(Login.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Login Successful!", Snackbar.LENGTH_SHORT).show();
                         startActivity(new Intent(Login.this, FeedManagerActivity.class));
                         finish();
                     } else {
                         if (task.getException().getMessage().contains("INVALID_LOGIN_CREDENTIALS")) {
                             handleInvalidCredentials(email, password);
                         } else {
-                            Toast.makeText(Login.this, "Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(android.R.id.content), "Error: " + task.getException().getMessage(), Snackbar.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -144,12 +119,9 @@ public class Login extends AppCompatActivity {
                             // Retry without signing out
                             attemptLogin(updatedEmail, password);
                         } else {
-                            Toast.makeText(Login.this, "Invalid credentials", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).show();
                         }
                     }
                 });
     }
 }
-
-
-

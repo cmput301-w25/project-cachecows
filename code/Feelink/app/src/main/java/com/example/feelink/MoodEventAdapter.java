@@ -3,20 +3,33 @@ package com.example.feelink;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.transition.Transition;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -139,6 +152,21 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             intent.putExtra("SOCIAL_SITUATION", moodEvent.getSocialSituation());
             context.startActivity(intent);
         });
+
+        String imageUrl = moodEvent.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()){
+            holder.photoContainer.setVisibility(View.VISIBLE);
+            holder.moodPostedImage.setVisibility(View.VISIBLE);
+            holder.tvPhotoPlaceholder.setVisibility(View.GONE);
+
+            Glide.with(context)
+                    .load(imageUrl)
+                    .fitCenter()
+                    .into(holder.moodPostedImage);
+        } else {
+            //No image
+            holder.photoContainer.setVisibility(View.GONE);
+        }
     }
 
     private void showDeleteConfirmationDialog(MoodEvent moodEvent) {
@@ -172,7 +200,9 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
                 Toast.makeText(context, "Failed to delete mood event: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
+
     }
+
     private void showDetailsDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -286,8 +316,9 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     }
 
     static class MoodEventViewHolder extends RecyclerView.ViewHolder {
-        TextView tvMoodDescription;
-        ImageView moodImage;
+        ConstraintLayout photoContainer;
+        TextView tvMoodDescription, tvPhotoPlaceholder;
+        ImageView moodImage, moodPostedImage;
         View btnLike;
         View btnComment;
         CardView cardView;
@@ -307,6 +338,9 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             btnExpand = itemView.findViewById(R.id.btnExpand);
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
+            photoContainer = itemView.findViewById(R.id.photoContainer);
+            moodPostedImage = itemView.findViewById(R.id.moodImage);
+            tvPhotoPlaceholder = itemView.findViewById(R.id.tvPhotoPlaceholder);
         }
     }
 
