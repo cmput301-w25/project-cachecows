@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import androidx.test.core.app.ActivityScenario;
+import androidx.test.espresso.IdlingRegistry;
 import androidx.test.platform.app.InstrumentationRegistry;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -23,6 +24,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -38,14 +40,14 @@ public class LoginActivityTest {
     @Rule
     public ActivityScenarioRule<Login> scenario = new ActivityScenarioRule<>(Login.class);
 
-//    @BeforeClass
-//    public static void setup(){
-//        // Specific address for emulated device to access our localHost
-//        String androidLocalhost = "10.0.2.2";
-//        int portNumber = 8080;
-//        FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
-//
-//    }
+    @BeforeClass
+    public static void setup(){
+        // Specific address for emulated device to access our localHost
+        String androidLocalhost = "10.0.2.2";
+        int portNumber = 8080;
+        FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
+
+    }
     @Before
     public void seedDatabase() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -54,17 +56,19 @@ public class LoginActivityTest {
         // Add a valid user for testing
         Map<String, Object> validUser = new HashMap<>();
         validUser.put("uid", "testUserId123"); // Replace with a valid UID
-        validUser.put("email", "testuser@example.com"); // Replace with a valid email
+//        validUser.put("email", "testuser@example.com"); // Replace with a valid email
         validUser.put("password", "P@ssw0rd");
         usernamesRef.document("validUsername").set(validUser); // Replace with a valid username
 
         // Add an invalid user for testing
         Map<String, Object> invalidUser = new HashMap<>();
         invalidUser.put("uid", "invalidUserId123"); // Replace with an invalid UID
-        invalidUser.put("email", "invaliduser@example.com"); // Replace with an invalid email
+//        invalidUser.put("email", "invaliduser@example.com"); // Replace with an invalid email
         invalidUser.put("password","password");
         usernamesRef.document("invalidUsername").set(invalidUser); // Replace with an invalid username
+        SystemClock.sleep(9000);
     }
+
 
     @Test
     public void testSuccessfulLogin() {
@@ -72,10 +76,16 @@ public class LoginActivityTest {
         onView(withId(R.id.username_text)).perform(replaceText("testUserId123"));
         onView(withId(R.id.password_text)).perform(replaceText("P@assw0rd"));
         onView(withId(R.id.create_button)).perform(click());
-        ActivityScenario<FeedManagerActivity> scenario = ActivityScenario.launch(FeedManagerActivity.class);
+//        ActivityScenario<FeedManagerActivity> scenario = ActivityScenario.launch(FeedManagerActivity.class);
+//
+//        // Verify navigation to FeedManagerActivity
+//        onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
+//        SystemClock.sleep(9000);
 
-        // Verify navigation to FeedManagerActivity
-        onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+                .check(matches(withText(R.string.successful_login)));
+
+//        SystemClock.sleep(9000);
     }
 
     @Test
@@ -84,15 +94,17 @@ public class LoginActivityTest {
         onView(withId(R.id.password_text)).perform(replaceText("wrongPassword"));
         onView(withId(R.id.create_button)).perform(click());
 
+//        SystemClock.sleep(9000);
         // Verify error message in Toast
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.invalid_cred)));
-    }
+    } // somehow working after adding sleep in seed database
 
     @Test
     public void testLoginWithEmptyFields() {
         onView(withId(R.id.create_button)).perform(click());
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.empty_field)));
-    }
+    } // working
+
 }
