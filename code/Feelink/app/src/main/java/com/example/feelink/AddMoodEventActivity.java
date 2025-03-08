@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -269,13 +270,12 @@ public class AddMoodEventActivity extends AppCompatActivity {
         socialSituationSpinner.setSelection(0);
     }
 
-
     private void setupAddButton() {
         btnAddMood.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (selectedMood == null) {
-                    Toast.makeText(AddMoodEventActivity.this, "Please select a mood", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(v, "Please select a mood", Snackbar.LENGTH_SHORT).show();
                     return;
                 }
                 currentDateTime = new Date();
@@ -308,8 +308,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     String documentId = getIntent().getStringExtra("DOCUMENT_ID");
 
                     if (documentId == null) {
-                        Toast.makeText(AddMoodEventActivity.this, "Error: Cannot find mood event", Toast.LENGTH_SHORT).show();
-                        btnAddMood.setEnabled(true);
+                        Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();                        btnAddMood.setEnabled(true);
                         return;
                     }
 
@@ -318,13 +317,13 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
                         @Override
                         public void onSuccess(MoodEvent moodEvent) {
-                            Toast.makeText(AddMoodEventActivity.this, "Mood updated successfully!", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(v, "Mood updated successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();
                             finish();
                         }
 
                         @Override
                         public void onFailure(String errorMessage) {
-                            Toast.makeText(AddMoodEventActivity.this, "Error: " + errorMessage, Toast.LENGTH_SHORT).show();
+                            Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).setDuration(5000).show();
                             btnAddMood.setEnabled(true);
                         }
                     });
@@ -333,13 +332,12 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
                         @Override
                         public void onSuccess(MoodEvent moodEvent) {
-                            Toast.makeText(AddMoodEventActivity.this, "Mood added successfully!", Toast.LENGTH_SHORT).show();
-                            finish();
+                            Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();                            finish();
                         }
 
                         @Override
                         public void onFailure(String errorMessage) {
-                            Toast.makeText(AddMoodEventActivity.this, "Error: " + errorMessage, Toast.LENGTH_SHORT).show();
+                            Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
                             btnAddMood.setEnabled(true);
                         }
                     });
@@ -355,7 +353,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
             String downloadedUrl = data.getStringExtra("imageUrl");
             Log.d("AddMoodEventActivity", "downloadedUrl="+downloadedUrl);
             if (downloadedUrl != null) {
-                Toast.makeText(this, "Image uploaded! URL:\n" + downloadedUrl, Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT).setDuration(5000).show();
                 this.uploadedImageUrl = downloadedUrl;
             }
         }
