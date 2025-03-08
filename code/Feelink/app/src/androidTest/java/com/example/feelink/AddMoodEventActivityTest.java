@@ -59,7 +59,7 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.etReason)).perform(typeText("Feeling great!"));
         onView(withId(R.id.btnAddMood)).perform(click());
         onView(withId(R.id.tvGreeting)).check(matches(isDisplayed()));
-    }
+    } // working
 
     @Test
     public void testAddMoodEventWithInvalidReason() throws InterruptedException {
@@ -70,7 +70,7 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.etReason)).perform(typeText("This reason is way too long and should trigger an error"));
 
         // Wait for the button to be disabled
-        Thread.sleep(1000); // Adjust the delay as needed
+//        Thread.sleep(5000); // Adjust the delay as needed
 
         // Check that the button is disabled
         onView(withId(R.id.btnAddMood)).check(matches(not(isEnabled())));
@@ -79,7 +79,7 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.etReason)).perform(replaceText("Valid reason"));
 
         // Wait for the button to be enabled
-        Thread.sleep(1000); // Adjust the delay as needed
+//        Thread.sleep(5000); // Adjust the delay as needed
 
         // Ensure the button is now enabled
         onView(withId(R.id.btnAddMood)).check(matches(isEnabled()));
@@ -88,6 +88,7 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.btnAddMood)).perform(click());
 
         // Verify the result (e.g., check if the mood event is added)
-        onView(withText("Mood added successfully!")).check(matches(isDisplayed()));
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+                .check(matches(withText("Mood added successfully!")));
     }
 }
