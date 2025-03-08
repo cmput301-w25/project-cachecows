@@ -27,7 +27,7 @@
                 android:layout_height="24dp"
                 android:src="@drawable/back_button"
                 android:padding="2dp"
-                app:tint="#EEEEEE" />
+                app:tint="@color/grey_violet_font" />
 
             <TextView
                 android:layout_width="0dp"
@@ -35,16 +35,16 @@
                 android:layout_weight="1"
                 android:text="Mood Event"
                 android:textAlignment="center"
-                android:textColor="#EEEEEE"
+                android:textColor="@color/grey_violet_font"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:fontFamily="@font/poppins_bold" />
 
             <ImageView
                 android:id="@+id/ivProfilePic"
                 android:src="@drawable/ic_nav_profile"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                app:tint="#EEEEEE"
+                app:tint="@color/grey_violet_font"
                 android:scaleType="centerCrop" />
 
         </LinearLayout>
@@ -64,7 +64,7 @@
                 <View
                     android:layout_width="60dp"
                     android:layout_height="60dp"
-                    android:backgroundTint="#FFFFFF" />
+                    android:backgroundTint="@color/grey_violet_font" />
 
                 <ImageView
                     android:id="@+id/ivMoodIcon"
@@ -79,8 +79,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#EEEEEE"
+                android:textColor="@color/grey_violet_font"
+                android:fontFamily="@font/poppins_bold"
                 android:layout_marginTop="8dp"/>
         </LinearLayout>
 
@@ -96,8 +96,9 @@
                 android:id="@+id/tvTimestamp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_italic"
                 android:textSize="14sp"
-                android:textColor="#EEEEEE" />
+                android:textColor="@color/grey_violet_font" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -110,16 +111,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Created by: "
-                    android:textStyle="bold"
+                    android:fontFamily="@font/poppins_bold"
                     android:textSize="14sp"
-                    android:textColor="#EEEEEE" />
+                    android:textColor="@color/grey_violet_font" />
 
                 <TextView
                     android:id="@+id/tvUsername"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_regular"
                     android:textSize="14sp"
-                    android:textColor="#EEEEEE" />
+                    android:textColor="@color/grey_violet_font" />
             </LinearLayout>
 
         </LinearLayout>
@@ -138,16 +140,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Social Situation: "
-                android:textStyle="bold"
+                android:fontFamily="@font/poppins_bold"
                 android:textSize="14sp"
-                android:textColor="#EEEEEE" />
+                android:textColor="@color/grey_violet_font" />
 
             <TextView
                 android:id="@+id/tvLocation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_regular"
                 android:textSize="14sp"
-                android:textColor="#EEEEEE" />
+                android:textColor="@color/grey_violet_font" />
         </LinearLayout>
 
         <!-- Trigger section (new) -->
@@ -162,16 +165,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Trigger: "
-                android:textStyle="bold"
+                android:fontFamily="@font/poppins_bold"
                 android:textSize="14sp"
-                android:textColor="#EEEEEE" />
+                android:textColor="@color/grey_violet_font" />
 
             <TextView
                 android:id="@+id/tvTrigger"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:textColor="#EEEEEE" />
+                android:fontFamily="@font/poppins_regular"
+                android:textColor="@color/grey_violet_font" />
         </LinearLayout>
 
         <!-- Content/Reason section -->
@@ -179,10 +183,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Description:"
-            android:textStyle="bold"
+            android:fontFamily="@font/poppins_bold"
             android:layout_marginTop="16dp"
             android:textSize="14sp"
-            android:textColor="#EEEEEE" />
+            android:textColor="@color/grey_violet_font" />
 
         <TextView
             android:id="@+id/tvContent"
@@ -190,7 +194,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textSize="14sp"
-            android:textColor="#EEEEEE" />
+            android:fontFamily="@font/poppins_regular"
+            android:textColor="@color/grey_violet_font" />
 
         <!-- Optional picture placeholder -->
         <FrameLayout
@@ -205,7 +210,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="Photograph"
-                android:textColor="#9E9E9E"
+                android:fontFamily="@font/poppins_regular"
+                android:textColor="@color/grey_violet_font"
                 android:textSize="16sp" />
         </FrameLayout>
 

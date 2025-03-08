@@ -4,14 +4,15 @@
     <color name="white">#FFFFFFFF</color>
     <color name="cerulean">#B0D8DA</color>
     <color name="grey_violet">#80604B64</color>
+    <color name="grey_violet_font">#604B64</color>
     <color name="selected_tab_color">#9FE2DD</color> <!-- Your selected color -->
     <color name="unselected_tab_color">#FFFFFF</color> <!-- Your unselected color -->
-    <color name="mood_happy">#FFD700</color>
-    <color name="mood_sad">#1E90FF</color>
-    <color name="mood_angry">#DC143C</color>
-    <color name="mood_surprised">#FFA500</color>
-    <color name="mood_confused">#800080</color>
-    <color name="mood_disgusted">#556B2F</color>
-    <color name="mood_fear">#2F4F4F</color>
-    <color name="mood_shame">#CD5C5C</color>
+    <color name="mood_happy">#FFD966</color>
+    <color name="mood_sad">#D9E2FE</color>
+    <color name="mood_angry">#F4A6A3 </color>
+    <color name="mood_surprised">#F3C7E6 </color>
+    <color name="mood_confused">#D7F7D9 </color>
+    <color name="mood_disgusted">#D4E6B5</color>
+    <color name="mood_fear">#D1D1E0 </color>
+    <color name="mood_shame">#E6C3A5  </color>
 </resources>
