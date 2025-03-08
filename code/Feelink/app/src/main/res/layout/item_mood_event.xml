@@ -54,7 +54,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="200dp"
-            android:background="#F0F0F0">
+            android:background="@drawable/bg_white_gray">
 
             <!-- Placeholder text -->
             <TextView
@@ -65,13 +65,12 @@
                 android:gravity="center"
                 android:text="Photograph"
                 android:textSize="18sp"
-                android:textStyle="bold"
+                android:fontFamily="@font/poppins_bold"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- Actual image - change visibility to invisible instead of gone -->
             <ImageView
                 android:id="@+id/moodImage"
                 android:layout_width="0dp"
@@ -91,6 +90,7 @@
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:text="description (caption)..."
+            android:fontFamily="@font/poppins_regular"
             android:textColor="#666666" />
 
         <!-- Reaction section -->

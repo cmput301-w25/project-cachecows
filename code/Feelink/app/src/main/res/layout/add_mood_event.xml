@@ -14,7 +14,7 @@
         android:text="Hey *Username*!"
         android:textColor="#FFFFFF"
         android:textSize="24sp"
-        android:textStyle="bold"
+        android:fontFamily="@font/poppins_bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -28,6 +28,7 @@
         android:text="How are you feeling?"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
+        android:fontFamily="@font/poppins_regular"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvGreeting" />
@@ -40,6 +41,7 @@
         android:text="Select a Mood"
         android:textColor="#FFFFFF"
         android:textSize="14sp"
+        android:fontFamily="@font/poppins_regular"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvQuestion" />
@@ -72,6 +74,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Happy"
+                android:fontFamily="@font/poppins_regular"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -94,6 +97,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Fear"
+                android:fontFamily="@font/poppins_regular"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -116,6 +120,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Shame"
+                android:fontFamily="@font/poppins_regular"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -138,6 +143,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Sad"
+                android:fontFamily="@font/poppins_regular"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -171,6 +177,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Angry"
+                android:fontFamily="@font/poppins_regular"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -193,6 +200,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Surprised"
+                android:fontFamily="@font/poppins_regular"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -215,6 +223,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Confused"
+                android:fontFamily="@font/poppins_regular"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -237,6 +246,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Disgusted"
+                android:fontFamily="@font/poppins_regular"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -248,8 +258,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:text="Reason"
+        android:fontFamily="@font/poppins_regular"
         android:textColor="#FFFFFF"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -264,9 +275,10 @@
         android:layout_marginEnd="32dp"
         android:background="@drawable/rounded_edittext"
         android:hint="Enter reason..."
-        android:padding="12dp"
+        android:padding="8dp"
         android:textColorHint="#80FFFFFF"
         android:textColor="#FFFFFF"
+        android:fontFamily="@font/poppins_regular"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvReason" />
@@ -277,8 +289,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:text="Trigger"
+        android:fontFamily="@font/poppins_regular"
         android:textColor="#FFFFFF"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -293,7 +306,8 @@
         android:layout_marginEnd="32dp"
         android:background="@drawable/rounded_edittext"
         android:hint="Enter trigger..."
-        android:padding="12dp"
+        android:fontFamily="@font/poppins_regular"
+        android:padding="8dp"
         android:textColorHint="#80FFFFFF"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
@@ -308,6 +322,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
         android:text="Social Situation"
+        android:fontFamily="@font/poppins_regular"
         android:textColor="#FFFFFF"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -333,6 +348,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="12dp"
+            android:fontFamily="@font/poppins_regular"
             android:background="@android:drawable/btn_dropdown"
             android:spinnerMode="dropdown"/>
 
@@ -359,6 +375,7 @@
             android:drawableStart="@drawable/ic_location"
             android:drawablePadding="8dp"
             android:text="Add Location (Optional)"
+            android:fontFamily="@font/poppins_regular"
             android:textColor="#FFFFFF"
             android:textSize="14sp" />
 
@@ -369,7 +386,8 @@
             android:layout_marginTop="8dp"
             android:drawableStart="@drawable/ic_add_photo"
             android:drawablePadding="8dp"
-            android:text="Add Photograph"
+            android:text="Add Photograph (Optional)"
+            android:fontFamily="@font/poppins_regular"
             android:textColor="#FFFFFF"
             android:textSize="14sp" />
     </LinearLayout>
@@ -377,15 +395,17 @@
     <!-- Add Mood Button -->
     <Button
         android:id="@+id/btnAddMood"
-        android:layout_width="match_parent"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
+        android:textColor="@color/grey_violet"
         android:layout_marginStart="32dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="32dp"
-        android:background="@drawable/rounded_button"
+        android:backgroundTint="@android:color/white"
         android:text="Add Mood"
+        android:textSize="20dp"
+        android:fontFamily="@font/poppins_bold"
         android:textAllCaps="false"
-        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layoutOptions" />
