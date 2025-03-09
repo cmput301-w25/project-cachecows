@@ -104,7 +104,7 @@ public class CreateAccount extends AppCompatActivity {
      * @param username
      */
     private void checkUsername(String username) {
-        if (!username.matches(VALID_USERNAME)) {
+        if (!ValidationUtils.isValidUsername(username)) {
             usernameFeedbackText.setText("Invalid username! Use 3-25 characters (letters, numbers, underscores)");
             usernameAvailable = false;
             return;
@@ -131,14 +131,15 @@ public class CreateAccount extends AppCompatActivity {
      * @return
      */
     private boolean isValidPassword(String password) {
-        return password.matches(VALID_PASSWORD);
+
+        return ValidationUtils.isValidPassword(password);
     }
 
     /**
      * User account creation process.
      * Validates all user input and registers the user with Firebase
      */
-    private void createNewAccount(){
+      void createNewAccount(){
         String name = nameEditText.getText().toString().trim();
         String username = usernameEditText.getText().toString().trim();
         String dob = dobEditText.getText().toString().trim();
@@ -201,7 +202,7 @@ public class CreateAccount extends AppCompatActivity {
      * @param dob user's date of birth
      * @param email user's email address
      */
-    private void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
+    void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
         // Batch write to both collections
         WriteBatch batch = db.batch();
 
