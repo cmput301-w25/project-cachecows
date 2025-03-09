@@ -150,6 +150,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             intent.putExtra("REASON", moodEvent.getReason());
             intent.putExtra("TRIGGER", moodEvent.getTrigger());
             intent.putExtra("SOCIAL_SITUATION", moodEvent.getSocialSituation());
+            intent.putExtra("IMAGE_URL", moodEvent.getImageUrl());
             context.startActivity(intent);
         });
 
