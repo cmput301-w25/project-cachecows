@@ -109,6 +109,7 @@ public class Login extends AppCompatActivity {
                 });
     }
 
+
     private void handleInvalidCredentials(String originalEmail, String password) {
         db.collection("usernames").document(usernameTextView.getText().toString().trim())
                 .get()
@@ -123,5 +124,5 @@ public class Login extends AppCompatActivity {
                         }
                     }
                 });
-    }
+        }
 }

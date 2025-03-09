@@ -308,7 +308,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     String documentId = getIntent().getStringExtra("DOCUMENT_ID");
 
                     if (documentId == null) {
-                        Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();                        btnAddMood.setEnabled(true);
+                        Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();
+                        btnAddMood.setEnabled(true);
                         return;
                     }
 
@@ -332,7 +333,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
                         @Override
                         public void onSuccess(MoodEvent moodEvent) {
-                            Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();                            finish();
+                            Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();
+                            finish();
                         }
 
                         @Override
