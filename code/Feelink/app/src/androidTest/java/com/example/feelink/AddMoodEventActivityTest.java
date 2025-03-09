@@ -95,16 +95,38 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.etReason)).perform(typeText("Test mood"), closeSoftKeyboard());
         onView(withId(R.id.btnAddMood)).perform(click());
 
-        // 2. Wait for the operation to complete and activity to finish
-        // You might need to use idling resources for this
+        // Wait for the UI thread to be idle after clicking the button
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
-        // 3. Launch FeedManagerActivity
+        // Add a delay to allow Firestore operation to complete
+        // This is a compromise since we can't modify FirestoreManager to expose its async state
+        try {
+            Thread.sleep(2000); // 2 seconds should be enough for the operation to complete
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 3. Launch FeedManagerActivity with clear task flags
         Intent feedIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
                 FeedManagerActivity.class);
+        feedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(feedIntent);
 
-        // 4. Switch to "My Mood" tab
+        // Wait for the feed activity to load
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+        // 4. Switch to "My Mood" tab and ensure it's fully visible
         onView(withId(R.id.btnMyMood)).perform(click());
+
+        // Wait for UI thread to be idle after tab switch
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+        // Small delay to ensure RecyclerView has loaded data from Firestore
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // 5. Verify the mood appears in the RecyclerView
         onView(withId(R.id.recyclerMoodEvents))
