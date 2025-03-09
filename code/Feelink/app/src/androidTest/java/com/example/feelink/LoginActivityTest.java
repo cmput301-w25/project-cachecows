@@ -2,12 +2,15 @@ package com.example.feelink;
 
 import static android.app.PendingIntent.getActivity;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.intent.Intents.intended;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.IdlingRegistry;
+import androidx.test.espresso.intent.Intents;
 import androidx.test.platform.app.InstrumentationRegistry;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -50,6 +53,13 @@ public class LoginActivityTest {
         FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
 
     }
+
+    @Before  // Initialize Espresso Intents before each test
+    public void initIntents() {
+        Intents.init();
+    }
+
+
 //    @Before
 //    public void seedDatabase() {
 //        FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -87,10 +97,8 @@ public class LoginActivityTest {
                     }
                 });
 
-        SystemClock.sleep(9000); // Ensure Firestore syncs before test runs
+        SystemClock.sleep(15000); // Ensure Firestore syncs before test runs
     }
-
-
 
     @Test
     public void testSuccessfulLogin() {
@@ -102,12 +110,12 @@ public class LoginActivityTest {
         // Wait for the login process to complete
         SystemClock.sleep(5000); // Adjust sleep duration if needed
 
-        // Launch FeedManagerActivity (ensures it's in the correct state)
-        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(FeedManagerActivity.class);
+        // Verify that FeedManagerActivity is launched
+        intended(hasComponent(FeedManagerActivity.class.getName()));
 
         // Verify recyclerMoodEvents is displayed
         onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
-    } // working!!!!!
+    } // working
 
 
     @Test
@@ -128,5 +136,11 @@ public class LoginActivityTest {
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.empty_field)));
     } // working
+
+    @After  // Clean up after each test
+    public void cleanup() {
+        Intents.release();  // Release Espresso Intents
+        FirebaseAuth.getInstance().signOut();
+    }
 
 }

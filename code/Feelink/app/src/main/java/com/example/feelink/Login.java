@@ -96,14 +96,14 @@ public class Login extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        Snackbar.make(findViewById(android.R.id.content), R.string.successful_login, Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Login Successful!", Snackbar.LENGTH_SHORT).show();
                         startActivity(new Intent(Login.this, FeedManagerActivity.class));
                         finish();
                     } else {
                         if (task.getException().getMessage().contains("INVALID_LOGIN_CREDENTIALS")) {
                             handleInvalidCredentials(email, password);
                         } else {
-                            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).show(); //"Error: " + task.getException().getMessage()
+                            Snackbar.make(findViewById(android.R.id.content), "Error: " + task.getException().getMessage(), Snackbar.LENGTH_SHORT).show();
                         }
                     }
                 });
