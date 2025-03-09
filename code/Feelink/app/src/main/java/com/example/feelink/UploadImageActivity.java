@@ -80,7 +80,7 @@ public class UploadImageActivity extends AppCompatActivity {
             }
         });
 
-        // Cancel -> reset everything so user can pick again
+
         btnCancel.setOnClickListener(v -> {
             pendingUri = null;
             pendingBitmap = null;
@@ -95,6 +95,7 @@ public class UploadImageActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> {
             finish();
         });
+
     }
 
     private void openCamera() {
