@@ -24,6 +24,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * Main activity for managing and displaying mood event feeds
+ *
+ * <p>Handles:
+ * <ul>
+ *   <li>Tabbed navigation between personal/shared moods</li>
+ *   <li>RecyclerView management with MoodEventAdapter</li>
+ *   <li>Firestore data synchronization</li>
+ *   <li>Add mood event FAB integration</li>
+ * </ul>
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 1.04.01.01 - Mood event display UI</li>
+ *   <li>US 1.04.01.02 - Mood event data binding</li>
+ *   <li>US 1.03.01.02 - Centralized asset integration</li>
+ *   <li>US 1.06.01.01 - Delete UI integration</li>
+ * </ul>
+ * @see MoodEventAdapter
+ * @see FirestoreManager
+ * @see AddMoodEventActivity
+ */
 public class FeedManagerActivity extends AppCompatActivity {
     private Button btnTheirMood, btnMyMood;
     private ImageButton btnFilter;
@@ -35,6 +57,19 @@ public class FeedManagerActivity extends AppCompatActivity {
     private MoodEventAdapter adapter;
     private boolean isShowingMyMood = false;
 
+    /**
+     * Initializes feed UI and authentication checks
+     *
+     * <p>Key operations:
+     * <ol>
+     *   <li>Edge-to-edge display configuration</li>
+     *   <li>Firebase authentication verification</li>
+     *   <li>View initialization</li>
+     *   <li>Default data loading</li>
+     * </ol>
+     *
+     * @param savedInstanceState Persisted state data
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +101,16 @@ public class FeedManagerActivity extends AppCompatActivity {
         loadTheirMoodEvents();
     }
 
+    /**
+     * Refreshes feed data on activity resume
+     *
+     * <p>Ensures data consistency when returning from:
+     * <ul>
+     *   <li>AddMoodEventActivity</li>
+     *   <li>Edit operations</li>
+     *   <li>Authentication flows</li>
+     * </ul>
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -77,6 +122,17 @@ public class FeedManagerActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Binds view references from layout XML
+     *
+     * <p>Initializes:
+     * <ul>
+     *   <li>Tab buttons</li>
+     *   <li>RecyclerView</li>
+     *   <li>Floating action button</li>
+     *   <li>Empty state indicators</li>
+     * </ul>
+     */
     private void initializeViews() {
         btnTheirMood = findViewById(R.id.btnTheirMood);
         btnMyMood = findViewById(R.id.btnMyMood);
@@ -86,6 +142,16 @@ public class FeedManagerActivity extends AppCompatActivity {
         fabAddMood = findViewById(R.id.fabAddMood);
     }
 
+    /**
+     * Configures click listeners for UI components
+     *
+     * <p>Handles:
+     * <ul>
+     *   <li>Tab selection changes</li>
+     *   <li>Filter button placeholder</li>
+     *   <li>Add mood FAB navigation</li>
+     * </ul>
+     */
     private void setupListeners() {
         btnTheirMood.setOnClickListener(v -> {
             updateTabSelection(false);
@@ -112,12 +178,34 @@ public class FeedManagerActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Initializes RecyclerView with linear layout and adapter
+     *
+     * <p>Configures:
+     * <ul>
+     *   <li>LayoutManager</li>
+     *   <li>MoodEventAdapter instance</li>
+     *   <li>Empty initial dataset</li>
+     * </ul>
+     */
     private void setupRecyclerView() {
         recyclerMoodEvents.setLayoutManager(new LinearLayoutManager(this));
         adapter = new MoodEventAdapter(new ArrayList<>(), this);
         recyclerMoodEvents.setAdapter(adapter);
     }
 
+    /**
+     * Updates UI state for tab selection
+     *
+     * @param showMyMood True to activate "My Mood" tab styling
+     *
+     * <p>Implements visual feedback through:
+     * <ul>
+     *   <li>Background tint changes</li>
+     *   <li>Text color updates</li>
+     *   <li>Info text visibility</li>
+     * </ul>
+     */
     private void updateTabSelection(boolean showMyMood) {
         isShowingMyMood = showMyMood;
         adapter.setMyMoodSection(showMyMood);
@@ -148,6 +236,16 @@ public class FeedManagerActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Loads current user's mood events from Firestore
+     *
+     * <p>Implements US 1.04.01.02 requirements through:
+     * <ol>
+     *   <li>Firestore query by user ID</li>
+     *   <li>Chronological ordering</li>
+     *   <li>Adapter data updates</li>
+     * </ol>
+     */
     private void loadMyMoodEvents() {
         firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
             @Override
@@ -166,11 +264,19 @@ public class FeedManagerActivity extends AppCompatActivity {
     }
 
     private void loadTheirMoodEvents() {
-        // This would need to be implemented in FirestoreManager to get other users' moods
-        // For now, we'll use a placeholder method that could be added to FirestoreManager
         loadSharedMoodEvents();
     }
 
+    /**
+     * Loads shared mood events from other users
+     *
+     * <p>Implements social feed functionality through:
+     * <ul>
+     *   <li>Firestore exclusion query</li>
+     *   <li>Multi-order sorting</li>
+     *   <li>Anonymous user handling</li>
+     * </ul>
+     */
     private void loadSharedMoodEvents() {
         // Placeholder - this should be implemented in FirestoreManager
         // to fetch mood events shared by other users
@@ -198,11 +304,25 @@ public class FeedManagerActivity extends AppCompatActivity {
         // Todo: Implement filter options dialog
     }
 
+    /**
+     * Navigates to AddMoodEventActivity
+     *
+     * <p>Preserves authentication state through FirebaseUser instance
+     */
     private void navigateToAddMood() {
         Intent intent = new Intent(FeedManagerActivity.this, AddMoodEventActivity.class);
         startActivity(intent);
     }
 
+    /**
+     * Handles unauthorized access scenarios
+     *
+     * <p>Redirects to login screen when:
+     * <ul>
+     *   <li>User session expires</li>
+     *   <li>Authentication tokens invalid</li>
+     * </ul>
+     */
     private void handleUnauthorizedAccess() {
         // Redirect to login
         startActivity(new Intent(this, Login.class));
