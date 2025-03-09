@@ -31,14 +31,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
-
-    testOptions {
-        unitTests {
-            isReturnDefaultValues = true
-        }
-    }
-
 }
 
 dependencies {
@@ -50,26 +42,21 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
-    implementation ("com.google.firebase:firebase-storage")
-    implementation ("com.google.android.gms:play-services-tasks:18.2.0")
+    implementation(libs.firebase.auth)
     implementation(libs.espresso.intents)
     implementation(libs.firebase.storage)
-//    testImplementation(libs.junit)
+    testImplementation(libs.junit)
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.mockito:mockito-core:4.5.1")
-    testImplementation("androidx.test:core:1.5.0")
-    testImplementation("androidx.test:runner:1.5.0")
-    testImplementation("com.google.firebase:firebase-auth:22.0.0")
-    testImplementation("com.google.firebase:firebase-firestore:24.6.0")
-    testImplementation("org.robolectric:robolectric:4.9")
-
-
-
+    // Mockito for unit tests
+    testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("org.mockito:mockito-android:5.4.0")
+    // For mocking final classes (Firebase classes are final)
+    testImplementation("net.bytebuddy:byte-buddy:1.17.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("com.github.bumptech.glide:glide:4.16.0")
 }
-
-

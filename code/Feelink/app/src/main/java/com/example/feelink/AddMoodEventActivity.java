@@ -12,7 +12,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -20,9 +19,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
 public class AddMoodEventActivity extends AppCompatActivity {
     private static final int IMAGE_REQUEST_CODE = 200;
@@ -36,7 +33,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private Button btnAddMood;
 
     //State
-    private String selectedMood = null;
+    String selectedMood = null;
     private String uploadedImageUrl = null;
     private FirestoreManager firestoreManager;
     private Date currentDateTime;
@@ -308,7 +305,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     String documentId = getIntent().getStringExtra("DOCUMENT_ID");
 
                     if (documentId == null) {
-                        Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();                        btnAddMood.setEnabled(true);
+                        Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();
+                        btnAddMood.setEnabled(true);
                         return;
                     }
 
@@ -332,11 +330,14 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
                         @Override
                         public void onSuccess(MoodEvent moodEvent) {
-                            Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();                            finish();
+                            Log.d("AddMoodEventActivity", "Mood added successfully: " + moodEvent.toString());
+                            Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();
+                            finish();
                         }
 
                         @Override
                         public void onFailure(String errorMessage) {
+                            Log.e("AddMoodEventActivity", "Failed to add mood: " + errorMessage);
                             Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
                             btnAddMood.setEnabled(true);
                         }
