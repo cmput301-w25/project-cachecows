@@ -134,13 +134,7 @@ public class AddMoodEventActivityTest {
                 .check(matches(hasDescendant(withText("Test mood"))));
     }
 
-//    @Test
-//    public void testMoodCheckIfAddMoodShouldFailWithoutChoosingMood(){
-//        onView(withId(R.id.etReason)).perform(typeText("Valid"), closeSoftKeyboard());
-//        onView(withId(R.id.btnAddMood)).check(matches(not(isEnabled())));
-//    }
-////
-//
+// Old one did not work either
 //
 //
 ////    @Test
