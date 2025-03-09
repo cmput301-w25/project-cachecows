@@ -1,6 +1,7 @@
 package com.example.feelink;
 
 import static android.app.PendingIntent.getActivity;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -73,8 +74,11 @@ public class LoginActivityTest {
     @Test
     public void testSuccessfulLogin() {
         // Enter valid username and password
-        onView(withId(R.id.username_text)).perform(replaceText("testUserId123"));
-        onView(withId(R.id.password_text)).perform(replaceText("P@assw0rd"));
+//        onView(withId(R.id.username_text)).perform(replaceText("testUserId123"));
+//        onView(withId(R.id.password_text)).perform(replaceText("P@assw0rd"));
+        // Enter valid credentials
+        onView(withId(R.id.username_text)).perform(replaceText("validUsername"));
+        onView(withId(R.id.password_text)).perform(replaceText("P@ssw0rd"), closeSoftKeyboard());
         onView(withId(R.id.create_button)).perform(click());
 //        ActivityScenario<FeedManagerActivity> scenario = ActivityScenario.launch(FeedManagerActivity.class);
 //
@@ -84,8 +88,14 @@ public class LoginActivityTest {
 
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.successful_login)));
+        // Wait for the login process to complete
+        SystemClock.sleep(5000); // Adjust sleep duration if needed
 
-//        SystemClock.sleep(9000);
+        // Launch FeedManagerActivity (ensures it's in the correct state)
+        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(FeedManagerActivity.class);
+
+        // Verify recyclerMoodEvents is displayed
+        onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
     }
 
     @Test
