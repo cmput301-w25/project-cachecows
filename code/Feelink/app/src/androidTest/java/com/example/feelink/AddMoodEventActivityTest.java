@@ -88,6 +88,7 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.btnAddMood)).check(matches(isEnabled()));
     } // working, now only checks if btnAddMood is enabled once all valid entries are in
 
+
     @Test
     public void testMoodEventAppearsInFeed() {
         // 1. Add a mood in AddMoodEventActivity
@@ -132,4 +133,30 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.recyclerMoodEvents))
                 .check(matches(hasDescendant(withText("Test mood"))));
     }
+
+//    @Test
+//    public void testMoodEventAppearsInFeed() {
+//        // 1. Add a mood in AddMoodEventActivity
+//        onView(withId(R.id.moodHappy)).perform(click());
+//        onView(withId(R.id.etReason)).perform(typeText("Test mood"), closeSoftKeyboard());
+//        onView(withId(R.id.btnAddMood)).perform(click());
+//
+//        // 2. Wait for the operation to complete and activity to finish
+//        // You might need to use idling resources for this
+//
+//        // 3. Launch FeedManagerActivity
+//        Intent feedIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+//                FeedManagerActivity.class);
+//        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(feedIntent);
+//
+//        // 4. Switch to "My Mood" tab
+//        onView(withId(R.id.btnMyMood)).perform(click());
+//
+////        Thread.sleep(2000); // Waits for 2 seconds
+//
+//
+//        // 5. Verify the mood appears in the RecyclerView
+//        onView(withId(R.id.recyclerMoodEvents))
+//                .check(matches(hasDescendant(withText("Test mood"))));
+//    }
 }

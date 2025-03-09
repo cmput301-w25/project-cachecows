@@ -36,7 +36,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private Button btnAddMood;
 
     //State
-    private String selectedMood = null;
+    String selectedMood = null;
     private String uploadedImageUrl = null;
     private FirestoreManager firestoreManager;
     private Date currentDateTime;

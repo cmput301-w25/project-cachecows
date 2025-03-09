@@ -44,6 +44,11 @@ public class FirestoreManager {
         this.userId = userId;
     }
 
+    public FirestoreManager(String userId, FirebaseFirestore firestore) { // Add this
+        this.db = firestore;
+        this.userId = userId;
+    }
+
     /**
      * Add a new mood event to Firestore
      * @param moodEvent The mood event to add
@@ -329,6 +334,10 @@ public class FirestoreManager {
                         callback.onFailure(userId);
                     }
                 });
+    }
+
+    void setDb(FirebaseFirestore db) {
+        this.db = db;
     }
 
     // Add this interface to the FirestoreManager class
