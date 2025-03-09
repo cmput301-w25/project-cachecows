@@ -9,12 +9,14 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -43,6 +45,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private boolean isEditMode = false;
     private long moodEventId = -1;
 
+    private ImageView btnDeletePhoto;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,9 +73,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
             String reason = intent.getStringExtra("REASON");
             String trigger = intent.getStringExtra("TRIGGER");
             String socialSituation = intent.getStringExtra("SOCIAL_SITUATION");
+            String imageUrl = intent.getStringExtra("IMAGE_URL");
 
-            // Pre-fill the fields
-            preFillFields(emotionalState, reason, trigger, socialSituation);
+            preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl);
         }
 
         // Set greeting with username (this would normally come from user data)
@@ -82,7 +85,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
     }
 
-    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation) {
+    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation, String imageUrl) {
         // Set the selected mood
         selectedMood = emotionalState;
         highlightSelectedMood(emotionalState);
@@ -90,6 +93,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         // Set reason and trigger
         etReason.setText(reason);
         etTrigger.setText(trigger);
+
 
         // Set social situation in spinner
         if (socialSituation != null && !socialSituation.isEmpty()) {
@@ -101,7 +105,20 @@ public class AddMoodEventActivity extends AppCompatActivity {
             }
         }
 
-        //uploadedImageUrl = imageUrl;
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            uploadedImageUrl = imageUrl;
+            tvAddPhoto.setText("Edit Photograph");
+            tvAddPhoto.setTextColor(ContextCompat.getColor(this, R.color.white));
+        } else {
+            tvAddPhoto.setText("Add Photograph");
+            tvAddPhoto.setTextColor(ContextCompat.getColor(this, R.color.white));
+        }
+
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            btnDeletePhoto.setVisibility(View.VISIBLE);
+        } else {
+            btnDeletePhoto.setVisibility(View.GONE);
+        }
     }
 
     private void highlightSelectedMood(String emotionalState) {
@@ -174,6 +191,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
             Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
         });
+
+        btnDeletePhoto = findViewById(R.id.btnDeletePhoto);
+        btnDeletePhoto.setOnClickListener(v -> deletePhoto());
 
     }
 
@@ -353,11 +373,23 @@ public class AddMoodEventActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             String downloadedUrl = data.getStringExtra("imageUrl");
-            Log.d("AddMoodEventActivity", "downloadedUrl="+downloadedUrl);
+            Log.d("AddMoodEventActivity", "downloadedUrl=" + downloadedUrl);
             if (downloadedUrl != null) {
                 Snackbar.make(findViewById(android.R.id.content), "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT).setDuration(5000).show();
                 this.uploadedImageUrl = downloadedUrl;
             }
+            if (downloadedUrl != null) {
+                btnDeletePhoto.setVisibility(View.VISIBLE);
+            }
+
         }
     }
-}
+        private void deletePhoto () {
+            uploadedImageUrl = null;
+            tvAddPhoto.setText("Add Photograph");
+            btnDeletePhoto.setVisibility(View.GONE);
+            Snackbar.make(findViewById(R.id.layoutBottomNav),"Photo removed", Snackbar.LENGTH_SHORT).show();
+
+
+        }
+    }

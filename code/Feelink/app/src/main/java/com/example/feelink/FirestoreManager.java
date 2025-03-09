@@ -300,6 +300,14 @@ public class FirestoreManager {
             moodData.put("socialSituation", FieldValue.delete());
         }
 
+        String imageUrl = moodEvent.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            moodData.put("imageUrl", imageUrl);
+        } else {
+            moodData.put("imageUrl", FieldValue.delete());
+        }
+
+
         db.collection(COLLECTION_MOOD_EVENTS)
                 .document(documentId)
                 .update(moodData)

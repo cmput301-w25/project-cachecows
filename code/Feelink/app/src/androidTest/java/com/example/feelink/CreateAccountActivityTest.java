@@ -28,6 +28,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class CreateAccountActivityTest {
@@ -48,9 +51,49 @@ public class CreateAccountActivityTest {
         Intents.init();
     }
 
+//    @Test
+//    public void testCreateAccountWithValidInput() throws InterruptedException {
+//        onView(withId(R.id.create_name_text)).perform(typeText("John Doe"));
+//        onView(withId(R.id.create_username_text)).perform(typeText("johndoe123"));
+//        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"));
+//        onView(withId(R.id.create_email_text)).perform(typeText("valid@example.com"));
+//        onView(withId(R.id.create_user_password_text)).perform(typeText("ValidPass123"));
+//        onView(withId(R.id.repeat_user_password_text)).perform(typeText("ValidPass123"));
+//
+//        onView(withId(R.id.create_button)).perform(click());
+//
+//        // Wait for async operations
+//        Thread.sleep(2000); // Temporary solution - replace with IdlingResource
+//
+//        intended(hasComponent(FeedManagerActivity.class.getName()));
+//        onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
+//    }
 
     @Test
     public void testCreateAccountWithValidInput() throws InterruptedException {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+
+        // Ensure Firestore has the username mapped to email
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("uid", "testUserId123");
+        userMap.put("email", "valid@example.com");
+        db.collection("usernames").document("johndoe123").set(userMap);
+
+        // Create user in Firebase Authentication
+        auth.createUserWithEmailAndPassword("valid@example.com", "ValidPass123")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        System.out.println("Firebase Auth Test User Created!");
+                    } else {
+                        System.out.println("Error creating Firebase user: " + task.getException().getMessage());
+                    }
+                });
+
+        // Wait for Firestore & Firebase Auth to sync
+//        Thread.sleep(9000); // Temporary sleep - Replace with IdlingResource for better handling
+
+        // Input valid user details
         onView(withId(R.id.create_name_text)).perform(typeText("John Doe"));
         onView(withId(R.id.create_username_text)).perform(typeText("johndoe123"));
         onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"));
@@ -58,14 +101,19 @@ public class CreateAccountActivityTest {
         onView(withId(R.id.create_user_password_text)).perform(typeText("ValidPass123"));
         onView(withId(R.id.repeat_user_password_text)).perform(typeText("ValidPass123"));
 
+        // Click create account button
         onView(withId(R.id.create_button)).perform(click());
 
-        // Wait for async operations
-        Thread.sleep(2000); // Temporary solution - replace with IdlingResource
+        // Wait for the transition to complete
+        Thread.sleep(5000); // Temporary solution - Replace with IdlingResource
 
+        // Verify that the user is redirected to FeedManagerActivity
         intended(hasComponent(FeedManagerActivity.class.getName()));
+
+        // Check if the main UI elements of FeedManagerActivity are displayed
         onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
     }
+
 
     @Test
     public void testCreateAccountWithInvalidUsername() {
@@ -100,5 +148,6 @@ public class CreateAccountActivityTest {
         Intents.release();  // Release Espresso Intents
         FirebaseAuth.getInstance().signOut();
     }
+
 
 }
