@@ -50,12 +50,13 @@ public class FeedManagerActivity extends AppCompatActivity {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             firestoreManager = new FirestoreManager(currentUser.getUid());
-        } else {
-            // Handle user not logged in
-            startActivity(new Intent(this, Login.class));
-            finish();
-            return;
         }
+//        else {
+//            // Handle user not logged in
+//            startActivity(new Intent(this, Login.class));
+//            finish();
+//            return;
+//        }
 
         initializeViews();
         setupListeners();
@@ -105,9 +106,10 @@ public class FeedManagerActivity extends AppCompatActivity {
         fabAddMood.setOnClickListener(v -> {
             if (mAuth.getCurrentUser() != null) {
                 navigateToAddMood();
-            } else {
-                handleUnauthorizedAccess();
             }
+//            else {
+//                handleUnauthorizedAccess();
+//            }
         });
     }
 
