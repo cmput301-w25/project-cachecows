@@ -37,7 +37,7 @@ import java.lang.reflect.Field;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class AddMoodEventActivityTest {
+public class   AddMoodEventActivityTest {
 
     @Rule
     public ActivityScenarioRule<AddMoodEventActivity> activityRule = new ActivityScenarioRule<>(AddMoodEventActivity.class);
