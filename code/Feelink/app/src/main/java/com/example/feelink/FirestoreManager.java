@@ -25,7 +25,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Manager class for all Firestore database operations
+ * Central Firestore operations handler managing all CRUD operations for mood events and user data
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 1.01.01.02 - Mood event storage logic</li>
+ *   <li>US 1.04.01.02 - Mood event data retrieval</li>
+ *   <li>US 1.05.01.03 - Mood event update operations</li>
+ *   <li>US 1.06.01.02 - Mood event deletion</li>
+ *   <li>US 02.02.01.03 - Image URL storage integration</li>
+ *   <li>US 03.01.01.02 - Username/UID resolution</li>
+ * </ul>
+ *
+ * @see MoodEvent
+ * @see FirebaseFirestore
  */
 public class FirestoreManager {
     private static final String TAG = "FirestoreManager";
@@ -39,15 +52,34 @@ public class FirestoreManager {
 
     private FirebaseFirestore db;
 
+    /**
+     * Constructs FirestoreManager with user context
+     * @param userId Authenticated user's unique identifier
+     */
     public FirestoreManager(String userId) { // Modified constructor
         db = FirebaseFirestore.getInstance();
         this.userId = userId;
     }
 
+    public FirestoreManager(String userId, FirebaseFirestore firestore) {
+        this.db = firestore;
+        this.userId = userId;
+    }
+
     /**
-     * Add a new mood event to Firestore
-     * @param moodEvent The mood event to add
-     * @param listener Callback for success/failure
+     * Persists mood event to Firestore with partial field updates
+     *
+     * <p>Handles:
+     * <ul>
+     *   <li>Conversion of MoodEvent object to Firestore document</li>
+     *   <li>Optional field omission for null/empty values</li>
+     *   <li>Atomic document creation with auto-generated ID</li>
+     * </ul>
+     *
+     * @param moodEvent Valid MoodEvent object to store
+     * @param listener Callback for operation results
+     *
+     * @see OnMoodEventListener
      */
     public void addMoodEvent(MoodEvent moodEvent, final OnMoodEventListener listener) {
         // Convert MoodEvent to Map
@@ -110,8 +142,16 @@ public class FirestoreManager {
     }
 
     /**
-     * Get all mood events for the current user
-     * @param listener Callback with the list of mood events
+     * Retrieves chronological mood events for current user
+     *
+     * <p>Query structure:
+     * <ol>
+     *   <li>Filters by current user ID</li>
+     *   <li>Orders by timestamp descending</li>
+     *   <li>Maps Firestore documents to MoodEvent objects</li>
+     * </ol>
+     *
+     * @param listener Callback receiving List<MoodEvent>
      */
     public void getMoodEvents(final OnMoodEventsListener listener) {
         db.collection(COLLECTION_MOOD_EVENTS)
@@ -155,9 +195,17 @@ public class FirestoreManager {
                     }
                 });
     }
+
     /**
-     * Get mood events shared by other users
-     * @param listener Callback with the list of mood events
+     * Fetches public mood events from other users
+     *
+     * <p>Security notes:
+     * <ul>
+     *   <li>Excludes current user's events</li>
+     *   <li>Requires composite index for multiple orderBy clauses</li>
+     * </ul>
+     *
+     * @param listener Callback for shared MoodEvent collection
      */
     public void getSharedMoodEvents(final OnMoodEventsListener listener) {
         // Query all mood events not belonging to current user
@@ -180,12 +228,13 @@ public class FirestoreManager {
                                 String socialSituation = document.getString("socialSituation");
                                 String reason = document.getString("reason");
                                 String userId = document.getString("userId");
-
+                                String imageUrl = document.getString("imageUrl");
 
                                 MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
                                 moodEvent.setUserId(userId);
                                 moodEvent.setId(id.hashCode());
                                 moodEvent.setTimestamp(timestamp);
+                                moodEvent.setImageUrl(imageUrl);
 
                                 moodEvents.add(moodEvent);
                             }
@@ -207,9 +256,16 @@ public class FirestoreManager {
 
 
     /**
-     * Delete a mood event
-     * @param moodEventId The ID of the mood event to delete
-     * @param listener Callback for success/failure
+     * Deletes mood event with ownership verification
+     *
+     * <p>Validation steps:
+     * <ol>
+     *   <li>Verify document belongs to current user</li>
+     *   <li>Execute deletion if verification passes</li>
+     * </ol>
+     *
+     * @param moodEventId Local app-generated event ID
+     * @param listener Deletion result callback
      */
     public void deleteMoodEvent(final long moodEventId, final OnDeleteListener listener) {
         db.collection(COLLECTION_MOOD_EVENTS)
@@ -257,6 +313,20 @@ public class FirestoreManager {
                 });
     }
 
+    /**
+     * Updates existing mood event document with delta changes
+     *
+     * <p>Key features:
+     * <ul>
+     *   <li>FieldValue.delete() for empty fields</li>
+     *   <li>Partial updates without overwriting unchanged fields</li>
+     *   <li>Document ID verification</li>
+     * </ul>
+     *
+     * @param moodEvent Updated MoodEvent object
+     * @param documentId Firestore document ID to update
+     * @param listener Result callback handler
+     */
     public void updateMoodEvent(MoodEvent moodEvent, String documentId, final OnMoodEventListener listener) {
         if (documentId == null || documentId.isEmpty()) {
             if (listener != null) {
@@ -295,6 +365,14 @@ public class FirestoreManager {
             moodData.put("socialSituation", FieldValue.delete());
         }
 
+        String imageUrl = moodEvent.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            moodData.put("imageUrl", imageUrl);
+        } else {
+            moodData.put("imageUrl", FieldValue.delete());
+        }
+
+
         db.collection(COLLECTION_MOOD_EVENTS)
                 .document(documentId)
                 .update(moodData)
@@ -310,9 +388,16 @@ public class FirestoreManager {
                 });
     }
     /**
-     * Get a username from Firestore based on userId
-     * @param userId The ID of the user to look up
-     * @param callback Callback with the username
+     * Resolves username from UID with fallback handling
+     *
+     * <p>Implements two-phase lookup:
+     * <ol>
+     *   <li>Check usernames collection mapping</li>
+     *   <li>Fallback to UID if unavailable</li>
+     * </ol>
+     *
+     * @param userId Target user's UID
+     * @param callback Username resolution handler
      */
     public void getUsernameById(String userId, OnUsernameListener callback) {
         // First try to get from the usernames collection
@@ -331,24 +416,65 @@ public class FirestoreManager {
                 });
     }
 
-    // Add this interface to the FirestoreManager class
+    void setDb(FirebaseFirestore db) {
+        this.db = db;
+    }
+
+    /**
+     * Callback interface for deletion operations
+     */
     public interface OnDeleteListener {
+        /**
+         * Called upon successful document removal
+         */
         void onSuccess();
+
+        /**
+         * @param errorMessage Deletion failure details
+         */
         void onFailure(String errorMessage);
     }
 
-    // Callback interfaces
+
+    /**
+     * Callback interface for single mood event operations
+     */
     public interface OnMoodEventListener {
+        /**
+         * @param moodEvent Successfully processed MoodEvent
+         */
         void onSuccess(MoodEvent moodEvent);
+        /**
+         * @param errorMessage Descriptive failure reason
+         */
         void onFailure(String errorMessage);
     }
 
+    /**
+     * Callback interface for bulk mood event operations
+     */
     public interface OnMoodEventsListener {
+        /**
+         * @param moodEvents Chronologically ordered list
+         */
         void onSuccess(List<MoodEvent> moodEvents);
+        /**
+         * @param errorMessage Firestore error details
+         */
         void onFailure(String errorMessage);
     }
+    /**
+     * Callback interface for username resolution
+     */
     public interface OnUsernameListener {
+        /**
+         * @param username Resolved username string
+         */
         void onSuccess(String username);
+
+        /**
+         * @param fallbackName UID used as fallback identifier
+         */
         void onFailure(String fallbackName);
     }
 }
