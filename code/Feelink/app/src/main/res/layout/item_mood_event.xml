@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardView"
     android:layout_width="match_parent"
@@ -13,8 +14,9 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-<!--         User profile circle and info -->
+        <!-- User profile circle and info -->
         <LinearLayout
+            android:id="@+id/profileRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -46,28 +48,40 @@
                 android:contentDescription="Delete mood"/>
         </LinearLayout>
 
-        <!-- Photo/Image placeholder -->
-        <FrameLayout
+        <!-- Photo/Image container -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/photoContainer"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:background="#F0F0F0">
+            android:layout_height="wrap_content"
+            android:minHeight="200dp"
+            android:background="@drawable/bg_white_gray">
 
+            <!-- Placeholder text -->
             <TextView
+                android:id="@+id/tvPhotoPlaceholder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:layout_margin="8dp"
+                android:gravity="center"
                 android:text="Photograph"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:fontFamily="@font/poppins_bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <ImageView
                 android:id="@+id/moodImage"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:visibility="gone" />
-        </FrameLayout>
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Mood description -->
         <TextView
@@ -76,6 +90,7 @@
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:text="description (caption)..."
+            android:fontFamily="@font/poppins_regular"
             android:textColor="#666666" />
 
         <!-- Reaction section -->
@@ -104,7 +119,6 @@
                 android:src="@drawable/ic_comment"
                 android:contentDescription="Comment" />
 
-
             <ImageButton
                 android:id="@+id/btnExpand"
                 android:layout_width="24dp"
@@ -121,7 +135,6 @@
                 android:layout_weight="1" />
 
             <!-- Mood emoji -->
-            <!-- Mood emoji (changed to ImageView for consistency) -->
             <ImageView
                 android:id="@+id/ivMoodIcon"
                 android:layout_width="48dp"
