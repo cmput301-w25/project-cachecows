@@ -23,6 +23,7 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class FeedManagerActivity extends AppCompatActivity {
     private Button btnTheirMood, btnMyMood;
     private ImageButton btnFilter;

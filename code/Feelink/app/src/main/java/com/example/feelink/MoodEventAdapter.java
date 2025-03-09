@@ -37,6 +37,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * RecyclerView adapter for displaying mood events with visual customization and CRUD operations
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 1.03.01.02 - Integrated centralized assets into UI views</li>
+ *   <li>US 1.04.01.01 - Mood event detail UI implementation</li>
+ *   <li>US 1.05.01.01 - Edit interface integration</li>
+ *   <li>US 1.06.01.01 - Delete UI with confirmation dialog</li>
+ *   <li>US 02.02.01.03 - Photograph display integration</li>
+ * </ul>
+ *
+ * @see MoodEvent
+ * @see FirestoreManager
+ */
 public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.MoodEventViewHolder> {
 
     private List<MoodEvent> moodEvents;
@@ -68,17 +83,30 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         put("Shame", R.color.mood_shame);
     }};
 
-
+    /**
+     * Toggles UI controls for personal vs shared mood events
+     * @param isMyMood True to show edit/delete buttons
+     */
     public void setMyMoodSection(boolean isMyMood) {
         this.isMyMoodSection = isMyMood;
     }
 
-
+    /**
+     * Initializes adapter with mood event data and context
+     * @param moodEvents List of MoodEvent objects to display
+     * @param context Hosting activity context
+     */
     public MoodEventAdapter(List<MoodEvent> moodEvents, Context context) {
         this.moodEvents = moodEvents;
         this.context = context;
     }
 
+    /**
+     * Creates view holder instances for RecyclerView
+     * @param parent ViewGroup container
+     * @param viewType View type identifier
+     * @return Configured ViewHolder instance
+     */
     @NonNull
     @Override
     public MoodEventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -87,6 +115,19 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         return new MoodEventViewHolder(view);
     }
 
+    /**
+     * Binds mood event data to view holder components
+     * <p>Handles:
+     * <ul>
+     *   <li>Color theming based on emotional state</li>
+     *   <li>Reason/trigger text display</li>
+     *   <li>Image loading with Glide</li>
+     *   <li>Edit/delete button visibility</li>
+     * </ul>
+     *
+     * @param holder ViewHolder instance
+     * @param position Item position in dataset
+     */
     @Override
     public void onBindViewHolder(@NonNull MoodEventViewHolder holder, int position) {
         MoodEvent moodEvent = moodEvents.get(position);
@@ -170,6 +211,16 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         }
     }
 
+    /**
+     * Displays confirmation dialog before deleting mood event
+     *
+     * <p>Implements US 1.06.01.01 requirements for delete confirmation UI.
+     * Uses native AlertDialog with positive/negative action buttons.</p>
+     *
+     * @param moodEvent MoodEvent to potentially delete
+     *
+     * @see #deleteMoodEvent(MoodEvent)
+     */
     private void showDeleteConfirmationDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Delete Mood Event");
@@ -185,6 +236,10 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         builder.show();
     }
 
+    /**
+     * Handles mood event deletion with Firestore integration
+     * @param moodEvent MoodEvent to delete
+     */
     private void deleteMoodEvent(MoodEvent moodEvent) {
         FirestoreManager firestoreManager = new FirestoreManager(moodEvent.getUserId());
         firestoreManager.deleteMoodEvent(moodEvent.getId(), new FirestoreManager.OnDeleteListener() {
@@ -204,6 +259,11 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
 
     }
 
+    /**
+     * Displays detailed view dialog for mood event
+     * @param moodEvent MoodEvent object to display
+     *
+     */
     private void showDetailsDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -221,7 +281,23 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         ImageView ivProfilePic = dialogView.findViewById(R.id.ivProfilePic);
         ImageView btnBack = dialogView.findViewById(R.id.btnBack);
         View cardViewBackground = dialogView.findViewById(R.id.cardViewBackground);
-        View photoPlaceholder = dialogView.findViewById(R.id.photoPlaceholder);
+        // Add these in the "Get references to all views" section:
+        ImageView ivMoodPhoto = dialogView.findViewById(R.id.ivMoodPhoto);
+        TextView tvPhotoPlaceholderText = dialogView.findViewById(R.id.tvPhotoPlaceholderText);
+
+        // Replace the existing photo handling code with:
+        String imageUrl = moodEvent.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            ivMoodPhoto.setVisibility(View.VISIBLE);
+            tvPhotoPlaceholderText.setVisibility(View.GONE);
+            Glide.with(context)
+                    .load(imageUrl)
+                    .fitCenter()
+                    .into(ivMoodPhoto);
+        } else {
+            ivMoodPhoto.setVisibility(View.GONE);
+            tvPhotoPlaceholderText.setVisibility(View.VISIBLE);
+        }
 
         // Set background color based on mood
         String emotionalState = moodEvent.getEmotionalState();
@@ -289,7 +365,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         ivProfilePic.setImageResource(R.drawable.ic_nav_profile);
 
         // Show or hide photo placeholder based on whether a photo exists
-        photoPlaceholder.setVisibility(View.VISIBLE);
+
 
         // Setup back button
         btnBack.setOnClickListener(v -> dialog.dismiss());
@@ -298,24 +374,50 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         dialog.show();
     }
 
-    // Helper method to check color brightness
-    // Change the parameter to use color integers
+    /**
+     * Determines text color contrast based on background luminance
+     * @param color Background color in integer format
+     * @return True if dark text should be used
+     *
+     * @see <a href="https://www.w3.org/TR/AERT/#color-contrast">WCAG Contrast Guidelines</a>
+     */
     private boolean isDarkColor(int color) {
         double darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
         return darkness >= 0.5;
     }
 
-
+    /**
+     * Returns total number of mood events in the adapter
+     *
+     * <p>Implements safe null-checking to prevent RecyclerView crashes.
+     * Required for proper RecyclerView item recycling.</p>
+     *
+     * @return Number of mood events (0 if null)
+     */
     @Override
     public int getItemCount() {
         return moodEvents != null ? moodEvents.size() : 0;
     }
 
+    /**
+     * Updates dataset and refreshes UI
+     * @param moodEvents New list of MoodEvent objects
+     */
     public void updateMoodEvents(List<MoodEvent> moodEvents) {
         this.moodEvents = moodEvents;
         notifyDataSetChanged();
     }
 
+    /**
+     * ViewHolder implementation for mood event items
+     *
+     * <p>Manages view references and click handlers for:</p>
+     * <ul>
+     *   <li>Expand/collapse functionality</li>
+     *   <li>Social interaction buttons</li>
+     *   <li>Edit/delete operations</li>
+     * </ul>
+     */
     static class MoodEventViewHolder extends RecyclerView.ViewHolder {
         ConstraintLayout photoContainer;
         TextView tvMoodDescription, tvPhotoPlaceholder;
@@ -327,6 +429,10 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
 
         ImageButton btnEdit, btnDelete;
 
+        /**
+         * Initializes view references and click handlers
+         * @param itemView Root view of item layout
+         */
 
         public MoodEventViewHolder(@NonNull View itemView) {
             super(itemView);

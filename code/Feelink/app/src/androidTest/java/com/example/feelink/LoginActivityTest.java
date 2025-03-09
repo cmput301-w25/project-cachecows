@@ -50,21 +50,6 @@ public class LoginActivityTest {
         FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
 
     }
-//    @Before
-//    public void seedDatabase() {
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//        CollectionReference usernamesRef = db.collection("usernames");
-//
-//        // Add a valid user with email
-//        Map<String, Object> validUser = new HashMap<>();
-//        validUser.put("uid", "testUserId123");
-//        validUser.put("email", "testuser@example.com"); // ✅ ADD EMAIL
-//        validUser.put("password", "P@ssw0rd");
-//        usernamesRef.document("validUsername").set(validUser);
-//
-//        SystemClock.sleep(9000); // Ensure Firestore syncs before tests run
-//    }
-
     @Before
     public void seedDatabase() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -91,14 +76,23 @@ public class LoginActivityTest {
     }
 
 
-
     @Test
     public void testSuccessfulLogin() {
+        // Enter valid username and password
+//        onView(withId(R.id.username_text)).perform(replaceText("testUserId123"));
+//        onView(withId(R.id.password_text)).perform(replaceText("P@assw0rd"));
         // Enter valid credentials
         onView(withId(R.id.username_text)).perform(replaceText("validUsername"));
         onView(withId(R.id.password_text)).perform(replaceText("P@ssw0rd"), closeSoftKeyboard());
         onView(withId(R.id.create_button)).perform(click());
+//        ActivityScenario<FeedManagerActivity> scenario = ActivityScenario.launch(FeedManagerActivity.class);
+//
+//        // Verify navigation to FeedManagerActivity
+//        onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
+//        SystemClock.sleep(9000);
 
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+                .check(matches(withText(R.string.successful_login)));
         // Wait for the login process to complete
         SystemClock.sleep(5000); // Adjust sleep duration if needed
 
@@ -107,8 +101,7 @@ public class LoginActivityTest {
 
         // Verify recyclerMoodEvents is displayed
         onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
-    } // working!!!!!
-
+    }
 
     @Test
     public void testLoginWithInvalidPassword() {
