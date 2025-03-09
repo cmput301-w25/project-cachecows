@@ -221,7 +221,23 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         ImageView ivProfilePic = dialogView.findViewById(R.id.ivProfilePic);
         ImageView btnBack = dialogView.findViewById(R.id.btnBack);
         View cardViewBackground = dialogView.findViewById(R.id.cardViewBackground);
-        View photoPlaceholder = dialogView.findViewById(R.id.photoPlaceholder);
+        // Add these in the "Get references to all views" section:
+        ImageView ivMoodPhoto = dialogView.findViewById(R.id.ivMoodPhoto);
+        TextView tvPhotoPlaceholderText = dialogView.findViewById(R.id.tvPhotoPlaceholderText);
+
+        // Replace the existing photo handling code with:
+        String imageUrl = moodEvent.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            ivMoodPhoto.setVisibility(View.VISIBLE);
+            tvPhotoPlaceholderText.setVisibility(View.GONE);
+            Glide.with(context)
+                    .load(imageUrl)
+                    .fitCenter()
+                    .into(ivMoodPhoto);
+        } else {
+            ivMoodPhoto.setVisibility(View.GONE);
+            tvPhotoPlaceholderText.setVisibility(View.VISIBLE);
+        }
 
         // Set background color based on mood
         String emotionalState = moodEvent.getEmotionalState();
@@ -289,7 +305,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         ivProfilePic.setImageResource(R.drawable.ic_nav_profile);
 
         // Show or hide photo placeholder based on whether a photo exists
-        photoPlaceholder.setVisibility(View.VISIBLE);
+
 
         // Setup back button
         btnBack.setOnClickListener(v -> dialog.dismiss());
