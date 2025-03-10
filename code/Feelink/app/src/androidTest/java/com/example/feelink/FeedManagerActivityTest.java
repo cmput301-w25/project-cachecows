@@ -184,8 +184,6 @@ public class FeedManagerActivityTest {
         // Verify recycler view is displayed
         onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
 
-        // Verify tab selection is updated
-        // This would require a custom matcher to check background tint
     }
 
     @Test
@@ -199,8 +197,6 @@ public class FeedManagerActivityTest {
         // Verify recycler view is displayed
         onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
 
-        // Verify tab selection is updated
-        // This would require a custom matcher to check background tint
     }
 
     @Test
@@ -220,9 +216,7 @@ public class FeedManagerActivityTest {
         // Click on filter button
         onView(withId(R.id.btnFilter)).perform(click());
 
-        // This would normally verify that a filter dialog appears
         // Since showFilterOptions() is not implemented yet, we can't test the dialog
-        // But we can verify the button is clickable
     }
 
     @Test
@@ -264,7 +258,6 @@ public class FeedManagerActivityTest {
         // Verify Their Mood tab is displayed
         onView(withText("Their Mood")).check(matches(isDisplayed()));
 
-        // Note: Visual verification of color changes would require custom matchers
     }
 
 }

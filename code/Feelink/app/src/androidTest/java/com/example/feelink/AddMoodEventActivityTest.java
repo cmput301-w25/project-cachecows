@@ -96,17 +96,6 @@ public class AddMoodEventActivityTest {
         Intents.release();
     }
 
-//    @Test(timeout = 20000)
-//    public void testAddMoodEventWithValidData() {
-//        onView(withId(R.id.moodHappy)).perform(click());
-//        onView(withId(R.id.etReason)).perform(typeText("Feeling great!"));
-//        onView(withId(R.id.btnAddMood)).perform(click());
-////        SystemClock.sleep(5000);
-//        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(FeedManagerActivity.class);
-//        onView(withId(R.id.btnMyMood)).perform(click());
-//        onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
-//    } // working
-
     @Test(timeout = 20000)
     public void testAddMoodEventWithInvalidReason() {
         // Select a mood
@@ -127,13 +116,13 @@ public class AddMoodEventActivityTest {
 
         // Ensure the button is now enabled
         onView(withId(R.id.btnAddMood)).check(matches(isEnabled()));
-    } // working, now only checks if btnAddMood is enabled once all valid entries are in
+    }
 
 
 
     @Test(timeout = 10000)
     public void testMoodEventAppearsInFeed() {
-        // 1. Add a mood in AddMoodEventActivity
+        // Add a mood in AddMoodEventActivity
         onView(withId(R.id.moodHappy)).perform(click());
         onView(withId(R.id.etReason)).perform(typeText("Test mood"), closeSoftKeyboard());
         onView(withId(R.id.btnAddMood)).perform(click());
@@ -142,14 +131,13 @@ public class AddMoodEventActivityTest {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
         // Add a delay to allow Firestore operation to complete
-        // This is a compromise since we can't modify FirestoreManager to expose its async state
         try {
             Thread.sleep(2000); // 2 seconds should be enough for the operation to complete
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        // 3. Launch FeedManagerActivity with clear task flags
+        // Launch FeedManagerActivity with clear task flags
         Intent feedIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
                 FeedManagerActivity.class);
         feedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -158,7 +146,7 @@ public class AddMoodEventActivityTest {
         // Wait for the feed activity to load
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
-        // 4. Switch to "My Mood" tab and ensure it's fully visible
+        // Switch to "My Mood" tab and ensure it's fully visible
         onView(withId(R.id.btnMyMood)).perform(click());
 
         // Wait for UI thread to be idle after tab switch
@@ -171,7 +159,7 @@ public class AddMoodEventActivityTest {
             e.printStackTrace();
         }
 
-        // 5. Verify the mood appears in the RecyclerView
+        // Verify the mood appears in the RecyclerView
         onView(withId(R.id.recyclerMoodEvents))
                 .check(matches(hasDescendant(withText("Test mood"))));
     }
@@ -200,38 +188,4 @@ public class AddMoodEventActivityTest {
         }
     }
 
-//    @Test
-//    public void testMoodCheckIfAddMoodShouldFailWithoutChoosingMood(){
-//        onView(withId(R.id.etReason)).perform(typeText("Valid"), closeSoftKeyboard());
-//        onView(withId(R.id.btnAddMood)).check(matches(not(isEnabled())));
-//    }
-////
-//
-//
-//
-////    @Test
-////    public void testMoodEventAppearsInFeed() {
-////        // 1. Add a mood in AddMoodEventActivity
-////        onView(withId(R.id.moodHappy)).perform(click());
-////        onView(withId(R.id.etReason)).perform(typeText("Test mood"), closeSoftKeyboard());
-////        onView(withId(R.id.btnAddMood)).perform(click());
-////
-////        // 2. Wait for the operation to complete and activity to finish
-////        // You might need to use idling resources for this
-////
-////        // 3. Launch FeedManagerActivity
-////        Intent feedIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-////                FeedManagerActivity.class);
-////        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(feedIntent);
-//
-//        // 4. Switch to "My Mood" tab
-//        onView(withId(R.id.btnMyMood)).perform(click());
-//
-////        Thread.sleep(2000); // Waits for 2 seconds
-//
-//
-//        // 5. Verify the mood appears in the RecyclerView
-//        onView(withId(R.id.recyclerMoodEvents))
-//                .check(matches(hasDescendant(withText("Test mood"))));
-//    }
 }

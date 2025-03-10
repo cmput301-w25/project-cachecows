@@ -31,8 +31,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -77,10 +82,6 @@ public class CreateAccountActivityTest {
         }
     }
 
-
-
-
-
     @Before
     public void initIntents() {
         // Sign out any existing user
@@ -89,27 +90,6 @@ public class CreateAccountActivityTest {
         // Initialize intents
         Intents.init();
     }
-
-
-
-
-//    @Test
-//    public void testCreateAccountWithValidInput() throws InterruptedException {
-//        onView(withId(R.id.create_name_text)).perform(typeText("John Doe"));
-//        onView(withId(R.id.create_username_text)).perform(typeText("johndoe123"));
-//        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"));
-//        onView(withId(R.id.create_email_text)).perform(typeText("valid@example.com"));
-//        onView(withId(R.id.create_user_password_text)).perform(typeText("ValidPass123"));
-//        onView(withId(R.id.repeat_user_password_text)).perform(typeText("ValidPass123"));
-//
-//        onView(withId(R.id.create_button)).perform(click());
-//
-//        // Wait for async operations
-//        Thread.sleep(2000); // Temporary solution - replace with IdlingResource
-//
-//        intended(hasComponent(FeedManagerActivity.class.getName()));
-//        onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
-//    }
 
     @Test
     public void testCreateAccountWithValidInput() throws InterruptedException {
@@ -127,7 +107,7 @@ public class CreateAccountActivityTest {
         onView(withId(R.id.repeat_user_password_text)).perform(typeText("TestPass123"), ViewActions.closeSoftKeyboard());
 
         // Wait for username validation to complete
-        Thread.sleep(2000);  // Increased from 1000ms
+        Thread.sleep(2000);
 
         // Click create account button
         onView(withId(R.id.create_button)).perform(click());
@@ -135,9 +115,7 @@ public class CreateAccountActivityTest {
         // After clicking create button
         Log.d("TEST", "Clicked create button, waiting for navigation...");
 
-
-        // Significantly increase wait time for Firebase operations
-        Thread.sleep(10000);  // Increased from 5000ms to 10000ms
+        Thread.sleep(10000);
 
         // Verify navigation to FeedManagerActivity
         intended(hasComponent(FeedManagerActivity.class.getName()));
@@ -152,7 +130,7 @@ public class CreateAccountActivityTest {
 
         // Check if an error message is displayed
         onView(withText("Invalid username! Use 3-25 characters (letters, numbers, underscores)")).check(matches(isDisplayed()));
-    } // working
+    }
 
     @Test
     public void testCreateAccountWithMismatchedPasswords() throws InterruptedException {
@@ -192,7 +170,28 @@ public class CreateAccountActivityTest {
             Log.e("Test", "Error clearing persistence", e);
         }
     }
-
-
+    @After
+    public void ClearEmulators() {
+        String projectId = "feelink-database-test";
+        URL url = null;
+        try {
+            url = new URL("http://10.0.2.2:8080/emulator/v1/projects/" + projectId + "/databases/(default)/documents");
+        } catch (MalformedURLException exception) {
+            Log.e("URL Error", Objects.requireNonNull(exception.getMessage()));
+        }
+        HttpURLConnection urlConnection = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("DELETE");
+            int response = urlConnection.getResponseCode();
+            Log.i("Response Code", "Response Code: " + response);
+        } catch (IOException exception) {
+            Log.e("IO Error", Objects.requireNonNull(exception.getMessage()));
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
 
 }
