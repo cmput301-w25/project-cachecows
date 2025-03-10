@@ -119,7 +119,7 @@ public class Login extends AppCompatActivity {
         String password = passwordTextView.getText().toString().trim();
 
         if (!ValidationUtils.areCredentialsValid(username, password)) {
-            Snackbar.make(findViewById(android.R.id.content), R.string.empty_field, Snackbar.LENGTH_LONG).show();
+            Snackbar.make(findViewById(android.R.id.content), R.string.empty_field, Snackbar.LENGTH_LONG).setDuration(5000).show();
             return;
         }
 
@@ -131,10 +131,10 @@ public class Login extends AppCompatActivity {
                         if (email != null && !email.isEmpty()) {
                             logInWithEmail(email, password);
                         } else {
-                            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).show(); // invalid user data
+                            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).setDuration(5000).show(); // invalid user data
                         }
                     } else {
-                        Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).show(); // invalid username
+                        Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).setDuration(5000).show(); // invalid username
                     }
                 });
     }
@@ -175,14 +175,14 @@ public class Login extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        Snackbar.make(findViewById(android.R.id.content), R.string.successful_login, Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), R.string.successful_login, Snackbar.LENGTH_SHORT).setDuration(5000).show();
                         startActivity(new Intent(Login.this, FeedManagerActivity.class));
                         finish();
                     } else {
                         if (task.getException().getMessage().contains("INVALID_LOGIN_CREDENTIALS")) {
                             handleInvalidCredentials(email, password);
                         } else {
-                            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).show(); //"Error: " + task.getException().getMessage()
+                            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).setDuration(5000).show(); //"Error: " + task.getException().getMessage()
                         }
                     }
                 });
@@ -208,7 +208,7 @@ public class Login extends AppCompatActivity {
                             // Retry without signing out
                             attemptLogin(updatedEmail, password);
                         } else {
-                            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(android.R.id.content), R.string.invalid_cred, Snackbar.LENGTH_SHORT).setDuration(5000).show();
                         }
                     }
                 });
