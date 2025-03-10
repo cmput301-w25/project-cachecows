@@ -27,9 +27,31 @@ This app called FeeLink so far allows users to login, create accounts, create mo
 
 ## Setup Instructions
 
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
+1. Firebase Configuration
+   
+   a. Create a Firestore Database
+   - Go to the Firebase Console
+   - Create a new project or use an existing one
+   - Navigate to Firestore Database and create a new database
+   
+   b. Configure Firestore Security Rules
+   - Add the following security rules to your Firestore database, the rules can be found in rules/rules.txt.
+   
+  c. Create Firestore Indexes
+  - Create the following indexes for the `mood_events` collection:
+    - Index 1: Collection `mood_events` with fields `userId` (Ascending), `timestamp` (Descending), `__name__` (Descending)
+    - Index 2: Collection `mood_events` with fields `timestamp` (Descending), `userId` (Descending), `__name__` (Descending)
+
+2. App Configuration
+- Download the `google-services.json` file from your Firebase project
+- Place the `google-services.json` file in the `app` directory of the project
+
+3. Running the App
+- Open the `feelink` directory in Android Studio
+- Wait for Gradle sync to complete
+- Connect an Android device or use an emulator
+- Click on the "Run" button to build and install the app
+    
 
 ## Documentation
 
