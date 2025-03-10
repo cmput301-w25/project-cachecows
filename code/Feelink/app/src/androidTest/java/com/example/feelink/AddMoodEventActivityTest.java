@@ -24,6 +24,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -31,34 +35,61 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.lang.reflect.Field;
+
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class AddMoodEventActivityTest {
+public class   AddMoodEventActivityTest {
 
     @Rule
     public ActivityScenarioRule<AddMoodEventActivity> activityRule = new ActivityScenarioRule<>(AddMoodEventActivity.class);
 
     @Before
-    public void setUp() {
-        Intents.init();
+    public void setup() {
+        try {
+            // Connect to Firestore emulator
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.useEmulator("10.0.2.2", 8080);
+            FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                    .setPersistenceEnabled(false)
+                    .build();
+            db.setFirestoreSettings(settings);
+
+            // Connect to Auth emulator if needed
+            FirebaseAuth.getInstance().useEmulator("10.0.2.2", 9099);
+
+            // Wait briefly to ensure connection is established
+            Thread.sleep(500);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
     @BeforeClass
-    public static void disableAnimations() {
-        // Disable animations for all tests
-        InstrumentationRegistry.getInstrumentation().getUiAutomation()
-                .executeShellCommand("settings put global window_animation_scale 0");
-        InstrumentationRegistry.getInstrumentation().getUiAutomation()
-                .executeShellCommand("settings put global transition_animation_scale 0");
-        InstrumentationRegistry.getInstrumentation().getUiAutomation()
-                .executeShellCommand("settings put global animator_duration_scale 0");
+    public static void setupForTesting() {
+        // Use reflection to set the testing flag for both activities
+        try {
+            // Set flag for FeedManagerActivity
+            Field feedField = FeedManagerActivity.class.getDeclaredField("SKIP_AUTH_FOR_TESTING");
+            feedField.setAccessible(true);
+            feedField.set(null, true);
+
+            // Set flag for AddMoodEventActivity
+            Field addMoodField = AddMoodEventActivity.class.getDeclaredField("SKIP_AUTH_FOR_TESTING");
+            addMoodField.setAccessible(true);
+            addMoodField.set(null, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 
     @After
     public void tearDown() {
         Intents.release();
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void testAddMoodEventWithValidData() {
         onView(withId(R.id.moodHappy)).perform(click());
         onView(withId(R.id.etReason)).perform(typeText("Feeling great!"));
@@ -66,7 +97,7 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.tvGreeting)).check(matches(isDisplayed()));
     } // working
 
-    @Test
+    @Test(timeout = 20000)
     public void testAddMoodEventWithInvalidReason() {
         // Select a mood
         onView(withId(R.id.moodHappy)).perform(click());
@@ -89,7 +120,8 @@ public class AddMoodEventActivityTest {
     } // working, now only checks if btnAddMood is enabled once all valid entries are in
 
 
-    @Test
+
+    @Test(timeout = 10000)
     public void testMoodEventAppearsInFeed() {
         // 1. Add a mood in AddMoodEventActivity
         onView(withId(R.id.moodHappy)).perform(click());
@@ -134,7 +166,13 @@ public class AddMoodEventActivityTest {
                 .check(matches(hasDescendant(withText("Test mood"))));
     }
 
-// Old one did not work either
+//    @Test
+//    public void testMoodCheckIfAddMoodShouldFailWithoutChoosingMood(){
+//        onView(withId(R.id.etReason)).perform(typeText("Valid"), closeSoftKeyboard());
+//        onView(withId(R.id.btnAddMood)).check(matches(not(isEnabled())));
+//    }
+////
+//
 //
 //
 ////    @Test
@@ -162,4 +200,4 @@ public class AddMoodEventActivityTest {
 //        onView(withId(R.id.recyclerMoodEvents))
 //                .check(matches(hasDescendant(withText("Test mood"))));
 //    }
-    }
+}

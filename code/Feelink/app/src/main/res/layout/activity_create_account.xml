@@ -86,7 +86,7 @@
         android:id="@+id/create_date_of_birth_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Date of Birth"
+        android:hint="DOB (dd/mm/yyyy)"
         android:background="@drawable/rounded_white_box"
         android:padding="12dp"
         android:maxLines="1"
