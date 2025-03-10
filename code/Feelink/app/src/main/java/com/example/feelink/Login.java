@@ -118,7 +118,7 @@ public class Login extends AppCompatActivity {
         String username = usernameTextView.getText().toString().trim();
         String password = passwordTextView.getText().toString().trim();
 
-        if (username.isEmpty() || password.isEmpty()) {
+        if (!ValidationUtils.areCredentialsValid(username, password)) {
             Snackbar.make(findViewById(android.R.id.content), R.string.empty_field, Snackbar.LENGTH_LONG).show();
             return;
         }

@@ -133,7 +133,7 @@ public class FirestoreManager {
                 });
     }
 
-    // Add this method to FirestoreManager.java
+
     public void updateUserEmail(String username, String newEmail, OnSuccessListener<Void> success, OnFailureListener failure) {
         db.collection("usernames").document(username)
                 .update("email", newEmail)

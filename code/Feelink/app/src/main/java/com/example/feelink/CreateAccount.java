@@ -60,10 +60,6 @@ public class CreateAccount extends AppCompatActivity {
     private FirebaseFirestore db;
     private boolean usernameAvailable = false;
 
-    // Adapted regex from Stackoverflow by JvdV:
-    // https://stackoverflow.com/questions/62361928/how-to-validate-username-and-password-on-android-using-java-regex
-    private static final String VALID_USERNAME = "^(?=.*[a-zA-Z])[a-zA-Z0-9_]{3,25}$"; //at least 1 letter, min 3 characters, max 25
-    private static final String VALID_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_+\\-=]{6,}$"; //at least 1 digit, 1 lowercase letter, 1 uppercase, min 6 characters
 
     /**
      * Called when activity is created
@@ -137,7 +133,7 @@ public class CreateAccount extends AppCompatActivity {
      * @see #VALID_USERNAME
      */
     private void checkUsername(String username) {
-        if (!username.matches(VALID_USERNAME)) {
+        if (!ValidationUtils.isUsernameValid(username)) {
             usernameFeedbackText.setText("Invalid username! Use 3-25 characters (letters, numbers, underscores)");
             usernameAvailable = false;
             return;
@@ -174,7 +170,7 @@ public class CreateAccount extends AppCompatActivity {
      * @see #VALID_PASSWORD
      */
     private boolean isValidPassword(String password) {
-        return password.matches(VALID_PASSWORD);
+        return ValidationUtils.isPasswordValid(password);
     }
 
     /**

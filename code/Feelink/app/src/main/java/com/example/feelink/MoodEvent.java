@@ -13,8 +13,6 @@ import java.util.Date;
  *   <li>Extended attribute integration (US 02.01.01.03, US 02.02.01.03)</li>
  * </ul>
  *
- * @author Your Name
- * @version 1.3
  * @see FirestoreManager
  * @see AddMoodEventActivity
  */
