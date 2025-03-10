@@ -18,6 +18,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -33,8 +34,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RunWith(AndroidJUnit4.class)
 public class LoginActivityTest {
@@ -48,7 +54,6 @@ public class LoginActivityTest {
         String androidLocalhost = "10.0.2.2";
         int portNumber = 8080;
         FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
-
     }
 
     @Before
@@ -72,7 +77,6 @@ public class LoginActivityTest {
                         System.out.println("Error creating Firebase user: " + task.getException().getMessage());
                     }
                 });
-
         SystemClock.sleep(15000); // Ensure Firestore syncs before test runs
     }
 
@@ -91,7 +95,7 @@ public class LoginActivityTest {
 
         // Verify recyclerMoodEvents is displayed
         onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
-    } // working!!!!!
+    }
 
 
     @Test
@@ -104,13 +108,35 @@ public class LoginActivityTest {
         // Verify error message in Toast
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.invalid_cred)));
-    } // somehow working after adding sleep in seed database
+    }
 
     @Test
     public void testLoginWithEmptyFields() {
         onView(withId(R.id.create_button)).perform(click());
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.empty_field)));
-    } // working
-
+    }
+    @After
+    public void ClearEmulators() {
+        String projectId = "feelink-database-test";
+        URL url = null;
+        try {
+            url = new URL("http://10.0.2.2:8080/emulator/v1/projects/" + projectId + "/databases/(default)/documents");
+        } catch (MalformedURLException exception) {
+            Log.e("URL Error", Objects.requireNonNull(exception.getMessage()));
+        }
+        HttpURLConnection urlConnection = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("DELETE");
+            int response = urlConnection.getResponseCode();
+            Log.i("Response Code", "Response Code: " + response);
+        } catch (IOException exception) {
+            Log.e("IO Error", Objects.requireNonNull(exception.getMessage()));
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
 }
