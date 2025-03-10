@@ -379,17 +379,34 @@
             android:textColor="#FFFFFF"
             android:textSize="14sp" />
 
-        <TextView
-            android:id="@+id/tvAddPhoto"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:drawableStart="@drawable/ic_add_photo"
-            android:drawablePadding="8dp"
-            android:text="Add Photograph (Optional)"
-            android:fontFamily="@font/poppins_regular"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvAddPhoto"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:drawableStart="@drawable/ic_add_photo"
+                android:drawablePadding="8dp"
+                android:text="Add Photograph (Optional)"
+                android:fontFamily="@font/poppins_regular"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp" />
+
+            <ImageView
+                android:id="@+id/btnDeletePhoto"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_delete"
+                android:visibility="gone"
+                android:contentDescription="Delete photo" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Add Mood Button -->

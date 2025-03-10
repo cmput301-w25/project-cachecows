@@ -20,6 +20,26 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentReference;
 
+
+/**
+ * Handles user authentication flow with username/email reconciliation
+ *
+ * <p>Manages:
+ * <ul>
+ *   <li>Username-based login resolution</li>
+ *   <li>Firebase Authentication integration</li>
+ *   <li>Credential error handling</li>
+ *   <li>Password recovery navigation</li>
+ * </ul>
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 03.01.01.01 - Username validation integration</li>
+ *   <li>US 03.01.01.02 - Username/email mapping verification</li>
+ *   <li>US 03.01.01.03 - Username constraint enforcement</li>
+ * </ul>
+ *
+ */
 public class Login extends AppCompatActivity {
     private EditText usernameTextView, passwordTextView;
     private Button loginButton;
@@ -30,6 +50,25 @@ public class Login extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
+    /**
+     * Initializes authentication UI and service connections
+     *
+     * <p>Configures:
+     * <ol>
+     *   <li>Firebase service instances</li>
+     *   <li>View binding</li>
+     *   <li>Click handlers for:
+     *     <ul>
+     *       <li>Primary login</li>
+     *       <li>Password recovery</li>
+     *       <li>Username recovery (Yet to be Implemented)</li>
+     *       <li>Back navigation</li>
+     *     </ul>
+     *   </li>
+     * </ol>
+     *
+     * @param savedInstanceState Persisted state data
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,14 +101,28 @@ public class Login extends AppCompatActivity {
         });
     }
     // changing warning messages to "invalid credentials"
+    /**
+     * Initiates authentication sequence with username resolution
+     *
+     * <p>Workflow:
+     * <ol>
+     *   <li>Validates input presence</li>
+     *   <li>Resolves username to email via Firestore</li>
+     *   <li>Triggers email/password authentication</li>
+     * </ol>
+     *
+     * <p>Implements username constraint validation through Firestore lookup
+     * (US 03.01.01.03)</p>
+     */
     private void loginUserAccount() {
         String username = usernameTextView.getText().toString().trim();
         String password = passwordTextView.getText().toString().trim();
 
-        if (username.isEmpty() || password.isEmpty()) {
+        if (!ValidationUtils.areCredentialsValid(username, password)) {
             Snackbar.make(findViewById(android.R.id.content), R.string.empty_field, Snackbar.LENGTH_LONG).show();
             return;
         }
+
         db.collection("usernames").document(username).get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
@@ -86,11 +139,37 @@ public class Login extends AppCompatActivity {
                 });
     }
 
+    /**
+     * Handles email-based authentication after username resolution
+     *
+     * <p>Ensures clean authentication state by:
+     * <ol>
+     *   <li>Clearing cached credentials</li>
+     *   <li>Attempting fresh login</li>
+     * </ol>
+     *
+     * @param email Resolved email address from username lookup
+     * @param password Raw password input
+     */
     private void logInWithEmail(String email, String password) {
         // Initial login attempt - clear cached credentials
         mAuth.signOut();
         attemptLogin(email, password);
     }
+
+    /**
+     * Executes Firebase authentication with error handling
+     *
+     * <p>Manages:
+     * <ul>
+     *   <li>Success routing to main feed</li>
+     *   <li>Invalid credential recovery flows</li>
+     *   <li>Error state feedback</li>
+     * </ul>
+     *
+     * @param email Verified email address
+     * @param password Raw password input
+     */
 
     private void attemptLogin(String email, String password) {
         mAuth.signInWithEmailAndPassword(email, password)
@@ -109,6 +188,16 @@ public class Login extends AppCompatActivity {
                 });
     }
 
+    /**
+     * Handles credential mismatch scenarios with email verification
+     *
+     * <p>Checks for email updates in usernames collection and retries
+     * authentication if needed. Implements US 03.01.01.02 validation
+     * through real-time username/email mapping checks.</p>
+     *
+     * @param originalEmail Initially resolved email address
+     * @param password Raw password input
+     */
     private void handleInvalidCredentials(String originalEmail, String password) {
         db.collection("usernames").document(usernameTextView.getText().toString().trim())
                 .get()
@@ -123,5 +212,5 @@ public class Login extends AppCompatActivity {
                         }
                     }
                 });
-    }
+        }
 }
