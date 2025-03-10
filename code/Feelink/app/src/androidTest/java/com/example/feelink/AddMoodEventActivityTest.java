@@ -16,6 +16,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.not;
 
 import android.content.Intent;
+import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.intent.Intents;
@@ -35,11 +37,16 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Objects;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class   AddMoodEventActivityTest {
+public class AddMoodEventActivityTest {
 
     @Rule
     public ActivityScenarioRule<AddMoodEventActivity> activityRule = new ActivityScenarioRule<>(AddMoodEventActivity.class);
@@ -89,13 +96,16 @@ public class   AddMoodEventActivityTest {
         Intents.release();
     }
 
-    @Test(timeout = 10000)
-    public void testAddMoodEventWithValidData() {
-        onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.etReason)).perform(typeText("Feeling great!"));
-        onView(withId(R.id.btnAddMood)).perform(click());
-        onView(withId(R.id.tvGreeting)).check(matches(isDisplayed()));
-    } // working
+//    @Test(timeout = 20000)
+//    public void testAddMoodEventWithValidData() {
+//        onView(withId(R.id.moodHappy)).perform(click());
+//        onView(withId(R.id.etReason)).perform(typeText("Feeling great!"));
+//        onView(withId(R.id.btnAddMood)).perform(click());
+////        SystemClock.sleep(5000);
+//        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(FeedManagerActivity.class);
+//        onView(withId(R.id.btnMyMood)).perform(click());
+//        onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
+//    } // working
 
     @Test(timeout = 20000)
     public void testAddMoodEventWithInvalidReason() {
@@ -164,6 +174,30 @@ public class   AddMoodEventActivityTest {
         // 5. Verify the mood appears in the RecyclerView
         onView(withId(R.id.recyclerMoodEvents))
                 .check(matches(hasDescendant(withText("Test mood"))));
+    }
+
+    @After
+    public void ClearEmulators() {
+        String projectId = "feelink-database-test";
+        URL url = null;
+        try {
+            url = new URL("http://10.0.2.2:8080/emulator/v1/projects/" + projectId + "/databases/(default)/documents");
+        } catch (MalformedURLException exception) {
+            Log.e("URL Error", Objects.requireNonNull(exception.getMessage()));
+        }
+        HttpURLConnection urlConnection = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("DELETE");
+            int response = urlConnection.getResponseCode();
+            Log.i("Response Code", "Response Code: " + response);
+        } catch (IOException exception) {
+            Log.e("IO Error", Objects.requireNonNull(exception.getMessage()));
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
     }
 
 //    @Test

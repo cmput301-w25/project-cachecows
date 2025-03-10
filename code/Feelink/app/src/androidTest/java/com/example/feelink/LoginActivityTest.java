@@ -50,20 +50,6 @@ public class LoginActivityTest {
         FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
 
     }
-//    @Before
-//    public void seedDatabase() {
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//        CollectionReference usernamesRef = db.collection("usernames");
-//
-//        // Add a valid user with email
-//        Map<String, Object> validUser = new HashMap<>();
-//        validUser.put("uid", "testUserId123");
-//        validUser.put("email", "testuser@example.com"); // ✅ ADD EMAIL
-//        validUser.put("password", "P@ssw0rd");
-//        usernamesRef.document("validUsername").set(validUser);
-//
-//        SystemClock.sleep(9000); // Ensure Firestore syncs before tests run
-//    }
 
     @Before
     public void seedDatabase() {
@@ -87,10 +73,8 @@ public class LoginActivityTest {
                     }
                 });
 
-        SystemClock.sleep(9000); // Ensure Firestore syncs before test runs
+        SystemClock.sleep(15000); // Ensure Firestore syncs before test runs
     }
-
-
 
     @Test
     public void testSuccessfulLogin() {
@@ -112,11 +96,11 @@ public class LoginActivityTest {
 
     @Test
     public void testLoginWithInvalidPassword() {
-        onView(withId(R.id.username_text)).perform(replaceText("testUserId123"));
+        onView(withId(R.id.username_text)).perform(replaceText("validUsername"));
         onView(withId(R.id.password_text)).perform(replaceText("wrongPassword"));
         onView(withId(R.id.create_button)).perform(click());
 
-//        SystemClock.sleep(9000);
+        SystemClock.sleep(5000);
         // Verify error message in Toast
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.invalid_cred)));

@@ -58,7 +58,7 @@ public class FeedManagerActivity extends AppCompatActivity {
     private MoodEventAdapter adapter;
     private boolean isShowingMyMood = false;
 
-    private static boolean SKIP_AUTH_FOR_TESTING = false;
+    static boolean SKIP_AUTH_FOR_TESTING = false;
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
 
     /**
