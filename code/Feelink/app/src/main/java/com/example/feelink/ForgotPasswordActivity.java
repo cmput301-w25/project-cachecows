@@ -13,6 +13,21 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+/**
+ * Handles password recovery workflow through email verification
+ *
+ * <p>Implements Firebase Authentication's password reset flow with:
+ * <ul>
+ *   <li>Email validation</li>
+ *   <li>Password reset email dispatch</li>
+ *   <li>User feedback mechanisms</li>
+ * </ul>
+ *
+ * @author Your Name
+ * @version 1.0
+ * @see FirebaseAuth
+ * @see Login
+ */
 public class ForgotPasswordActivity extends AppCompatActivity {
 
     private EditText etEmailAddress;
@@ -21,6 +36,19 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     private ImageView backArrow;
     private FirebaseAuth mAuth;
 
+    /**
+     * Initializes password recovery UI components
+     *
+     * <p>Configures:
+     * <ol>
+     *   <li>Firebase Authentication instance</li>
+     *   <li>Input field binding</li>
+     *   <li>Progress indicator</li>
+     *   <li>Navigation handlers</li>
+     * </ol>
+     *
+     * @param savedInstanceState Persisted state data
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +69,19 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         // Handle back arrow click
         backArrow.setOnClickListener(v -> finish());
     }
-
+    /**
+     * Orchestrates password reset process
+     *
+     * <p>Workflow:
+     * <ol>
+     *   <li>Validates email format</li>
+     *   <li>Shows progress indicator</li>
+     *   <li>Sends password reset email via Firebase</li>
+     *   <li>Handles success/failure states</li>
+     * </ul>
+     *
+     * <p>Uses {@link Patterns#EMAIL_ADDRESS} for email validation
+     */
     private void resetPassword() {
         String email = etEmailAddress.getText().toString().trim();
 
