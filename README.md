@@ -37,8 +37,8 @@ This app called FeeLink so far allows users to login, create accounts, create mo
    b. Configure Firestore Security Rules
    - Add the following security rules to your Firestore database, the rules can be found in rules/rules.txt.
    
-  c. Create Firestore Indexes
-  - Create the following indexes for the `mood_events` collection:
+   c. Create Firestore Indexes
+   - Create the following indexes for the `mood_events` collection:
     - Index 1: Collection `mood_events` with fields `userId` (Ascending), `timestamp` (Descending), `__name__` (Descending)
     - Index 2: Collection `mood_events` with fields `timestamp` (Descending), `userId` (Descending), `__name__` (Descending)
 
