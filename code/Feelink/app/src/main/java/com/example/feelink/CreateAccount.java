@@ -1,6 +1,7 @@
 package com.example.feelink;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -140,7 +141,7 @@ public class CreateAccount extends AppCompatActivity {
      * @see #VALID_USERNAME
      */
     private void checkUsername(String username) {
-        if (!username.matches(VALID_USERNAME)) {
+        if (!ValidationUtils.isUsernameValid(username)) {
             usernameFeedbackText.setText("Invalid username! Use 3-25 characters (letters, numbers, underscores)");
             usernameAvailable = false;
             return;
@@ -178,7 +179,7 @@ public class CreateAccount extends AppCompatActivity {
      */
     private boolean isValidPassword(String password) {
 
-        return password.matches(VALID_PASSWORD);
+        return ValidationUtils.isPasswordValid(password);
     }
 
     /**
@@ -207,6 +208,13 @@ public class CreateAccount extends AppCompatActivity {
             Snackbar.make(findViewById(android.R.id.content), "Please fill all fields!", Snackbar.LENGTH_SHORT).show();
             return;
         }
+
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+              if (!ValidationUtils.isDateValid(dob)) {
+                  Snackbar.make(findViewById(android.R.id.content), "Invalid date format. Use dd/mm/yyyy.", Snackbar.LENGTH_SHORT).show();
+                  return;
+              }
+          }
 
         //Email validation
         //Based on a StackOverflow answer by gaurav jain:

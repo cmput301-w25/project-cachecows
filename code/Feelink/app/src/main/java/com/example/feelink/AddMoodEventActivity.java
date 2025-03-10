@@ -291,15 +291,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
      * @param text Input to validate
      */
     private void validateReasonField(String text) {
-        // Check character limit
-        boolean exceedsCharLimit = text.length() > 20;
-
-        // Check word limit
-        String[] words = text.trim().split("\\s+");
-        boolean exceedsWordLimit = text.trim().length() > 0 && words.length > 3;
 
         // Show error if either limit is exceeded
-        if (exceedsCharLimit || exceedsWordLimit) {
+        if (ValidationUtils.isReasonNotValid(text)) {
             etReason.setError("Reason must be limited to 20 characters or 3 words");
             btnAddMood.setEnabled(false);
         } else {
