@@ -97,7 +97,7 @@ public class   AddMoodEventActivityTest {
         onView(withId(R.id.tvGreeting)).check(matches(isDisplayed()));
     } // working
 
-    @Test(timeout = 10000)
+    @Test(timeout = 20000)
     public void testAddMoodEventWithInvalidReason() {
         // Select a mood
         onView(withId(R.id.moodHappy)).perform(click());

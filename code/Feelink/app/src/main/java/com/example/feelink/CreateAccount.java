@@ -64,6 +64,9 @@ public class CreateAccount extends AppCompatActivity {
     // https://stackoverflow.com/questions/62361928/how-to-validate-username-and-password-on-android-using-java-regex
     private static final String VALID_USERNAME = "^(?=.*[a-zA-Z])[a-zA-Z0-9_]{3,25}$"; //at least 1 letter, min 3 characters, max 25
     private static final String VALID_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_+\\-=]{6,}$"; //at least 1 digit, 1 lowercase letter, 1 uppercase, min 6 characters
+    private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
+
+
 
     /**
      * Called when activity is created
@@ -228,6 +231,23 @@ public class CreateAccount extends AppCompatActivity {
             return;
         }
 
+          // TESTING BYPASS: Skip Firebase auth for testing
+          if (SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
+              Log.d(TAG, "TESTING MODE: Bypassing Firebase auth and navigating directly");
+              // Create a mock user in test mode for Firestore
+              Map<String, Object> userData = new HashMap<>();
+              userData.put("name", name);
+              userData.put("username", username);
+              userData.put("dob", dob);
+              userData.put("email", email);
+
+              // Navigate directly to FeedManagerActivity
+              Intent intent = new Intent(CreateAccount.this, FeedManagerActivity.class);
+              startActivity(intent);
+              finish();
+              return;
+          }
+
         // Create user with Firebase Authentication
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
@@ -261,6 +281,13 @@ public class CreateAccount extends AppCompatActivity {
      * @param email Verified email address
      */
     void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
+        if (user == null) {
+            Log.e(TAG, "Cannot add null user to Firestore");
+            return;
+        }
+
+        Log.d(TAG, "Starting to add user to Firestore: " + username);
+
         // Batch write to both collections
         WriteBatch batch = db.batch();
 
@@ -284,10 +311,14 @@ public class CreateAccount extends AppCompatActivity {
         // Commit batch
         batch.commit()
                 .addOnSuccessListener(unused -> {
-                    startActivity(new Intent(CreateAccount.this, FeedManagerActivity.class));
-//                    finish();
+                    Log.d(TAG, "User data successfully written to Firestore");
+                    Intent intent = new Intent(CreateAccount.this, FeedManagerActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear activity stack for testing
+                    startActivity(intent);
+                    finish();
                 })
                 .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error writing user data to Firestore", e);
                     // Rollback auth user if Firestore fails
                     user.delete();
                     Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show();

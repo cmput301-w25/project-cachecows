@@ -59,6 +59,7 @@ public class FeedManagerActivity extends AppCompatActivity {
     private boolean isShowingMyMood = false;
 
     private static boolean SKIP_AUTH_FOR_TESTING = false;
+    private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
 
     /**
      * Initializes feed UI and authentication checks
@@ -87,7 +88,7 @@ public class FeedManagerActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null || SKIP_AUTH_FOR_TESTING) {
+        if (currentUser != null || SKIP_AUTH_FOR_TESTING || SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
             // Initialize with test UID if needed
             String uid = currentUser != null ? currentUser.getUid() : "test_user_id";
             firestoreManager = new FirestoreManager(uid);
@@ -175,7 +176,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         });
 
         fabAddMood.setOnClickListener(v -> {
-            if (mAuth.getCurrentUser() != null || SKIP_AUTH_FOR_TESTING) {
+            if (mAuth.getCurrentUser() != null || SKIP_AUTH_FOR_TESTING || SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
                 navigateToAddMood();
             } else {
                 handleUnauthorizedAccess();
