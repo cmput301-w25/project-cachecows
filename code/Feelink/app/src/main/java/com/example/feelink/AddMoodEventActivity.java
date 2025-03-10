@@ -9,12 +9,14 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -24,6 +26,23 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/**
+ * Central activity for creating and editing mood events with full CRUD operations.
+ * Handles UI rendering, data validation, and Firestore integration.
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 1.01.01.01 - Main mood event form UI</li>
+ *   <li>US 1.02.01.02 - Emotional state model integration</li>
+ *   <li>US 1.05.01.01 - Mood event edit interface</li>
+ *   <li>US 1.05.01.02 - Edit data binding</li>
+ *   <li>US 1.05.01.03 - Update/edit logic</li>
+ *   <li>US 02.01.01.02 - Reason input validation</li>
+ *   <li>US 02.04.01.01 - Social situation UI</li>
+ *   <li>US 02.02.01.01 - Photo upload UI</li>
+ *   <li>US 02.02.01.03 - Photograph data integration</li>
+ * </ul>
+ */
 public class AddMoodEventActivity extends AppCompatActivity {
     private static final int IMAGE_REQUEST_CODE = 200;
 
@@ -36,13 +55,31 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private Button btnAddMood;
 
     //State
-    private String selectedMood = null;
+    String selectedMood = null;
     private String uploadedImageUrl = null;
     private FirestoreManager firestoreManager;
     private Date currentDateTime;
     private boolean isEditMode = false;
     private long moodEventId = -1;
 
+    private ImageView btnDeletePhoto;
+    private static boolean SKIP_AUTH_FOR_TESTING = false;
+
+
+
+    /**
+     * Initializes activity components and state
+     *
+     * <p>Key operations:</p>
+     * <ol>
+     *   <li>Firestore manager initialization</li>
+     *   <li>UI component binding</li>
+     *   <li>Edit mode detection and setup</li>
+     *   <li>Current user context establishment</li>
+     * </ol>
+     *
+     * @param savedInstanceState Persisted state data
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,8 +87,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
         // Initialize Firestore manager
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            firestoreManager = new FirestoreManager(user.getUid()); // Pass real UID
+        if (user != null || SKIP_AUTH_FOR_TESTING) {
+            // Use test user ID if needed for testing
+            String uid = user != null ? user.getUid() : "test_user_id";
+            firestoreManager = new FirestoreManager(uid);
         }
 
 
@@ -70,9 +109,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
             String reason = intent.getStringExtra("REASON");
             String trigger = intent.getStringExtra("TRIGGER");
             String socialSituation = intent.getStringExtra("SOCIAL_SITUATION");
+            String imageUrl = intent.getStringExtra("IMAGE_URL");
 
-            // Pre-fill the fields
-            preFillFields(emotionalState, reason, trigger, socialSituation);
+            preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl);
         }
 
         // Set greeting with username (this would normally come from user data)
@@ -82,7 +121,24 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
     }
 
-    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation) {
+    /**
+     * Populates form fields with existing data during edit operations
+     *
+     * <p>Implements US 1.05.01.02 data binding requirements by:
+     * <ol>
+     *   <li>Restoring emotional state selection</li>
+     *   <li>Prefilling text inputs</li>
+     *   <li>Setting social situation spinner</li>
+     *   <li>Handling image URL state</li>
+     * </ol>
+     *
+     * @param emotionalState Previously saved emotional state
+     * @param reason Stored reason text
+     * @param trigger Stored trigger text
+     * @param socialSituation Selected social situation
+     * @param imageUrl Stored image reference
+     */
+    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation, String imageUrl) {
         // Set the selected mood
         selectedMood = emotionalState;
         highlightSelectedMood(emotionalState);
@@ -90,6 +146,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         // Set reason and trigger
         etReason.setText(reason);
         etTrigger.setText(trigger);
+
 
         // Set social situation in spinner
         if (socialSituation != null && !socialSituation.isEmpty()) {
@@ -101,9 +158,40 @@ public class AddMoodEventActivity extends AppCompatActivity {
             }
         }
 
-        //uploadedImageUrl = imageUrl;
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            uploadedImageUrl = imageUrl;
+            tvAddPhoto.setText("Edit Photograph");
+            tvAddPhoto.setTextColor(ContextCompat.getColor(this, R.color.white));
+        } else {
+            tvAddPhoto.setText("Add Photograph");
+            tvAddPhoto.setTextColor(ContextCompat.getColor(this, R.color.white));
+        }
+
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            btnDeletePhoto.setVisibility(View.VISIBLE);
+        } else {
+            btnDeletePhoto.setVisibility(View.GONE);
+        }
     }
 
+    /**
+     * Applies visual highlighting to the selected emotional state UI element
+     *
+     * <p>Implements selection feedback mechanism for emotional state model integration.
+     * Works with {@link #resetMoodSelections()} to manage UI state.</p>
+     *
+     * <h3>User Stories Implemented:</h3>
+     * <ul>
+     *   <li>US 1.02.01.02 - Emotional state model visualization</li>
+     *   <li>US 1.05.01.02 - Edit mode state restoration</li>
+     * </ul>
+     *
+     * @param emotionalState The emotional state to highlight from predefined values:
+     *                      "Happy", "Sad", "Angry", "Surprised", "Confused",
+     *                      "Disgusted", "Fear", "Shame"
+     *
+     * @see R.drawable#selected_mood_background
+     */
     private void highlightSelectedMood(String emotionalState) {
         resetMoodSelections();
         switch (emotionalState) {
@@ -134,6 +222,16 @@ public class AddMoodEventActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Initializes all UI components and sets up text validation
+     *
+     * <p>Binds view references and configures:</p>
+     * <ul>
+     *   <li>Reason field input validation (US 02.01.01.02)</li>
+     *   <li>Photo upload click handler (US 02.02.01.01)</li>
+     *   <li>Photo deletion functionality (US 02.02.01.03)</li>
+     * </ul>
+     */
     private void initializeViews() {
         tvGreeting = findViewById(R.id.tvGreeting);
         etReason = findViewById(R.id.etReason);
@@ -175,18 +273,27 @@ public class AddMoodEventActivity extends AppCompatActivity {
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
         });
 
+        btnDeletePhoto = findViewById(R.id.btnDeletePhoto);
+        btnDeletePhoto.setOnClickListener(v -> deletePhoto());
+
     }
 
+    /**
+     * Validates reason field against business rules
+     *
+     * <p>Enforces:
+     * <ul>
+     *   <li>20 character maximum length</li>
+     *   <li>3 word maximum limit</li>
+     * </ul>
+     * Implements US 02.01.01.02 validation requirements.</p>
+     *
+     * @param text Input to validate
+     */
     private void validateReasonField(String text) {
-        // Check character limit
-        boolean exceedsCharLimit = text.length() > 20;
-
-        // Check word limit
-        String[] words = text.trim().split("\\s+");
-        boolean exceedsWordLimit = text.trim().length() > 0 && words.length > 3;
 
         // Show error if either limit is exceeded
-        if (exceedsCharLimit || exceedsWordLimit) {
+        if (ValidationUtils.isReasonNotValid(text)) {
             etReason.setError("Reason must be limited to 20 characters or 3 words");
             btnAddMood.setEnabled(false);
         } else {
@@ -195,6 +302,14 @@ public class AddMoodEventActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Configures mood selection UI components
+     *
+     * <p>Implements emotional state selection logic with visual feedback.
+     * Integrates with centralized emotional state model (US 1.02.01.02).</p>
+     *
+     * @see #resetMoodSelections()
+     */
     private void setupMoodSelectors() {
         // Set click listeners for all mood options
         View.OnClickListener moodClickListener = new View.OnClickListener() {
@@ -250,6 +365,12 @@ public class AddMoodEventActivity extends AppCompatActivity {
         moodFear.setBackgroundResource(android.R.color.transparent);
     }
 
+    /**
+     * Initializes social situation spinner with predefined options
+     *
+     * <p>Implements US 02.04.01.01 requirements for social situation selection.
+     * Uses standardized options from requirements specification.</p>
+     */
     private void setupSocialSituationSpinner() {
         String[] options = {
                 "None",
@@ -270,6 +391,17 @@ public class AddMoodEventActivity extends AppCompatActivity {
         socialSituationSpinner.setSelection(0);
     }
 
+    /**
+     * Configures primary action button behavior based on mode (create/edit)
+     *
+     * <p>Handles:
+     * <ul>
+     *   <li>Final validation checks (US 1.01.01.03)</li>
+     *   <li>MoodEvent object construction</li>
+     *   <li>Firestore create/update operations (US 1.01.01.02, US 1.05.01.03)</li>
+     *   <li>Error handling and user feedback</li>
+     * </ul>
+     */
     private void setupAddButton() {
         btnAddMood.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -308,7 +440,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     String documentId = getIntent().getStringExtra("DOCUMENT_ID");
 
                     if (documentId == null) {
-                        Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();                        btnAddMood.setEnabled(true);
+                        Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();
+                        btnAddMood.setEnabled(true);
                         return;
                     }
 
@@ -332,7 +465,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
                         @Override
                         public void onSuccess(MoodEvent moodEvent) {
-                            Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();                            finish();
+                            Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();
+                            finish();
                         }
 
                         @Override
@@ -346,16 +480,45 @@ public class AddMoodEventActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Handles image upload results from UploadImageActivity
+     *
+     * <p>Processes image URL results and updates UI state.
+     * Implements US 02.02.01.03 photograph integration requirements.</p>
+     *
+     * @param requestCode Originating request identifier
+     * @param resultCode Operation result status
+     * @param data Result payload containing image URL
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             String downloadedUrl = data.getStringExtra("imageUrl");
-            Log.d("AddMoodEventActivity", "downloadedUrl="+downloadedUrl);
+            Log.d("AddMoodEventActivity", "downloadedUrl=" + downloadedUrl);
             if (downloadedUrl != null) {
                 Snackbar.make(findViewById(android.R.id.content), "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT).setDuration(5000).show();
                 this.uploadedImageUrl = downloadedUrl;
             }
+            if (downloadedUrl != null) {
+                btnDeletePhoto.setVisibility(View.VISIBLE);
+            }
+
         }
+    }
+
+    /**
+     * Removes associated photograph from current mood event
+     *
+     * <p>Clears image URL reference and updates UI state.
+     * Part of US 02.02.01.03 photograph integration requirements.</p>
+     */
+    private void deletePhoto () {
+        uploadedImageUrl = null;
+        tvAddPhoto.setText("Add Photograph");
+        btnDeletePhoto.setVisibility(View.GONE);
+        Snackbar.make(findViewById(R.id.layoutBottomNav),"Photo removed", Snackbar.LENGTH_SHORT).show();
+
+
     }
 }

@@ -1,6 +1,7 @@
 package com.example.feelink;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -28,8 +29,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * User account creation process
- * Validates user input, checks username availability, creates Firebase Authentication accounts and stores data in Firestore
+ * Handles user registration flow with Firebase integration
+ *
+ * <p>Manages complete account creation process including:</p>
+ * <ul>
+ *   <li>Real-time username validation</li>
+ *   <li>Password complexity enforcement</li>
+ *   <li>Firebase Authentication integration</li>
+ *   <li>Firestore data storage</li>
+ * </ul>
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 03.01.01.01 - Unique username validation</li>
+ *   <li>US 03.01.01.02 - Username availability checking</li>
+ *   <li>US 03.01.01.03 - Username constraints enforcement</li>
+ * </ul>
+ *
+ * @see FirebaseAuth
+ * @see FirebaseFirestore
  */
 public class CreateAccount extends AppCompatActivity {
     private EditText nameEditText, usernameEditText, dobEditText,
@@ -47,11 +65,21 @@ public class CreateAccount extends AppCompatActivity {
     // https://stackoverflow.com/questions/62361928/how-to-validate-username-and-password-on-android-using-java-regex
     private static final String VALID_USERNAME = "^(?=.*[a-zA-Z])[a-zA-Z0-9_]{3,25}$"; //at least 1 letter, min 3 characters, max 25
     private static final String VALID_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_+\\-=]{6,}$"; //at least 1 digit, 1 lowercase letter, 1 uppercase, min 6 characters
+    private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
+
+
 
     /**
      * Called when activity is created
      * Initializes UI components, Firebase & event listeners
      * Real time username validation
+     * <p>Key setup operations:</p>
+     * <ol>
+     *   <li>Firebase service initialization</li>
+     *   <li>UI component binding</li>
+     *   <li>Real-time username validation (US 03.01.01.02)</li>
+     *   <li>Navigation handlers</li>
+     * </ol>
      * @param savedInstanceState If the activity is being re-initialized after
      *     previously being shut down then this Bundle contains the data it most
      *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
@@ -100,11 +128,20 @@ public class CreateAccount extends AppCompatActivity {
     }
 
     /**
-     * checks if the username being entered is valid and available in Firestore
-     * @param username
+     * Validates username format and checks availability in Firestore
+     *
+     * <p>Implements:
+     * <ul>
+     *   <li>Regex validation (US 03.01.01.03)</li>
+     *   <li>Real-time availability check (US 03.01.01.02)</li>
+     * </ul>
+     *
+     * @param username Potential username to validate
+     *
+     * @see #VALID_USERNAME
      */
     private void checkUsername(String username) {
-        if (!username.matches(VALID_USERNAME)) {
+        if (!ValidationUtils.isUsernameValid(username)) {
             usernameFeedbackText.setText("Invalid username! Use 3-25 characters (letters, numbers, underscores)");
             usernameAvailable = false;
             return;
@@ -126,19 +163,39 @@ public class CreateAccount extends AppCompatActivity {
     }
 
     /**
-     * confirms the given password with regex
-     * @param password
-     * @return
+     * Validates password against complexity requirements
+     *
+     * <p>Enforces:
+     * <ul>
+     *   <li>6+ characters</li>
+     *   <li>Uppercase and lowercase letters</li>
+     *   <li>At least one numeric character</li>
+     * </ul>
+     *
+     * @param password Password to validate
+     * @return true if password meets complexity rules
+     *
+     * @see #VALID_PASSWORD
      */
     private boolean isValidPassword(String password) {
-        return password.matches(VALID_PASSWORD);
+
+        return ValidationUtils.isPasswordValid(password);
     }
 
     /**
-     * User account creation process.
-     * Validates all user input and registers the user with Firebase
+     * Orchestrates complete account creation process
+     *
+     * <p>Performs:
+     * <ol>
+     *   <li>Field validation</li>
+     *   <li>Firebase auth creation</li>
+     *   <li>Firestore data storage</li>
+     *   <li>Username reservation</li>
+     * </ol>
+     *
+     * <p>Implements atomic batch writes for data consistency</p>
      */
-    private void createNewAccount(){
+      void createNewAccount(){
         String name = nameEditText.getText().toString().trim();
         String username = usernameEditText.getText().toString().trim();
         String dob = dobEditText.getText().toString().trim();
@@ -151,6 +208,13 @@ public class CreateAccount extends AppCompatActivity {
             Snackbar.make(findViewById(android.R.id.content), "Please fill all fields!", Snackbar.LENGTH_SHORT).show();
             return;
         }
+
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+              if (!ValidationUtils.isDateValid(dob)) {
+                  Snackbar.make(findViewById(android.R.id.content), "Invalid date format. Use dd/mm/yyyy.", Snackbar.LENGTH_SHORT).show();
+                  return;
+              }
+          }
 
         //Email validation
         //Based on a StackOverflow answer by gaurav jain:
@@ -175,6 +239,23 @@ public class CreateAccount extends AppCompatActivity {
             return;
         }
 
+          // TESTING BYPASS: Skip Firebase auth for testing
+          if (SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
+              Log.d(TAG, "TESTING MODE: Bypassing Firebase auth and navigating directly");
+              // Create a mock user in test mode for Firestore
+              Map<String, Object> userData = new HashMap<>();
+              userData.put("name", name);
+              userData.put("username", username);
+              userData.put("dob", dob);
+              userData.put("email", email);
+
+              // Navigate directly to FeedManagerActivity
+              Intent intent = new Intent(CreateAccount.this, FeedManagerActivity.class);
+              startActivity(intent);
+              finish();
+              return;
+          }
+
         // Create user with Firebase Authentication
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
@@ -193,15 +274,28 @@ public class CreateAccount extends AppCompatActivity {
     // https://stackoverflow.com/questions/68910946/how-to-check-if-the-particular-username-exists-in-the-firebase-java-android
 
     /**
-     * Stores all the information about the user in the Firebase user object
+     * Stores user data in Firestore with atomic batch write
      *
-     * @param user authenticated FirebaseUser object
-     * @param name user's full name
-     * @param username unique username
-     * @param dob user's date of birth
-     * @param email user's email address
+     * <p>Writes to two collections atomically:
+     * <ol>
+     *   <li>users collection (user profile data)</li>
+     *   <li>usernames collection (username reservation)</li>
+     * </ol>
+     *
+     * @param user Authenticated Firebase user
+     * @param name User's full name
+     * @param username Unique username
+     * @param dob Date of birth
+     * @param email Verified email address
      */
-    private void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
+    void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
+        if (user == null) {
+            Log.e(TAG, "Cannot add null user to Firestore");
+            return;
+        }
+
+        Log.d(TAG, "Starting to add user to Firestore: " + username);
+
         // Batch write to both collections
         WriteBatch batch = db.batch();
 
@@ -225,10 +319,14 @@ public class CreateAccount extends AppCompatActivity {
         // Commit batch
         batch.commit()
                 .addOnSuccessListener(unused -> {
-                    startActivity(new Intent(CreateAccount.this, FeedManagerActivity.class));
-//                    finish();
+                    Log.d(TAG, "User data successfully written to Firestore");
+                    Intent intent = new Intent(CreateAccount.this, FeedManagerActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear activity stack for testing
+                    startActivity(intent);
+                    finish();
                 })
                 .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error writing user data to Firestore", e);
                     // Rollback auth user if Firestore fails
                     user.delete();
                     Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show();

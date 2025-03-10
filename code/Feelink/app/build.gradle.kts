@@ -42,6 +42,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
+//    implementation(files("C:/Users/jcyri/AppData/Local/Android/Sdk/platforms/android-35/android.jar")) //specifc to Cyrils local machine . This is for javadocs
     implementation(libs.firebase.auth)
     implementation(libs.espresso.intents)
     implementation(libs.firebase.storage)

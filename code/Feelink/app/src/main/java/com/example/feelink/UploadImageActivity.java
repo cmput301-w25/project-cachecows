@@ -27,6 +27,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
 
+
+/**
+ * Handles image uploads with compression and validation for mood event photographs
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 02.02.01.01 - Photo upload UI implementation</li>
+ *   <li>US 02.02.01.02 - Photo validation and processing</li>
+ *   <li>US 02.02.01.03 - Image URL storage integration</li>
+ *   <li>US 02.03.01.01 - File size validation</li>
+ *   <li>US 02.03.01.02 - Image compression/resizing implementation</li>
+ * </ul>
+ * @see AddMoodEventActivity
+ */
 public class UploadImageActivity extends AppCompatActivity {
     private static final String TAG = "UploadImageActivity";
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
@@ -46,6 +60,18 @@ public class UploadImageActivity extends AppCompatActivity {
 
     private StorageReference storageRef;
 
+    /**
+     * Initializes image upload UI and Firebase Storage references
+     *
+     * <p>Configures:
+     * <ol>
+     *   <li>Storage bucket reference for user mood images</li>
+     *   <li>Camera/gallery selection buttons</li>
+     *   <li>Image preview and confirmation controls</li>
+     * </ol>
+     *
+     * @param savedInstanceState Persisted state data
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,7 +106,7 @@ public class UploadImageActivity extends AppCompatActivity {
             }
         });
 
-        // Cancel -> reset everything so user can pick again
+
         btnCancel.setOnClickListener(v -> {
             pendingUri = null;
             pendingBitmap = null;
@@ -95,6 +121,7 @@ public class UploadImageActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> {
             finish();
         });
+
     }
 
     private void openCamera() {
@@ -126,6 +153,18 @@ public class UploadImageActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(intent, "Select Image"), SELECT_IMAGE);
     }
 
+    /**
+     * Handles image selection results from camera/gallery intents
+     *
+     * <p>Routes processing based on source:
+     * <ul>
+     *   <li>Camera images: Directly processes bitmap data</li>
+     * </ul>
+     *
+     * @param requestCode Originating request identifier
+     * @param resultCode Operation result status
+     * @param data Image data payload
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -151,6 +190,18 @@ public class UploadImageActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Validates gallery images against size and format constraints
+     *
+     * <p>Performs:
+     * <ol>
+     *   <li>MIME type validation (JPEG/PNG only)</li>
+     *   <li>File size check (max 65KB)</li>
+     *   <li>Automatic compression if needed</li>
+     * </ol>
+     *
+     * @param uri Gallery image URI to validate
+     */
     private void validateGalleryImage(Uri uri) {
         try {
             String extensionType = getContentResolver().getType(uri);

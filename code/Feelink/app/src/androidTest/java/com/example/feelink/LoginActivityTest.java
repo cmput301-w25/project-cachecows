@@ -87,7 +87,7 @@ public class LoginActivityTest {
                     }
                 });
 
-        SystemClock.sleep(9000); // Ensure Firestore syncs before test runs
+        SystemClock.sleep(15000); // Ensure Firestore syncs before test runs
     }
 
 

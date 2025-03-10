@@ -16,7 +16,8 @@ import com.google.firebase.FirebaseApp;
 /**
  * Entry point of the application
  * It displays the main screen with options to log in or create an account
- *
+ * User Stories:
+ * US 1.01.01.01 (UI for Mood Event creation entry point)
  * Navigates to Logic and Create Account screens
  */
 public class MainActivity extends AppCompatActivity {
