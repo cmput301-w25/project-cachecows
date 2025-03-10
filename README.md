@@ -13,13 +13,17 @@
 
 ## Project Description
 
-[Brief description of the project in your own words]
+This app called FeeLink so far allows users to login, create accounts, create mood events, and view them in the feed manager. Each Mood event has a emoji (mood icon) and color associated with it and is displayed with them.
 
 ## Key Features
 
-- [Feature 1]: Brief description
-- [Feature 2]: Brief description
-- [Feature 3]: Brief description
+- Main Activity: First-time entry point to the app which gives the user the choice to either login or create an account.
+- Login: Allows user to login using valid username and password.
+- Create Account: Allows user to create a new account using name, username, DOB and Password.
+- Add MoodEvent: Allows user who has either logged in or created a new account to add mood events with information such as mood icon (emoji), reason, trigger, social situation, location and photograph.
+- Feed Manager: Keeps track of all mood events that are either being followed by the user ('Their Mood' tab)or made by the user themselves ('My Mood' tab).
+- Mood Event Adapter: Displays mood events in desired manner and allows viewer of the mood event to expand it and see the mood event in more detail.
+  
 
 ## Setup Instructions
 
@@ -29,7 +33,7 @@
 
 ## Documentation
 
-- [Wiki Link]
-- [Scrum Board]
-- [UI Mockups]
-- [UML]
+- *Wiki Link* : https://github.com/cmput301-w25/project-cachecows.wiki.git 
+- *Scrum Board* : https://github.com/orgs/cmput301-w25/projects/54
+- *UI Mockups* : Can be found in the wiki
+- *UML* : Can be found in the wiki
