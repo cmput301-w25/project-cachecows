@@ -1,5 +1,7 @@
 package com.example.feelink;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
@@ -7,7 +9,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -58,7 +62,8 @@ public class FeedManagerActivity extends AppCompatActivity {
     private MoodEventAdapter adapter;
     private boolean isShowingMyMood = false;
 
-    private static boolean SKIP_AUTH_FOR_TESTING = false;
+    static boolean SKIP_AUTH_FOR_TESTING = false;
+    private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
 
     /**
      * Initializes feed UI and authentication checks
@@ -87,7 +92,7 @@ public class FeedManagerActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null || SKIP_AUTH_FOR_TESTING) {
+        if (currentUser != null || SKIP_AUTH_FOR_TESTING || SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
             // Initialize with test UID if needed
             String uid = currentUser != null ? currentUser.getUid() : "test_user_id";
             firestoreManager = new FirestoreManager(uid);
@@ -104,6 +109,17 @@ public class FeedManagerActivity extends AppCompatActivity {
 
         // Default to "Their Mood" tab
         loadTheirMoodEvents();
+
+        // Initialize navigation buttons
+        ImageView navSearch = findViewById(R.id.navSearch);
+        ImageView navProfile = findViewById(R.id.navProfile);
+
+        // Set click listener for Search navigation
+        navSearch.setOnClickListener(v -> navigateToSearch());
+
+        // Set click listener for Profile navigation (existing code)
+        navProfile.setOnClickListener(v -> navigateToProfile());
+
     }
 
     /**
@@ -175,7 +191,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         });
 
         fabAddMood.setOnClickListener(v -> {
-            if (mAuth.getCurrentUser() != null || SKIP_AUTH_FOR_TESTING) {
+            if (mAuth.getCurrentUser() != null || SKIP_AUTH_FOR_TESTING || SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
                 navigateToAddMood();
             } else {
                 handleUnauthorizedAccess();
@@ -337,4 +353,17 @@ public class FeedManagerActivity extends AppCompatActivity {
         startActivity(new Intent(this, Login.class));
         finish();
     }
+
+    // Inside FeedManagerActivity.java
+    // Inside FeedManagerActivity.java
+    private void navigateToProfile() {
+        Intent intent = new Intent(FeedManagerActivity.this, UserProfileActivity.class);
+        startActivity(intent);
+    }
+
+    private void navigateToSearch() {
+        Intent intent = new Intent(FeedManagerActivity.this, SearchActivity.class);
+        startActivity(intent);
+    }
+
 }

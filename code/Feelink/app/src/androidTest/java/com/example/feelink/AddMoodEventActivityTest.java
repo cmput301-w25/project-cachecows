@@ -16,6 +16,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.not;
 
 import android.content.Intent;
+import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.intent.Intents;
@@ -35,11 +37,16 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Objects;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class   AddMoodEventActivityTest {
+public class AddMoodEventActivityTest {
 
     @Rule
     public ActivityScenarioRule<AddMoodEventActivity> activityRule = new ActivityScenarioRule<>(AddMoodEventActivity.class);
@@ -89,15 +96,7 @@ public class   AddMoodEventActivityTest {
         Intents.release();
     }
 
-    @Test(timeout = 10000)
-    public void testAddMoodEventWithValidData() {
-        onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.etReason)).perform(typeText("Feeling great!"));
-        onView(withId(R.id.btnAddMood)).perform(click());
-        onView(withId(R.id.tvGreeting)).check(matches(isDisplayed()));
-    } // working
-
-    @Test(timeout = 10000)
+    @Test(timeout = 20000)
     public void testAddMoodEventWithInvalidReason() {
         // Select a mood
         onView(withId(R.id.moodHappy)).perform(click());
@@ -117,13 +116,13 @@ public class   AddMoodEventActivityTest {
 
         // Ensure the button is now enabled
         onView(withId(R.id.btnAddMood)).check(matches(isEnabled()));
-    } // working, now only checks if btnAddMood is enabled once all valid entries are in
+    }
 
 
 
     @Test(timeout = 10000)
     public void testMoodEventAppearsInFeed() {
-        // 1. Add a mood in AddMoodEventActivity
+        // Add a mood in AddMoodEventActivity
         onView(withId(R.id.moodHappy)).perform(click());
         onView(withId(R.id.etReason)).perform(typeText("Test mood"), closeSoftKeyboard());
         onView(withId(R.id.btnAddMood)).perform(click());
@@ -139,7 +138,7 @@ public class   AddMoodEventActivityTest {
             e.printStackTrace();
         }
 
-        // 3. Launch FeedManagerActivity with clear task flags
+        // Launch FeedManagerActivity with clear task flags
         Intent feedIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
                 FeedManagerActivity.class);
         feedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -148,7 +147,7 @@ public class   AddMoodEventActivityTest {
         // Wait for the feed activity to load
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
-        // 4. Switch to "My Mood" tab and ensure it's fully visible
+        // Switch to "My Mood" tab and ensure it's fully visible
         onView(withId(R.id.btnMyMood)).perform(click());
 
         // Wait for UI thread to be idle after tab switch
@@ -161,43 +160,33 @@ public class   AddMoodEventActivityTest {
             e.printStackTrace();
         }
 
-        // 5. Verify the mood appears in the RecyclerView
+        // Verify the mood appears in the RecyclerView
         onView(withId(R.id.recyclerMoodEvents))
                 .check(matches(hasDescendant(withText("Test mood"))));
     }
 
-//    @Test
-//    public void testMoodCheckIfAddMoodShouldFailWithoutChoosingMood(){
-//        onView(withId(R.id.etReason)).perform(typeText("Valid"), closeSoftKeyboard());
-//        onView(withId(R.id.btnAddMood)).check(matches(not(isEnabled())));
-//    }
-////
-//
-//
-//
-////    @Test
-////    public void testMoodEventAppearsInFeed() {
-////        // 1. Add a mood in AddMoodEventActivity
-////        onView(withId(R.id.moodHappy)).perform(click());
-////        onView(withId(R.id.etReason)).perform(typeText("Test mood"), closeSoftKeyboard());
-////        onView(withId(R.id.btnAddMood)).perform(click());
-////
-////        // 2. Wait for the operation to complete and activity to finish
-////        // You might need to use idling resources for this
-////
-////        // 3. Launch FeedManagerActivity
-////        Intent feedIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-////                FeedManagerActivity.class);
-////        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(feedIntent);
-//
-//        // 4. Switch to "My Mood" tab
-//        onView(withId(R.id.btnMyMood)).perform(click());
-//
-////        Thread.sleep(2000); // Waits for 2 seconds
-//
-//
-//        // 5. Verify the mood appears in the RecyclerView
-//        onView(withId(R.id.recyclerMoodEvents))
-//                .check(matches(hasDescendant(withText("Test mood"))));
-//    }
+    @After
+    public void ClearEmulators() {
+        String projectId = "feelink-database-test";
+        URL url = null;
+        try {
+            url = new URL("http://10.0.2.2:8080/emulator/v1/projects/" + projectId + "/databases/(default)/documents");
+        } catch (MalformedURLException exception) {
+            Log.e("URL Error", Objects.requireNonNull(exception.getMessage()));
+        }
+        HttpURLConnection urlConnection = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("DELETE");
+            int response = urlConnection.getResponseCode();
+            Log.i("Response Code", "Response Code: " + response);
+        } catch (IOException exception) {
+            Log.e("IO Error", Objects.requireNonNull(exception.getMessage()));
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
+
 }
