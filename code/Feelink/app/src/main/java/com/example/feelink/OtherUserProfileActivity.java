@@ -13,6 +13,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class OtherUserProfileActivity extends AppCompatActivity {
@@ -21,6 +22,8 @@ public class OtherUserProfileActivity extends AppCompatActivity {
     private TextView usernameTextView, bioTextView, followerCountTextView, followingCountTextView;
     private Button followButton;
     private String currentUserId, profileUserId;
+    private TextView moodPostsTextView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +36,8 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         bioTextView = findViewById(R.id.bio);
         followerCountTextView = findViewById(R.id.followerCount);
         followingCountTextView = findViewById(R.id.followingCount);
+        moodPostsTextView = findViewById(R.id.moodPosts);
+
         followButton = findViewById(R.id.followButton);
 
         // Get current user ID
@@ -48,12 +53,30 @@ public class OtherUserProfileActivity extends AppCompatActivity {
 
         // Fetch user data from Firestore
         fetchUserData(profileUserId);
+        // Fetch total mood events from Firestore
+        fetchTotalMoodEvents(profileUserId);
+
 
         // Check if the current user is already following the profile user
         checkIfFollowing();
 
         // Set follow button click listener
         followButton.setOnClickListener(v -> toggleFollow());
+    }
+    private void fetchTotalMoodEvents(String userId) {
+        FirestoreManager firestoreManager = new FirestoreManager(userId);
+        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+            @Override
+            public void onSuccess(List<MoodEvent> moodEvents) {
+                // Update UI with dynamic count
+                moodPostsTextView.setText(String.valueOf(moodEvents.size()));
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Error fetching moods: " + errorMessage);
+            }
+        });
     }
 
     private void fetchUserData(String userId) {

@@ -29,6 +29,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private RecyclerView recyclerMoodEvents;
     private MoodEventAdapter moodEventAdapter;
     private List<MoodEvent> moodEventsList;
+    private TextView moodPostsTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +40,7 @@ public class UserProfileActivity extends AppCompatActivity {
         profileImageView = findViewById(R.id.profileImage);
         usernameTextView = findViewById(R.id.username);
         bioTextView = findViewById(R.id.bio);
+        moodPostsTextView = findViewById(R.id.moodPosts);
 //        recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
 //        // Set up RecyclerView (as in FeedManagerActivity)
 //        moodEventsList = new ArrayList<>();
@@ -53,6 +55,22 @@ public class UserProfileActivity extends AppCompatActivity {
 
         // Fetch user data from Firestore
         fetchUserData(currentUserId);
+        fetchTotalMoodEvents(currentUserId);
+    }
+    private void fetchTotalMoodEvents(String userId) {
+        FirestoreManager firestoreManager = new FirestoreManager(userId);
+        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+            @Override
+            public void onSuccess(List<MoodEvent> moodEvents) {
+                // Update UI with dynamic count
+                moodPostsTextView.setText(String.valueOf(moodEvents.size()));
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Error fetching moods: " + errorMessage);
+            }
+        });
     }
 
     private void fetchUserData(String userId) {
