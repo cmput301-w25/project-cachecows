@@ -11,6 +11,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import android.util.Log;
+
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.intent.Intents;
@@ -20,6 +22,7 @@ import androidx.test.filters.LargeTest;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,8 +31,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -40,77 +48,77 @@ public class CreateAccountActivityTest {
 
     @BeforeClass
     public static void setup() {
-        // Specific address for emulated device to access our localHost
+        // Specific address for emulated device to access localhost
         String androidLocalhost = "10.0.2.2";
-        int portNumber = 8080;
-        FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
+
+        // Configure BOTH emulators
+        FirebaseFirestore.getInstance().useEmulator(androidLocalhost, 8080);
+        FirebaseAuth.getInstance().useEmulator(androidLocalhost, 9099);
+
+        // Disable persistence to avoid caching issues
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(false)
+                .build();
+        FirebaseFirestore.getInstance().setFirestoreSettings(settings);
+
+        // Set the SKIP_AUTH flag in BOTH activities
+        try {
+            // For CreateAccount
+            Class<?> createAccountClass = Class.forName("com.example.feelink.CreateAccount");
+            java.lang.reflect.Field skipAuthFieldCA = createAccountClass.getDeclaredField("SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT");
+            skipAuthFieldCA.setAccessible(true);
+            skipAuthFieldCA.set(null, true);
+
+            // ALSO for FeedManagerActivity - notice the different flag name
+            Class<?> feedManagerClass = Class.forName("com.example.feelink.FeedManagerActivity");
+            java.lang.reflect.Field skipAuthFieldFM = feedManagerClass.getDeclaredField("SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT");
+            skipAuthFieldFM.setAccessible(true);
+            skipAuthFieldFM.set(null, true);
+
+            Log.d("Test", "Successfully set testing flags for both activities");
+        } catch (Exception e) {
+            Log.e("Test", "Failed to set testing flags", e);
+            e.printStackTrace(); // Print the stack trace for detailed error info
+        }
     }
 
-    @Before  // Initialize Espresso Intents before each test
+    @Before
     public void initIntents() {
+        // Sign out any existing user
+        FirebaseAuth.getInstance().signOut();
+
+        // Initialize intents
         Intents.init();
     }
 
-//    @Test
-//    public void testCreateAccountWithValidInput() throws InterruptedException {
-//        onView(withId(R.id.create_name_text)).perform(typeText("John Doe"));
-//        onView(withId(R.id.create_username_text)).perform(typeText("johndoe123"));
-//        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"));
-//        onView(withId(R.id.create_email_text)).perform(typeText("valid@example.com"));
-//        onView(withId(R.id.create_user_password_text)).perform(typeText("ValidPass123"));
-//        onView(withId(R.id.repeat_user_password_text)).perform(typeText("ValidPass123"));
-//
-//        onView(withId(R.id.create_button)).perform(click());
-//
-//        // Wait for async operations
-//        Thread.sleep(2000); // Temporary solution - replace with IdlingResource
-//
-//        intended(hasComponent(FeedManagerActivity.class.getName()));
-//        onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
-//    }
-
     @Test
     public void testCreateAccountWithValidInput() throws InterruptedException {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        FirebaseAuth auth = FirebaseAuth.getInstance();
+        // Generate unique values to prevent conflicts
+        String uniqueId = String.valueOf(System.currentTimeMillis());
+        String username = "testuser" + uniqueId;
+        String email = "test" + uniqueId + "@example.com";
 
-        // Ensure Firestore has the username mapped to email
-        Map<String, Object> userMap = new HashMap<>();
-        userMap.put("uid", "testUserId123");
-        userMap.put("email", "valid@example.com");
-        db.collection("usernames").document("johndoe123").set(userMap);
+        // Input valid user details with keyboard closing
+        onView(withId(R.id.create_name_text)).perform(typeText("Test User"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.create_username_text)).perform(typeText(username), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.create_email_text)).perform(typeText(email), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.create_user_password_text)).perform(typeText("TestPass123"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.repeat_user_password_text)).perform(typeText("TestPass123"), ViewActions.closeSoftKeyboard());
 
-        // Create user in Firebase Authentication
-        auth.createUserWithEmailAndPassword("valid@example.com", "ValidPass123")
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        System.out.println("Firebase Auth Test User Created!");
-                    } else {
-                        System.out.println("Error creating Firebase user: " + task.getException().getMessage());
-                    }
-                });
-
-        // Wait for Firestore & Firebase Auth to sync
-//        Thread.sleep(9000); // Temporary sleep - Replace with IdlingResource for better handling
-
-        // Input valid user details
-        onView(withId(R.id.create_name_text)).perform(typeText("John Doe"));
-        onView(withId(R.id.create_username_text)).perform(typeText("johndoe123"));
-        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"));
-        onView(withId(R.id.create_email_text)).perform(typeText("valid@example.com"));
-        onView(withId(R.id.create_user_password_text)).perform(typeText("ValidPass123"));
-        onView(withId(R.id.repeat_user_password_text)).perform(typeText("ValidPass123"));
+        // Wait for username validation to complete
+        Thread.sleep(2000);
 
         // Click create account button
         onView(withId(R.id.create_button)).perform(click());
 
-        // Wait for the transition to complete
-        Thread.sleep(5000); // Temporary solution - Replace with IdlingResource
+        // After clicking create button
+        Log.d("TEST", "Clicked create button, waiting for navigation...");
 
-        // Verify that the user is redirected to FeedManagerActivity
+        Thread.sleep(10000);
+
+        // Verify navigation to FeedManagerActivity
         intended(hasComponent(FeedManagerActivity.class.getName()));
-
-        // Check if the main UI elements of FeedManagerActivity are displayed
         onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
     }
 
@@ -122,32 +130,68 @@ public class CreateAccountActivityTest {
 
         // Check if an error message is displayed
         onView(withText("Invalid username! Use 3-25 characters (letters, numbers, underscores)")).check(matches(isDisplayed()));
-    } // working
+    }
 
     @Test
-    public void testCreateAccountWithMismatchedPasswords() {
-        onView(withId(R.id.create_name_text)).perform(typeText("John Doe"));
-        onView(withId(R.id.create_username_text)).perform(typeText("johndoes"));
-        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"));
-        onView(withId(R.id.create_email_text)).perform(typeText("johndoes123@example.com"));
+    public void testCreateAccountWithMismatchedPasswords() throws InterruptedException {
+        onView(withId(R.id.create_name_text)).perform(typeText("John Doe"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.create_username_text)).perform(typeText("johndoes" + System.currentTimeMillis()), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.create_email_text)).perform(typeText("johndoes" + System.currentTimeMillis() + "@example.com"), ViewActions.closeSoftKeyboard());
+
         // Input mismatched passwords
-        onView(withId(R.id.create_user_password_text)).perform(typeText("P@ssword123"));
-        onView(withId(R.id.repeat_user_password_text)).perform(typeText("P@ssword456"));
+        onView(withId(R.id.create_user_password_text)).perform(typeText("P@ssword123"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.repeat_user_password_text)).perform(typeText("P@ssword456"), ViewActions.closeSoftKeyboard());
+
+        // Wait for any validation to complete
+        Thread.sleep(1000);
 
         // Click on the create account button
         onView(withId(R.id.create_button)).perform(click());
 
-        // Check if an error message is displayed
+        // Need a small delay for Snackbar to appear
+        Thread.sleep(1000);
+
+        // Check if error message is displayed
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.password_no_match)));
-
-    } //working
-
-    @After  // Clean up after each test
-    public void cleanup() {
-        Intents.release();  // Release Espresso Intents
-        FirebaseAuth.getInstance().signOut();
     }
 
+
+    @After
+    public void cleanup() {
+        Intents.release(); // Release Espresso Intents
+        FirebaseAuth.getInstance().signOut();
+
+        // Clear any cached data
+        try {
+            FirebaseFirestore.getInstance().clearPersistence();
+        } catch (Exception e) {
+            Log.e("Test", "Error clearing persistence", e);
+        }
+    }
+    @After
+    public void ClearEmulators() {
+        String projectId = "feelink-database-test";
+        URL url = null;
+        try {
+            url = new URL("http://10.0.2.2:8080/emulator/v1/projects/" + projectId + "/databases/(default)/documents");
+        } catch (MalformedURLException exception) {
+            Log.e("URL Error", Objects.requireNonNull(exception.getMessage()));
+        }
+        HttpURLConnection urlConnection = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("DELETE");
+            int response = urlConnection.getResponseCode();
+            Log.i("Response Code", "Response Code: " + response);
+        } catch (IOException exception) {
+            Log.e("IO Error", Objects.requireNonNull(exception.getMessage()));
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
 
 }

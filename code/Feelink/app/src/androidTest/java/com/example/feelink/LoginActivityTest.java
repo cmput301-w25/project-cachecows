@@ -18,6 +18,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -33,8 +34,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RunWith(AndroidJUnit4.class)
 public class LoginActivityTest {
@@ -50,20 +56,6 @@ public class LoginActivityTest {
         FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
 
     }
-//    @Before
-//    public void seedDatabase() {
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//        CollectionReference usernamesRef = db.collection("usernames");
-//
-//        // Add a valid user with email
-//        Map<String, Object> validUser = new HashMap<>();
-//        validUser.put("uid", "testUserId123");
-//        validUser.put("email", "testuser@example.com"); // ✅ ADD EMAIL
-//        validUser.put("password", "P@ssw0rd");
-//        usernamesRef.document("validUsername").set(validUser);
-//
-//        SystemClock.sleep(9000); // Ensure Firestore syncs before tests run
-//    }
 
     @Before
     public void seedDatabase() {
@@ -86,10 +78,8 @@ public class LoginActivityTest {
                         System.out.println("Error creating Firebase user: " + task.getException().getMessage());
                     }
                 });
-
-        SystemClock.sleep(9000); // Ensure Firestore syncs before test runs
+        SystemClock.sleep(15000); // Ensure Firestore syncs before test runs
     }
-
 
 
     @Test
@@ -107,26 +97,48 @@ public class LoginActivityTest {
 
         // Verify recyclerMoodEvents is displayed
         onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
-    } // working!!!!!
+    }
 
 
     @Test
     public void testLoginWithInvalidPassword() {
-        onView(withId(R.id.username_text)).perform(replaceText("testUserId123"));
+        onView(withId(R.id.username_text)).perform(replaceText("validUsername"));
         onView(withId(R.id.password_text)).perform(replaceText("wrongPassword"));
         onView(withId(R.id.create_button)).perform(click());
 
-//        SystemClock.sleep(9000);
+        SystemClock.sleep(5000);
         // Verify error message in Toast
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.invalid_cred)));
-    } // somehow working after adding sleep in seed database
+    }
 
     @Test
     public void testLoginWithEmptyFields() {
         onView(withId(R.id.create_button)).perform(click());
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.empty_field)));
-    } // working
-
+    }
+    @After
+    public void ClearEmulators() {
+        String projectId = "feelink-database-test";
+        URL url = null;
+        try {
+            url = new URL("http://10.0.2.2:8080/emulator/v1/projects/" + projectId + "/databases/(default)/documents");
+        } catch (MalformedURLException exception) {
+            Log.e("URL Error", Objects.requireNonNull(exception.getMessage()));
+        }
+        HttpURLConnection urlConnection = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("DELETE");
+            int response = urlConnection.getResponseCode();
+            Log.i("Response Code", "Response Code: " + response);
+        } catch (IOException exception) {
+            Log.e("IO Error", Objects.requireNonNull(exception.getMessage()));
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
 }

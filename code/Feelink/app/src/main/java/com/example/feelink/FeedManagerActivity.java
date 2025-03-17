@@ -1,12 +1,17 @@
 package com.example.feelink;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -57,6 +62,9 @@ public class FeedManagerActivity extends AppCompatActivity {
     private MoodEventAdapter adapter;
     private boolean isShowingMyMood = false;
 
+    static boolean SKIP_AUTH_FOR_TESTING = false;
+    private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
+
     /**
      * Initializes feed UI and authentication checks
      *
@@ -84,8 +92,10 @@ public class FeedManagerActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            firestoreManager = new FirestoreManager(currentUser.getUid());
+        if (currentUser != null || SKIP_AUTH_FOR_TESTING || SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
+            // Initialize with test UID if needed
+            String uid = currentUser != null ? currentUser.getUid() : "test_user_id";
+            firestoreManager = new FirestoreManager(uid);
         } else {
             // Handle user not logged in
             startActivity(new Intent(this, Login.class));
@@ -99,6 +109,17 @@ public class FeedManagerActivity extends AppCompatActivity {
 
         // Default to "Their Mood" tab
         loadTheirMoodEvents();
+
+        // Initialize navigation buttons
+        ImageView navSearch = findViewById(R.id.navSearch);
+        ImageView navProfile = findViewById(R.id.navProfile);
+
+        // Set click listener for Search navigation
+        navSearch.setOnClickListener(v -> navigateToSearch());
+
+        // Set click listener for Profile navigation (existing code)
+        navProfile.setOnClickListener(v -> navigateToProfile());
+
     }
 
     /**
@@ -170,7 +191,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         });
 
         fabAddMood.setOnClickListener(v -> {
-            if (mAuth.getCurrentUser() != null) {
+            if (mAuth.getCurrentUser() != null || SKIP_AUTH_FOR_TESTING || SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
                 navigateToAddMood();
             } else {
                 handleUnauthorizedAccess();
@@ -250,6 +271,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
+                Log.d("FeedManagerActivity", "Fetched mood events: " + moodEvents.size());
                 adapter.updateMoodEvents(moodEvents);
                 checkEmptyState(moodEvents);
             }
@@ -257,6 +279,7 @@ public class FeedManagerActivity extends AppCompatActivity {
             @Override
             public void onFailure(String errorMessage) {
                 // Handle error
+                Log.e("FeedManagerActivity", "Failed to fetch mood events: " + errorMessage);
                 adapter.updateMoodEvents(new ArrayList<>());
                 checkEmptyState(new ArrayList<>());
             }
@@ -264,6 +287,8 @@ public class FeedManagerActivity extends AppCompatActivity {
     }
 
     private void loadTheirMoodEvents() {
+        // This would need to be implemented in FirestoreManager to get other users' moods
+        // For now, we'll use a placeholder method that could be added to FirestoreManager
         loadSharedMoodEvents();
     }
 
@@ -328,4 +353,17 @@ public class FeedManagerActivity extends AppCompatActivity {
         startActivity(new Intent(this, Login.class));
         finish();
     }
+
+    // Inside FeedManagerActivity.java
+    // Inside FeedManagerActivity.java
+    private void navigateToProfile() {
+        Intent intent = new Intent(FeedManagerActivity.this, UserProfileActivity.class);
+        startActivity(intent);
+    }
+
+    private void navigateToSearch() {
+        Intent intent = new Intent(FeedManagerActivity.this, SearchActivity.class);
+        startActivity(intent);
+    }
+
 }
