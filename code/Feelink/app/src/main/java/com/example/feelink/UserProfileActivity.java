@@ -29,6 +29,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private RecyclerView recyclerMoodEvents;
     private MoodEventAdapter moodEventAdapter;
     private List<MoodEvent> moodEventsList;
+    private FirestoreManager firestoreManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,21 +40,49 @@ public class UserProfileActivity extends AppCompatActivity {
         profileImageView = findViewById(R.id.profileImage);
         usernameTextView = findViewById(R.id.username);
         bioTextView = findViewById(R.id.bio);
-//        recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
-//        // Set up RecyclerView (as in FeedManagerActivity)
-//        moodEventsList = new ArrayList<>();
-//        moodEventAdapter = new MoodEventAdapter(moodEventsList, this);
-//        recyclerMoodEvents.setLayoutManager(new LinearLayoutManager(this));
-//        recyclerMoodEvents.setAdapter(moodEventAdapter);
+        recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
 
-//        fetchUserMoodEvents(currentUserId);
+        // Set up RecyclerView
+        moodEventsList = new ArrayList<>();
+        moodEventAdapter = new MoodEventAdapter(moodEventsList, this);
+        moodEventAdapter.setMyMoodSection(true);
+        recyclerMoodEvents.setLayoutManager(new LinearLayoutManager(this));
+        recyclerMoodEvents.setAdapter(moodEventAdapter);
+
+        // Initialize FirestoreManager
+        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        firestoreManager = new FirestoreManager(currentUserId);
 
         // Get current user ID
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         // Fetch user data from Firestore
         fetchUserData(currentUserId);
+        fetchUserMoodEvents(currentUserId);
     }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void fetchUserMoodEvents(String userId) {
+        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+            @Override
+            public void onSuccess(List<MoodEvent> moodEvents) {
+                moodEventsList.clear();
+                moodEventsList.addAll(moodEvents);
+                moodEventAdapter.notifyDataSetChanged();
+
+                if (moodEvents.isEmpty()) {
+                    Toast.makeText(UserProfileActivity.this, "No moods found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Error fetching moods: " + errorMessage);
+                Toast.makeText(UserProfileActivity.this, "Failed to load moods", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 
     private void fetchUserData(String userId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -92,31 +121,5 @@ public class UserProfileActivity extends AppCompatActivity {
         }
     }
 
-//    @SuppressLint("NotifyDataSetChanged")
-//    private void fetchUserMoodEvents(String userId) {
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//
-//        db.collection("mood_events")
-//                .whereEqualTo("userId", userId)
-//                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
-//                .get()
-//                .addOnSuccessListener(queryDocumentSnapshots -> {
-//                    moodEventsList.clear();
-//                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-//                        MoodEvent moodEvent = doc.toObject(MoodEvent.class);
-//                        moodEvent.setId(Long.parseLong(doc.getId()));
-//                        moodEventsList.add(moodEvent);
-//                    }
-//                    moodEventAdapter.notifyDataSetChanged();
-//
-//                    if (moodEventsList.isEmpty()) {
-//                        Toast.makeText(this, "No moods found", Toast.LENGTH_SHORT).show();
-//                    }
-//                })
-//                .addOnFailureListener(e -> {
-//                    Log.e(TAG, "Error fetching moods", e);
-//                    Toast.makeText(this, "Failed to load moods", Toast.LENGTH_SHORT).show();
-//                });
-//    } tried to implement
 
 }
