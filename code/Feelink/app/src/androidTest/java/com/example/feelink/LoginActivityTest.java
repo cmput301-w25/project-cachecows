@@ -22,6 +22,7 @@ import android.os.SystemClock;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -54,20 +55,24 @@ public class LoginActivityTest {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference usernamesRef = db.collection("usernames");
 
-        // Add a valid user for testing
+        // Add a valid user with an email (Firestore)
         Map<String, Object> validUser = new HashMap<>();
-        validUser.put("uid", "testUserId123"); // Replace with a valid UID
-//        validUser.put("email", "testuser@example.com"); // Replace with a valid email
-        validUser.put("password", "P@ssw0rd");
-        usernamesRef.document("validUsername").set(validUser); // Replace with a valid username
+        validUser.put("uid", "testUserId123");
+        validUser.put("email", "testuser@example.com");  // ✅ Ensure email exists!
+        usernamesRef.document("validUsername").set(validUser);
 
-        // Add an invalid user for testing
-        Map<String, Object> invalidUser = new HashMap<>();
-        invalidUser.put("uid", "invalidUserId123"); // Replace with an invalid UID
-//        invalidUser.put("email", "invaliduser@example.com"); // Replace with an invalid email
-        invalidUser.put("password","password");
-        usernamesRef.document("invalidUsername").set(invalidUser); // Replace with an invalid username
-        SystemClock.sleep(9000);
+        // ✅ ALSO Create a Firebase Authentication user
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        auth.createUserWithEmailAndPassword("testuser@example.com", "P@ssw0rd")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        System.out.println("Firebase Auth Test User Created!");
+                    } else {
+                        System.out.println("Error creating Firebase user: " + task.getException().getMessage());
+                    }
+                });
+
+        SystemClock.sleep(9000); // Ensure Firestore syncs before test runs
     }
 
 

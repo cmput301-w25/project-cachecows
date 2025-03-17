@@ -28,8 +28,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * User account creation process
- * Validates user input, checks username availability, creates Firebase Authentication accounts and stores data in Firestore
+ * Handles user registration flow with Firebase integration
+ *
+ * <p>Manages complete account creation process including:</p>
+ * <ul>
+ *   <li>Real-time username validation</li>
+ *   <li>Password complexity enforcement</li>
+ *   <li>Firebase Authentication integration</li>
+ *   <li>Firestore data storage</li>
+ * </ul>
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 03.01.01.01 - Unique username validation</li>
+ *   <li>US 03.01.01.02 - Username availability checking</li>
+ *   <li>US 03.01.01.03 - Username constraints enforcement</li>
+ * </ul>
+ *
+ * @see FirebaseAuth
+ * @see FirebaseFirestore
  */
 public class CreateAccount extends AppCompatActivity {
     private EditText nameEditText, usernameEditText, dobEditText,
@@ -52,6 +69,13 @@ public class CreateAccount extends AppCompatActivity {
      * Called when activity is created
      * Initializes UI components, Firebase & event listeners
      * Real time username validation
+     * <p>Key setup operations:</p>
+     * <ol>
+     *   <li>Firebase service initialization</li>
+     *   <li>UI component binding</li>
+     *   <li>Real-time username validation (US 03.01.01.02)</li>
+     *   <li>Navigation handlers</li>
+     * </ol>
      * @param savedInstanceState If the activity is being re-initialized after
      *     previously being shut down then this Bundle contains the data it most
      *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
@@ -100,8 +124,17 @@ public class CreateAccount extends AppCompatActivity {
     }
 
     /**
-     * checks if the username being entered is valid and available in Firestore
-     * @param username
+     * Validates username format and checks availability in Firestore
+     *
+     * <p>Implements:
+     * <ul>
+     *   <li>Regex validation (US 03.01.01.03)</li>
+     *   <li>Real-time availability check (US 03.01.01.02)</li>
+     * </ul>
+     *
+     * @param username Potential username to validate
+     *
+     * @see #VALID_USERNAME
      */
     private void checkUsername(String username) {
         if (!username.matches(VALID_USERNAME)) {
@@ -126,19 +159,39 @@ public class CreateAccount extends AppCompatActivity {
     }
 
     /**
-     * confirms the given password with regex
-     * @param password
-     * @return
+     * Validates password against complexity requirements
+     *
+     * <p>Enforces:
+     * <ul>
+     *   <li>6+ characters</li>
+     *   <li>Uppercase and lowercase letters</li>
+     *   <li>At least one numeric character</li>
+     * </ul>
+     *
+     * @param password Password to validate
+     * @return true if password meets complexity rules
+     *
+     * @see #VALID_PASSWORD
      */
     private boolean isValidPassword(String password) {
+
         return password.matches(VALID_PASSWORD);
     }
 
     /**
-     * User account creation process.
-     * Validates all user input and registers the user with Firebase
+     * Orchestrates complete account creation process
+     *
+     * <p>Performs:
+     * <ol>
+     *   <li>Field validation</li>
+     *   <li>Firebase auth creation</li>
+     *   <li>Firestore data storage</li>
+     *   <li>Username reservation</li>
+     * </ol>
+     *
+     * <p>Implements atomic batch writes for data consistency</p>
      */
-    private void createNewAccount(){
+      void createNewAccount(){
         String name = nameEditText.getText().toString().trim();
         String username = usernameEditText.getText().toString().trim();
         String dob = dobEditText.getText().toString().trim();
@@ -193,15 +246,21 @@ public class CreateAccount extends AppCompatActivity {
     // https://stackoverflow.com/questions/68910946/how-to-check-if-the-particular-username-exists-in-the-firebase-java-android
 
     /**
-     * Stores all the information about the user in the Firebase user object
+     * Stores user data in Firestore with atomic batch write
      *
-     * @param user authenticated FirebaseUser object
-     * @param name user's full name
-     * @param username unique username
-     * @param dob user's date of birth
-     * @param email user's email address
+     * <p>Writes to two collections atomically:
+     * <ol>
+     *   <li>users collection (user profile data)</li>
+     *   <li>usernames collection (username reservation)</li>
+     * </ol>
+     *
+     * @param user Authenticated Firebase user
+     * @param name User's full name
+     * @param username Unique username
+     * @param dob Date of birth
+     * @param email Verified email address
      */
-    private void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
+    void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
         // Batch write to both collections
         WriteBatch batch = db.batch();
 
