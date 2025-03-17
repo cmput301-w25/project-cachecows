@@ -44,8 +44,13 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
 //    implementation(files("C:/Users/jcyri/AppData/Local/Android/Sdk/platforms/android-35/android.jar")) //specifc to Cyrils local machine . This is for javadocs
     implementation(libs.firebase.auth)
+    implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation(libs.espresso.intents)
     implementation(libs.firebase.storage)
+    implementation(libs.recyclerview)
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
     testImplementation(libs.junit)
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:4.2.0")

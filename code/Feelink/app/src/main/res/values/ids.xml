@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="username" type="id" />
+    <item name="bio" type="id" />
+    <item name="followerCount" type="id" />
+    <item name="followingCount" type="id" />
+    <item name="moodPosts" type="id" />
+</resources>

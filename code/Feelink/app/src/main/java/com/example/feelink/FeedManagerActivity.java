@@ -1,5 +1,7 @@
 package com.example.feelink;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
@@ -7,7 +9,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -105,6 +109,17 @@ public class FeedManagerActivity extends AppCompatActivity {
 
         // Default to "Their Mood" tab
         loadTheirMoodEvents();
+
+        // Initialize navigation buttons
+        ImageView navSearch = findViewById(R.id.navSearch);
+        ImageView navProfile = findViewById(R.id.navProfile);
+
+        // Set click listener for Search navigation
+        navSearch.setOnClickListener(v -> navigateToSearch());
+
+        // Set click listener for Profile navigation (existing code)
+        navProfile.setOnClickListener(v -> navigateToProfile());
+
     }
 
     /**
@@ -338,4 +353,17 @@ public class FeedManagerActivity extends AppCompatActivity {
         startActivity(new Intent(this, Login.class));
         finish();
     }
+
+    // Inside FeedManagerActivity.java
+    // Inside FeedManagerActivity.java
+    private void navigateToProfile() {
+        Intent intent = new Intent(FeedManagerActivity.this, UserProfileActivity.class);
+        startActivity(intent);
+    }
+
+    private void navigateToSearch() {
+        Intent intent = new Intent(FeedManagerActivity.this, SearchActivity.class);
+        startActivity(intent);
+    }
+
 }
