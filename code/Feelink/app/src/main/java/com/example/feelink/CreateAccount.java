@@ -1,6 +1,7 @@
 package com.example.feelink;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -129,8 +130,6 @@ public class CreateAccount extends AppCompatActivity {
      * </ul>
      *
      * @param username Potential username to validate
-     *
-     * @see #VALID_USERNAME
      */
     private void checkUsername(String username) {
         if (!ValidationUtils.isUsernameValid(username)) {
@@ -167,7 +166,6 @@ public class CreateAccount extends AppCompatActivity {
      * @param password Password to validate
      * @return true if password meets complexity rules
      *
-     * @see #VALID_PASSWORD
      */
     private boolean isValidPassword(String password) {
         return ValidationUtils.isPasswordValid(password);
@@ -186,7 +184,7 @@ public class CreateAccount extends AppCompatActivity {
      *
      * <p>Implements atomic batch writes for data consistency</p>
      */
-    private void createNewAccount(){
+      void createNewAccount(){
         String name = nameEditText.getText().toString().trim();
         String username = usernameEditText.getText().toString().trim();
         String dob = dobEditText.getText().toString().trim();
@@ -200,7 +198,15 @@ public class CreateAccount extends AppCompatActivity {
             return;
         }
 
-        //Email validation
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+              if (!ValidationUtils.isDateValid(dob)) {
+                  Snackbar.make(findViewById(android.R.id.content), "Invalid date format. Use dd/mm/yyyy.", Snackbar.LENGTH_SHORT).show();
+                  return;
+              }
+          }
+
+
+          //Email validation
         //Based on a StackOverflow answer by gaurav jain:
         //https://stackoverflow.com/questions/77226668/how-allow-email-using-email-validation-regex-in-android
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -255,7 +261,7 @@ public class CreateAccount extends AppCompatActivity {
      * @param dob Date of birth
      * @param email Verified email address
      */
-    private void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
+    void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
         // Batch write to both collections
         WriteBatch batch = db.batch();
 

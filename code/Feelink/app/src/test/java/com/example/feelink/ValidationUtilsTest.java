@@ -41,4 +41,51 @@ public class ValidationUtilsTest {
         assertFalse("Missing @", ValidationUtils.isEmailValid("invalid.email"));
         assertFalse("No domain", ValidationUtils.isEmailValid("user@"));
     }
+
+
+    @Test
+    public void testValidDateFormats() {
+        // Proper slash format
+        assertTrue("Standard date", ValidationUtils.isDateValid("31/12/2025"));
+        assertTrue("Mid-month date", ValidationUtils.isDateValid("15/06/2024"));
+        assertTrue("End of month", ValidationUtils.isDateValid("30/03/2025")); // Format valid (semantic validity not checked)
+        assertTrue("Leap year format", ValidationUtils.isDateValid("29/02/2024")); // Format only
+    }
+
+
+    @Test
+    public void testInvalidDateFormats() {
+        // Wrong separators
+        assertFalse("Hyphen separator", ValidationUtils.isDateValid("31-12-2025"));
+        assertFalse("Mixed separators", ValidationUtils.isDateValid("15/12-2025"));
+
+        // Digit count violations
+        assertFalse("Single-digit day", ValidationUtils.isDateValid("5/12/2025"));
+        assertFalse("3-digit month", ValidationUtils.isDateValid("15/123/2025"));
+        assertFalse("Short year", ValidationUtils.isDateValid("15/12/25"));
+
+        // Invalid characters
+        assertFalse("Text month", ValidationUtils.isDateValid("15/Dec/2025"));
+        assertFalse("Special characters", ValidationUtils.isDateValid("15/12/20$5"));
+
+        // Edge cases
+        assertFalse("Empty input", ValidationUtils.isDateValid(""));
+    }
+
+    @Test
+    public void testImpossibleDates() {
+        // Format valid but dates impossible
+        assertFalse("February 30th", ValidationUtils.isDateValid("30/02/2025"));
+        assertFalse("April 31st", ValidationUtils.isDateValid("31/04/2024"));
+        assertFalse("Month 00", ValidationUtils.isDateValid("15/00/2025"));
+        assertFalse("Day 00", ValidationUtils.isDateValid("00/12/2025"));
+    }
+
+    @Test
+    public void testValidBoundaryDates() {
+        assertTrue("Leap day", ValidationUtils.isDateValid("29/02/2024"));
+        assertTrue("31-day month", ValidationUtils.isDateValid("31/01/2025"));
+        assertTrue("30-day month", ValidationUtils.isDateValid("30/04/2025"));
+    }
+
 }

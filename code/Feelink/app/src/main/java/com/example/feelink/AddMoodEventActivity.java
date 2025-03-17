@@ -63,6 +63,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private long moodEventId = -1;
 
     private ImageView btnDeletePhoto;
+    private static boolean SKIP_AUTH_FOR_TESTING = false;
+
 
 
     /**
@@ -85,8 +87,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
         // Initialize Firestore manager
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            firestoreManager = new FirestoreManager(user.getUid()); // Pass real UID
+        if (user != null || SKIP_AUTH_FOR_TESTING) {
+            // Use test user ID if needed for testing
+            String uid = user != null ? user.getUid() : "test_user_id";
+            firestoreManager = new FirestoreManager(uid);
         }
 
 
@@ -287,15 +291,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
      * @param text Input to validate
      */
     private void validateReasonField(String text) {
-        // Check character limit
-        boolean exceedsCharLimit = text.length() > 20;
-
-        // Check word limit
-        String[] words = text.trim().split("\\s+");
-        boolean exceedsWordLimit = text.trim().length() > 0 && words.length > 3;
-
         // Show error if either limit is exceeded
-        if (exceedsCharLimit || exceedsWordLimit) {
+        if (ValidationUtils.isReasonNotValid(text)) {
             etReason.setError("Reason must be limited to 20 characters or 3 words");
             btnAddMood.setEnabled(false);
         } else {
