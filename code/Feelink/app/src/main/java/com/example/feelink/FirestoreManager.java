@@ -66,6 +66,36 @@ public class FirestoreManager {
         this.userId = userId;
     }
 
+    public void updateAllUsersWithLowercaseUsername() {
+        Log.d(TAG, "Starting update of all users with lowercase usernames");
+
+        db.collection("users").get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int updatedCount = 0;
+                    for (QueryDocumentSnapshot document : querySnapshot) {
+                        String username = document.getString("username");
+                        if (username != null) {
+                            String usernameLowercase = username.toLowerCase();
+
+                            // Update the document with the lowercase username
+                            document.getReference().update("username_lowercase", usernameLowercase)
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d(TAG, "Updated lowercase username for user: " + document.getId());
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e(TAG, "Error updating lowercase username for user: " + document.getId(), e);
+                                    });
+
+                            updatedCount++;
+                        }
+                    }
+                    Log.d(TAG, "Processed " + updatedCount + " users for lowercase username update");
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error fetching users for lowercase username update", e);
+                });
+    }
+
     /**
      * Persists mood event to Firestore with partial field updates
      *
@@ -415,6 +445,21 @@ public class FirestoreManager {
                     }
                 });
     }
+
+
+//    public Query getPublicMoodEvents(String userId) {
+//        return db.collection("mood_events")
+//                .whereEqualTo("userId", userId)
+//                .whereEqualTo("isPublic", true); // Only fetch public events
+//    }
+
+    /**
+     * Fetches all mood events for the current authenticated user (private and public).
+     */
+//    public Query getAllMoodEvents(String userId) {
+//        return db.collection("mood_events")
+//                .whereEqualTo("userId", userId); // Fetch all events regardless of visibility
+//    }
 
     void setDb(FirebaseFirestore db) {
         this.db = db;
