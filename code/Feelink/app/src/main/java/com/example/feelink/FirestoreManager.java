@@ -61,10 +61,10 @@ public class FirestoreManager {
         this.userId = userId;
     }
 
-    public FirestoreManager(String userId, FirebaseFirestore firestore) {
-        this.db = firestore;
-        this.userId = userId;
-    }
+//    public FirestoreManager(String userId, FirebaseFirestore firestore) {
+//        this.db = firestore;
+//        this.userId = userId;
+//    }
 
     /**
      * Persists mood event to Firestore with partial field updates

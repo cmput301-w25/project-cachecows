@@ -174,6 +174,7 @@ public class CreateAccount extends AppCompatActivity {
      * @see #VALID_PASSWORD
      */
     private boolean isValidPassword(String password) {
+
         return password.matches(VALID_PASSWORD);
     }
 
@@ -190,7 +191,7 @@ public class CreateAccount extends AppCompatActivity {
      *
      * <p>Implements atomic batch writes for data consistency</p>
      */
-    private void createNewAccount(){
+      void createNewAccount(){
         String name = nameEditText.getText().toString().trim();
         String username = usernameEditText.getText().toString().trim();
         String dob = dobEditText.getText().toString().trim();
@@ -259,7 +260,7 @@ public class CreateAccount extends AppCompatActivity {
      * @param dob Date of birth
      * @param email Verified email address
      */
-    private void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
+    void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
         // Batch write to both collections
         WriteBatch batch = db.batch();
 
