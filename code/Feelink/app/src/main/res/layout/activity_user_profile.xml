@@ -7,13 +7,16 @@
     android:background="#E0F0F0">
 
     <!-- Profile Section -->
+
     <LinearLayout
         android:id="@+id/profileSection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        tools:ignore="MissingConstraints">
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="-146dp"
+        tools:layout_editor_absoluteY="0dp">
 
         <!-- Decorative Elements -->
         <FrameLayout
@@ -193,12 +196,11 @@
         android:layout_marginTop="8dp"
         android:clipToPadding="false"
         android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/layoutBottomNav"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editProfileButton"
-        tools:listitem="@layout/item_mood_event"
-        tools:ignore="NotSibling" />
+        tools:ignore="NotSibling"
+        tools:listitem="@layout/item_mood_event" />
 
 
 <!--    &lt;!&ndash; Floating Action Button &ndash;&gt;-->
@@ -216,49 +218,49 @@
 <!--        app:tint="#FFFFFF" />-->
 
 
-    <!--     Bottom Navigation -->
-    <LinearLayout
-        android:id="@+id/layoutBottomNav"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+<!--    &lt;!&ndash;     Bottom Navigation &ndash;&gt;-->
+<!--    <LinearLayout-->
+<!--        android:id="@+id/layoutBottomNav"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="56dp"-->
+<!--        android:background="#FFFFFF"-->
+<!--        android:gravity="center"-->
+<!--        android:orientation="horizontal"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent">-->
 
-        <ImageView
-            android:id="@+id/navSearch"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_search"
-            android:contentDescription="Search tab" />
+<!--        <ImageView-->
+<!--            android:id="@+id/navSearch"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="24dp"-->
+<!--            android:layout_weight="1"-->
+<!--            android:src="@drawable/ic_search"-->
+<!--            android:contentDescription="Search tab" />-->
 
-        <ImageView
-            android:id="@+id/navHome"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_nav_map"
-            android:contentDescription="Map tab" />
+<!--        <ImageView-->
+<!--            android:id="@+id/navHome"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="24dp"-->
+<!--            android:layout_weight="1"-->
+<!--            android:src="@drawable/ic_nav_map"-->
+<!--            android:contentDescription="Map tab" />-->
 
-        <ImageView
-            android:id="@+id/navChats"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_nav_chats"
-            android:contentDescription="Chats tab" />
+<!--        <ImageView-->
+<!--            android:id="@+id/navChats"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="24dp"-->
+<!--            android:layout_weight="1"-->
+<!--            android:src="@drawable/ic_nav_chats"-->
+<!--            android:contentDescription="Chats tab" />-->
 
-        <ImageView
-            android:id="@+id/navProfile"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_nav_profile"
-            android:contentDescription="Profile tab" />
-    </LinearLayout>
+<!--        <ImageView-->
+<!--            android:id="@+id/navProfile"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="24dp"-->
+<!--            android:layout_weight="1"-->
+<!--            android:src="@drawable/ic_nav_profile"-->
+<!--            android:contentDescription="Profile tab" />-->
+<!--    </LinearLayout>-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
