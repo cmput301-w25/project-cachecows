@@ -1,8 +1,10 @@
 package com.example.feelink;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,6 +52,15 @@ public class UserProfileActivity extends AppCompatActivity {
 
 //        fetchUserMoodEvents(currentUserId);
 
+        ImageButton settingsButton = findViewById(R.id.settingsButton);
+        if (settingsButton != null) {
+            settingsButton.setOnClickListener(v -> {
+                Intent intent = new Intent(UserProfileActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "Settings button not found in layout");
+        }
         // Get current user ID
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
