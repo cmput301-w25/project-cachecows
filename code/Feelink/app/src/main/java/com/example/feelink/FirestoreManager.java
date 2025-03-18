@@ -522,4 +522,32 @@ public class FirestoreManager {
          */
         void onFailure(String fallbackName);
     }
+
+    public Task<DocumentReference> addMoodEventSync(MoodEvent moodEvent) {
+        Map<String, Object> moodData = new HashMap<>();
+        moodData.put("userId", this.userId);
+        moodData.put("timestamp", moodEvent.getTimestamp());
+        moodData.put("emotionalState", moodEvent.getEmotionalState());
+        if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
+            moodData.put("reason", moodEvent.getReason());
+        }
+        // (Add other fields as needed)
+        return db.collection(COLLECTION_MOOD_EVENTS).add(moodData);
+    }
+
+
+    public Task<Void> updateMoodEventSync(MoodEvent moodEvent, String documentId) {
+        Map<String, Object> moodData = new HashMap<>();
+        moodData.put("emotionalState", moodEvent.getEmotionalState());
+        // (Add logic for updating optional fields – using FieldValue.delete() for empty values as needed)
+        return db.collection(COLLECTION_MOOD_EVENTS)
+                .document(documentId)
+                .update(moodData);
+    }
+
+    public Task<Void> deleteMoodEventSync(String documentId) {
+        return db.collection(COLLECTION_MOOD_EVENTS)
+                .document(documentId)
+                .delete();
+    }
 }

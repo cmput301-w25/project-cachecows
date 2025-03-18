@@ -1,6 +1,9 @@
 package com.example.feelink;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -98,7 +101,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
         initializeViews();
         setupMoodSelectors();
         setupSocialSituationSpinner();
-        setupAddButton();
 
         Intent intent = getIntent();
         if (intent != null && intent.getBooleanExtra("EDIT_MODE", false)) {
@@ -113,6 +115,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
             preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl);
         }
+
+        setupAddButton();
 
         // Set greeting with username (this would normally come from user data)
         String username = "User"; // Replace with actual username later
@@ -406,26 +410,26 @@ public class AddMoodEventActivity extends AppCompatActivity {
         btnAddMood.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Ensure a mood is selected
                 if (selectedMood == null) {
                     Snackbar.make(v, "Please select a mood", Snackbar.LENGTH_SHORT).show();
                     return;
                 }
                 currentDateTime = new Date();
-
                 // Show loading state (could add a progress indicator here)
                 btnAddMood.setEnabled(false);
 
                 // Get input values
                 String reason = etReason.getText().toString().trim();
-                // Validate reason field one more time before proceeding
-                if (reason.length() > 20 || (reason.split("\\s+").length > 3 && !reason.isEmpty())) {
+                if (reason.length() > 20 || (!reason.isEmpty() && reason.split("\\s+").length > 3)) {
                     etReason.setError("Reason must be limited to 20 characters or 3 words");
+                    btnAddMood.setEnabled(true);
                     return;
                 }
-
                 String trigger = etTrigger.getText().toString().trim();
                 String selectedValue = socialSituationSpinner.getSelectedItem().toString();
                 String socialSituation = selectedValue.equals("None") ? "" : selectedValue;
+
 
                 MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
                 moodEvent.setTimestamp(currentDateTime);
@@ -438,7 +442,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 if (isEditMode) {
                     // Get the document ID from the intent
                     String documentId = getIntent().getStringExtra("DOCUMENT_ID");
-
                     if (documentId == null) {
                         Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();
                         btnAddMood.setEnabled(true);
@@ -447,38 +450,64 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
                     // Update the existing mood event
                     moodEvent.setId(moodEventId);
-                    firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
-                        @Override
-                        public void onSuccess(MoodEvent moodEvent) {
-                            Snackbar.make(v, "Mood updated successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();
-                            finish();
-                        }
 
-                        @Override
-                        public void onFailure(String errorMessage) {
-                            Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).setDuration(5000).show();
-                            btnAddMood.setEnabled(true);
-                        }
-                    });
+                    // Check network connectivity for update
+                    if (isNetworkAvailable()) {
+                        // Online: update and wait for callback
+                        firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
+                            @Override
+                            public void onSuccess(MoodEvent moodEvent) {
+                                Snackbar.make(v, "Mood updated successfully!", Snackbar.LENGTH_SHORT).show();
+                                finish();
+                            }
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
+                                btnAddMood.setEnabled(true);
+                            }
+                        });
+                    } else {
+                        // Offline: trigger update and finish immediately
+                        firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
+                            @Override
+                            public void onSuccess(MoodEvent moodEvent) {}
+                            @Override
+                            public void onFailure(String errorMessage) {}
+                        });
+                        Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
                 } else {
-                    // Save a new mood event (existing code remains the same)
-                    firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
-                        @Override
-                        public void onSuccess(MoodEvent moodEvent) {
-                            Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();
-                            finish();
-                        }
-
-                        @Override
-                        public void onFailure(String errorMessage) {
-                            Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
-                            btnAddMood.setEnabled(true);
-                        }
-                    });
+                    // Add mode: check connectivity and handle offline immediately
+                    if (isNetworkAvailable()) {
+                        firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
+                            @Override
+                            public void onSuccess(MoodEvent moodEvent) {
+                                Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).show();
+                                finish();
+                            }
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
+                                btnAddMood.setEnabled(true);
+                            }
+                        });
+                    } else {
+                        firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
+                            @Override
+                            public void onSuccess(MoodEvent moodEvent) {}
+                            @Override
+                            public void onFailure(String errorMessage) {}
+                        });
+                        Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
                 }
             }
         });
     }
+
+
 
     /**
      * Handles image upload results from UploadImageActivity
@@ -518,7 +547,12 @@ public class AddMoodEventActivity extends AppCompatActivity {
         tvAddPhoto.setText("Add Photograph");
         btnDeletePhoto.setVisibility(View.GONE);
         Snackbar.make(findViewById(R.id.layoutBottomNav),"Photo removed", Snackbar.LENGTH_SHORT).show();
+    }
 
-
+    // Example method to check connectivity
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnected();
     }
 }
