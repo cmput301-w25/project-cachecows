@@ -95,8 +95,22 @@ public class AddMoodEventActivity extends AppCompatActivity {
             // Use test user ID if needed for testing
             String uid = user != null ? user.getUid() : "test_user_id";
             firestoreManager = new FirestoreManager(uid);
-        }
 
+            // Fetch the username
+            firestoreManager.getUsernameById(uid, new FirestoreManager.OnUsernameListener() {
+                @Override
+                public void onSuccess(String username) {
+                    // Set greeting with the actual username
+                    tvGreeting.setText("Hey " + username + "!");
+                }
+
+                @Override
+                public void onFailure(String fallbackName) {
+                    // If username fetch fails, use the UID or a fallback
+                    tvGreeting.setText("Hey " + fallbackName + "!");
+                }
+            });
+        }
 
         // Initialize views
         initializeViews();
@@ -120,8 +134,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         setupAddButton();
 
         // Set greeting with username (this would normally come from user data)
-        String username = "User"; // Replace with actual username later
-        tvGreeting.setText("Hey " + username + "!");
+        tvGreeting.setText("Hey there!"); // Temporary placeholder
         currentDateTime = new Date();
 
     }
