@@ -28,6 +28,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
@@ -114,6 +115,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     public MoodEventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_mood_event, parent, false);
+
+
         return new MoodEventViewHolder(view);
     }
 
@@ -210,6 +213,19 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         } else {
             //No image
             holder.photoContainer.setVisibility(View.GONE);
+        }
+
+
+        PendingSyncManager pendingSyncManager = new PendingSyncManager(context);
+        if (pendingSyncManager.getPendingIds().contains(moodEvent.getDocumentId())) {
+            holder.lottieSync.setVisibility(View.VISIBLE);
+            holder.lottieSync.setAnimation("loading2.json");
+            if (!holder.lottieSync.isAnimating()) {
+                holder.lottieSync.playAnimation();
+            }
+        } else {
+            holder.lottieSync.cancelAnimation();
+            holder.lottieSync.setVisibility(View.GONE);
         }
     }
 
@@ -451,6 +467,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
 
         ImageButton btnEdit, btnDelete;
 
+        LottieAnimationView lottieSync; // UI element for offline behavior
+
         /**
          * Initializes view references and click handlers
          * @param itemView Root view of item layout
@@ -470,6 +488,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             photoContainer = itemView.findViewById(R.id.photoContainer);
             moodPostedImage = itemView.findViewById(R.id.moodImage);
             tvPhotoPlaceholder = itemView.findViewById(R.id.tvPhotoPlaceholder);
+            lottieSync = itemView.findViewById(R.id.lottieSync);
         }
     }
 

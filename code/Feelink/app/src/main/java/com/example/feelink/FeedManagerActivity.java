@@ -3,7 +3,9 @@ package com.example.feelink;
 import static android.content.ContentValues.TAG;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.ColorStateList;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -119,6 +121,23 @@ public class FeedManagerActivity extends AppCompatActivity {
 
         // Set click listener for Profile navigation (existing code)
         navProfile.setOnClickListener(v -> navigateToProfile());
+
+        // Register ConnectivityReceiver
+        IntentFilter intentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        ConnectivityReceiver connectivityReceiver = new ConnectivityReceiver(new ConnectivityReceiver.ConnectivityReceiverListener() {
+            @Override
+            public void onNetworkConnectionChanged(boolean isConnected) {
+                if (isConnected) {
+                    // Refresh the adapter to update the UI
+                    if (isShowingMyMood) {
+                        loadMyMoodEvents();
+                    } else {
+                        loadTheirMoodEvents();
+                    }
+                }
+            }
+        });
+        registerReceiver(connectivityReceiver, intentFilter);
 
     }
 

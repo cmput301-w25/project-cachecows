@@ -12,6 +12,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentId;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -523,7 +524,7 @@ public class FirestoreManager {
         void onFailure(String fallbackName);
     }
 
-    public Task<DocumentReference> addMoodEventSync(MoodEvent moodEvent) {
+    public void addMoodEventWithId(MoodEvent moodEvent, String documentId, final OnMoodEventListener listener) {
         Map<String, Object> moodData = new HashMap<>();
         moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
@@ -531,23 +532,59 @@ public class FirestoreManager {
         if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
             moodData.put("reason", moodEvent.getReason());
         }
-        // (Add other fields as needed)
-        return db.collection(COLLECTION_MOOD_EVENTS).add(moodData);
-    }
+        if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
+            moodData.put("trigger", moodEvent.getTrigger());
+        }
+        if (moodEvent.getSocialSituation() != null && !moodEvent.getSocialSituation().isEmpty()) {
+            moodData.put("socialSituation", moodEvent.getSocialSituation());
+        }
+        if (moodEvent.getImageUrl() != null && !moodEvent.getImageUrl().isEmpty()) {
+            moodData.put("imageUrl", moodEvent.getImageUrl());
+        }
 
 
-    public Task<Void> updateMoodEventSync(MoodEvent moodEvent, String documentId) {
-        Map<String, Object> moodData = new HashMap<>();
-        moodData.put("emotionalState", moodEvent.getEmotionalState());
-        // (Add logic for updating optional fields – using FieldValue.delete() for empty values as needed)
-        return db.collection(COLLECTION_MOOD_EVENTS)
+        // Use set() with the given documentId so it remains consistent offline and online.
+        db.collection(COLLECTION_MOOD_EVENTS)
                 .document(documentId)
-                .update(moodData);
+                .set(moodData)
+                .addOnSuccessListener(documentReference -> {
+                    // Call listener with the moodEvent; optionally update moodEvent's documentId.
+                    moodEvent.setDocumentId(documentId);
+                    if (listener != null) {
+                        listener.onSuccess(moodEvent);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (listener != null) {
+                        listener.onFailure(e.getMessage());
+                    }
+                });
     }
 
-    public Task<Void> deleteMoodEventSync(String documentId) {
-        return db.collection(COLLECTION_MOOD_EVENTS)
+    public void syncPendingMoodEvent(String documentId, OnMoodEventListener listener) {
+        // Fetch the mood event from Firestore
+        db.collection(COLLECTION_MOOD_EVENTS)
                 .document(documentId)
-                .delete();
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            MoodEvent moodEvent = document.toObject(MoodEvent.class);
+                            if (listener != null) {
+                                listener.onSuccess(moodEvent);
+                            }
+                        } else {
+                            if (listener != null) {
+                                listener.onFailure("Document does not exist");
+                            }
+                        }
+                    } else {
+                        if (listener != null) {
+                            listener.onFailure(task.getException().getMessage());
+                        }
+                    }
+                });
     }
+
 }

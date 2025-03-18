@@ -28,6 +28,7 @@ import com.google.firebase.auth.FirebaseUser;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Central activity for creating and editing mood events with full CRUD operations.
@@ -440,24 +441,23 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 }
 
                 if (isEditMode) {
-                    // Get the document ID from the intent
+                    // For update mode
                     String documentId = getIntent().getStringExtra("DOCUMENT_ID");
                     if (documentId == null) {
                         Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();
                         btnAddMood.setEnabled(true);
                         return;
                     }
-
-                    // Update the existing mood event
                     moodEvent.setId(moodEventId);
-
-                    // Check network connectivity for update
                     if (isNetworkAvailable()) {
-                        // Online: update and wait for callback
+                        moodEvent.setPendingSync(false);
                         firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
                             @Override
                             public void onSuccess(MoodEvent moodEvent) {
-                                Snackbar.make(v, "Mood updated successfully!", Snackbar.LENGTH_SHORT).show();
+                                // Remove from pending list if present
+                                new PendingSyncManager(AddMoodEventActivity.this).removePendingId(moodEvent.getDocumentId());
+                                Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).show();
+                                moodEvent.setPendingSync(false);
                                 finish();
                             }
                             @Override
@@ -467,7 +467,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
                             }
                         });
                     } else {
-                        // Offline: trigger update and finish immediately
+                        moodEvent.setPendingSync(true);
+                        // Offline: add the pending document id to the local pending set.
+                        new PendingSyncManager(AddMoodEventActivity.this).addPendingId(documentId);
                         firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
                             @Override
                             public void onSuccess(MoodEvent moodEvent) {}
@@ -478,12 +480,15 @@ public class AddMoodEventActivity extends AppCompatActivity {
                         finish();
                     }
                 } else {
-                    // Add mode: check connectivity and handle offline immediately
+                    // Add mode:
                     if (isNetworkAvailable()) {
+                        moodEvent.setPendingSync(false);
                         firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
                             @Override
                             public void onSuccess(MoodEvent moodEvent) {
+                                new PendingSyncManager(AddMoodEventActivity.this).removePendingId(moodEvent.getDocumentId());
                                 Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).show();
+                                moodEvent.setPendingSync(false);
                                 finish();
                             }
                             @Override
@@ -493,11 +498,25 @@ public class AddMoodEventActivity extends AppCompatActivity {
                             }
                         });
                     } else {
-                        firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
+                        moodEvent.setPendingSync(true);
+                        // If no document ID is available, generate one
+                        if (moodEvent.getDocumentId() == null || moodEvent.getDocumentId().isEmpty()) {
+                            // Generate a temporary ID
+                            String tempId = UUID.randomUUID().toString();
+                            moodEvent.setDocumentId(tempId);
+                        }
+                        // Add this document ID to PendingSyncManager
+                        new PendingSyncManager(AddMoodEventActivity.this).addPendingId(moodEvent.getDocumentId());
+                        // Use the new method that uses set() with the provided ID:
+                        firestoreManager.addMoodEventWithId(moodEvent, moodEvent.getDocumentId(), new FirestoreManager.OnMoodEventListener() {
                             @Override
-                            public void onSuccess(MoodEvent moodEvent) {}
+                            public void onSuccess(MoodEvent moodEvent) {
+                                // Offline callback might be delayed
+                            }
                             @Override
-                            public void onFailure(String errorMessage) {}
+                            public void onFailure(String errorMessage) {
+                                // Optionally handle error
+                            }
                         });
                         Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
                         finish();
@@ -549,7 +568,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         Snackbar.make(findViewById(R.id.layoutBottomNav),"Photo removed", Snackbar.LENGTH_SHORT).show();
     }
 
-    // Example method to check connectivity
+    // method to check connectivity
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();

@@ -29,6 +29,7 @@ public class MoodEvent {
     private String userId;  // Added to support authentication later
     private String imageUrl;
     private String tempLocalImagePath;
+    private boolean isPendingSync;
 
     /**
      * Default constructor initializes required temporal fields
@@ -224,5 +225,13 @@ public class MoodEvent {
     }
     public String getTempLocalImagePath() {
         return tempLocalImagePath;
+    }
+
+    public boolean isPendingSync() {
+        return isPendingSync;
+    }
+
+    public void setPendingSync(boolean pendingSync) {
+        isPendingSync = pendingSync;
     }
 }
