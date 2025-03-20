@@ -45,9 +45,10 @@ import java.util.Locale;
  */
 public class AddMoodEventActivity extends AppCompatActivity {
     private static final int IMAGE_REQUEST_CODE = 200;
+    private static final int LOCATION_PICKER_REQUEST_CODE = 2;
 
     // UI references
-    private TextView tvGreeting, tvAddPhoto;
+    private TextView tvGreeting, tvAddPhoto, tvAddLocation;
     private LinearLayout moodHappy, moodSad, moodAngry, moodSurprised,
             moodConfused, moodDisgusted, moodShame, moodFear;
     private EditText etReason, etTrigger;
@@ -64,8 +65,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
     private ImageView btnDeletePhoto;
     private static boolean SKIP_AUTH_FOR_TESTING = false;
+    private double selectedLatitude = 0.0;
+    private double selectedLongitude = 0.0;
 
-
+    private ImageView btnDeleteLocation;
 
     /**
      * Initializes activity components and state
@@ -110,15 +113,22 @@ public class AddMoodEventActivity extends AppCompatActivity {
             String trigger = intent.getStringExtra("TRIGGER");
             String socialSituation = intent.getStringExtra("SOCIAL_SITUATION");
             String imageUrl = intent.getStringExtra("IMAGE_URL");
+            String locationName = intent.getStringExtra("LOCATION_NAME");
+            selectedLatitude = intent.getDoubleExtra("LATITUDE", 0.0);
+            selectedLongitude = intent.getDoubleExtra("LONGITUDE", 0.0);
 
-            preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl);
+            // Add debug logging
+            Log.d("AddMoodEventActivity", "Edit Mode - Location Name: " + locationName);
+            Log.d("AddMoodEventActivity", "Edit Mode - Latitude: " + selectedLatitude);
+            Log.d("AddMoodEventActivity", "Edit Mode - Longitude: " + selectedLongitude);
+
+            preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl, locationName);
         }
 
         // Set greeting with username (this would normally come from user data)
         String username = "User"; // Replace with actual username later
         tvGreeting.setText("Hey " + username + "!");
         currentDateTime = new Date();
-
     }
 
     /**
@@ -137,8 +147,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
      * @param trigger Stored trigger text
      * @param socialSituation Selected social situation
      * @param imageUrl Stored image reference
+     * @param locationName Stored location name
      */
-    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation, String imageUrl) {
+    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation, String imageUrl, String locationName) {
         // Set the selected mood
         selectedMood = emotionalState;
         highlightSelectedMood(emotionalState);
@@ -146,7 +157,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
         // Set reason and trigger
         etReason.setText(reason);
         etTrigger.setText(trigger);
-
 
         // Set social situation in spinner
         if (socialSituation != null && !socialSituation.isEmpty()) {
@@ -171,6 +181,17 @@ public class AddMoodEventActivity extends AppCompatActivity {
             btnDeletePhoto.setVisibility(View.VISIBLE);
         } else {
             btnDeletePhoto.setVisibility(View.GONE);
+        }
+
+        // Handle location data
+        if (locationName != null && !locationName.isEmpty()) {
+            tvAddLocation.setText(locationName);
+            tvAddLocation.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+            btnDeleteLocation.setVisibility(View.VISIBLE);
+        } else {
+            tvAddLocation.setText("Add Location (Optional)");
+            tvAddLocation.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+            btnDeleteLocation.setVisibility(View.GONE);
         }
     }
 
@@ -239,6 +260,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
         btnAddMood = findViewById(R.id.btnAddMood);
         tvAddPhoto = findViewById(R.id.tvAddPhoto);
+        tvAddLocation = findViewById(R.id.tvAddLocation);
 
         // Mood selectors
         moodHappy = findViewById(R.id.moodHappy);
@@ -250,6 +272,11 @@ public class AddMoodEventActivity extends AppCompatActivity {
         moodShame = findViewById(R.id.moodShame);
         moodFear = findViewById(R.id.moodFear);
 
+        // Add location click listener
+        tvAddLocation.setOnClickListener(v -> {
+            Intent locationIntent = new Intent(this, LocationPickerActivity.class);
+            startActivityForResult(locationIntent, LOCATION_PICKER_REQUEST_CODE);
+        });
 
         etReason.addTextChangedListener(new TextWatcher() {
             @Override
@@ -276,6 +303,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
         btnDeletePhoto = findViewById(R.id.btnDeletePhoto);
         btnDeletePhoto.setOnClickListener(v -> deletePhoto());
 
+        btnDeleteLocation = findViewById(R.id.btnDeleteLocation);
+        btnDeleteLocation.setOnClickListener(v -> deleteLocation());
     }
 
     /**
@@ -430,7 +459,15 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
                 moodEvent.setTimestamp(currentDateTime);
 
-                //If we have an uploaded image url
+                // Set the location data
+                String locationName = tvAddLocation.getText().toString();
+                if (!locationName.equals("Add Location (Optional)") && !locationName.equals("Add Location")) {
+                    moodEvent.setLocationName(locationName);
+                    moodEvent.setLatitude(selectedLatitude);
+                    moodEvent.setLongitude(selectedLongitude);
+                }
+
+                // If we have an uploaded image url
                 if (uploadedImageUrl != null) {
                     moodEvent.setImageUrl(uploadedImageUrl);
                 }
@@ -461,7 +498,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
                         }
                     });
                 } else {
-                    // Save a new mood event (existing code remains the same)
+                    // Save a new mood event
                     firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
                         @Override
                         public void onSuccess(MoodEvent moodEvent) {
@@ -503,7 +540,15 @@ public class AddMoodEventActivity extends AppCompatActivity {
             if (downloadedUrl != null) {
                 btnDeletePhoto.setVisibility(View.VISIBLE);
             }
-
+        } else if (requestCode == LOCATION_PICKER_REQUEST_CODE && resultCode == RESULT_OK) {
+            if (data != null) {
+                selectedLatitude = data.getDoubleExtra("latitude", 0.0);
+                selectedLongitude = data.getDoubleExtra("longitude", 0.0);
+                String locationName = data.getStringExtra("locationName");
+                tvAddLocation.setText(locationName);
+                tvAddLocation.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+                btnDeleteLocation.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -520,5 +565,13 @@ public class AddMoodEventActivity extends AppCompatActivity {
         Snackbar.make(findViewById(R.id.layoutBottomNav),"Photo removed", Snackbar.LENGTH_SHORT).show();
 
 
+    }
+
+    private void deleteLocation() {
+        selectedLatitude = 0.0;
+        selectedLongitude = 0.0;
+        tvAddLocation.setText("Add Location");
+        btnDeleteLocation.setVisibility(View.GONE);
+        Snackbar.make(findViewById(R.id.layoutBottomNav), "Location removed", Snackbar.LENGTH_SHORT).show();
     }
 }
