@@ -19,6 +19,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+
             <!-- Profile Section -->
             <LinearLayout
                 android:id="@+id/profileSection"
@@ -45,6 +46,20 @@
                             android:background="@drawable/logo_feelink"
                             android:rotation="45" />
                     </LinearLayout>
+
+                    <ImageButton
+                        android:id="@+id/settingsButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="end"
+                        android:src="@drawable/ic_settings_button"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Settings"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:layout_margin="10dp"/>
                 </FrameLayout>
 
                 <!-- Profile Picture and Username -->
