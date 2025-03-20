@@ -25,7 +25,6 @@ public class UserProfileActivity extends AppCompatActivity {
     private ImageView profileImageView;
     private TextView usernameTextView, bioTextView;
     private String currentUserId;
-
     private RecyclerView recyclerMoodEvents;
     private MoodEventAdapter moodEventAdapter;
     private List<MoodEvent> moodEventsList;
@@ -59,6 +58,13 @@ public class UserProfileActivity extends AppCompatActivity {
         // Fetch user data from Firestore
         fetchUserData(currentUserId);
         fetchUserMoodEvents(currentUserId);
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchUserMoodEvents(currentUserId); // Refresh mood events
     }
 
     @SuppressLint("NotifyDataSetChanged")
