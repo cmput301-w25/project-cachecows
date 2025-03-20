@@ -255,7 +255,7 @@ public class CreateAccount extends AppCompatActivity {
               }
           }
 
-        //Email validation
+          //Email validation
         //Based on a StackOverflow answer by gaurav jain:
         //https://stackoverflow.com/questions/77226668/how-allow-email-using-email-validation-regex-in-android
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -365,7 +365,6 @@ public class CreateAccount extends AppCompatActivity {
                     finish();
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error writing user data to Firestore", e);
                     // Rollback auth user if Firestore fails
                     user.delete();
                     Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show();
