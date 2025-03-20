@@ -63,7 +63,7 @@
             </FrameLayout>
 
             <TextView
-                android:id="@id/username"
+                android:id="@+id/username"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Username"
@@ -88,10 +88,10 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@id/moodPosts"
+                    android:id="@+id/moodPosts"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="146"
+                    android:text="0"
                     android:textColor="#5A4A7E"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -112,7 +112,7 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@id/followerCount"
+                    android:id="@+id/followerCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="12"
@@ -136,7 +136,7 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@id/followingCount"
+                    android:id="@+id/followingCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="200"
@@ -155,7 +155,7 @@
 
         <!-- Bio Quote -->
         <TextView
-            android:id="@id/bio"
+            android:id="@+id/bio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

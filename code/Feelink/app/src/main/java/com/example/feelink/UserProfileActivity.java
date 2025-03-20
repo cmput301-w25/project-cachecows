@@ -1,8 +1,10 @@
 package com.example.feelink;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,6 +31,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private RecyclerView recyclerMoodEvents;
     private MoodEventAdapter moodEventAdapter;
     private List<MoodEvent> moodEventsList;
+    private TextView moodPostsTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +42,7 @@ public class UserProfileActivity extends AppCompatActivity {
         profileImageView = findViewById(R.id.profileImage);
         usernameTextView = findViewById(R.id.username);
         bioTextView = findViewById(R.id.bio);
+        moodPostsTextView = findViewById(R.id.moodPosts);
 //        recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
 //        // Set up RecyclerView (as in FeedManagerActivity)
 //        moodEventsList = new ArrayList<>();
@@ -48,11 +52,36 @@ public class UserProfileActivity extends AppCompatActivity {
 
 //        fetchUserMoodEvents(currentUserId);
 
+        ImageButton settingsButton = findViewById(R.id.settingsButton);
+        if (settingsButton != null) {
+            settingsButton.setOnClickListener(v -> {
+                Intent intent = new Intent(UserProfileActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "Settings button not found in layout");
+        }
         // Get current user ID
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         // Fetch user data from Firestore
         fetchUserData(currentUserId);
+        fetchTotalMoodEvents(currentUserId);
+    }
+    private void fetchTotalMoodEvents(String userId) {
+        FirestoreManager firestoreManager = new FirestoreManager(userId);
+        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+            @Override
+            public void onSuccess(List<MoodEvent> moodEvents) {
+                // Update UI with dynamic count
+                moodPostsTextView.setText(String.valueOf(moodEvents.size()));
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Error fetching moods: " + errorMessage);
+            }
+        });
     }
 
     private void fetchUserData(String userId) {

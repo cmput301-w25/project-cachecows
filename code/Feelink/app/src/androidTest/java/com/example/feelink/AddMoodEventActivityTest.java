@@ -131,6 +131,7 @@ public class AddMoodEventActivityTest {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
         // Add a delay to allow Firestore operation to complete
+        // This is a compromise since we can't modify FirestoreManager to expose its async state
         try {
             Thread.sleep(2000); // 2 seconds should be enough for the operation to complete
         } catch (InterruptedException e) {
