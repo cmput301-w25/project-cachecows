@@ -56,7 +56,7 @@ import java.util.List;
 public class FeedManagerActivity extends AppCompatActivity {
     private Button btnTheirMood, btnMyMood;
     private ImageButton btnFilter;
-    private TextView tvShareInfo, tvEmptyState;
+    private TextView tvShareInfo, tvEmptyState, tvOfflineIndicator;
     private RecyclerView recyclerMoodEvents;
     private FloatingActionButton fabAddMood;
     private FirebaseAuth mAuth;
@@ -66,6 +66,7 @@ public class FeedManagerActivity extends AppCompatActivity {
 
     static boolean SKIP_AUTH_FOR_TESTING = false;
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
+    private ConnectivityReceiver connectivityReceiver;
 
     /**
      * Initializes feed UI and authentication checks
@@ -122,18 +123,32 @@ public class FeedManagerActivity extends AppCompatActivity {
         // Set click listener for Profile navigation (existing code)
         navProfile.setOnClickListener(v -> navigateToProfile());
 
+        // Check initial network state
+        boolean isConnected = ConnectivityReceiver.isNetworkAvailable(this);
+        if (!isConnected) {
+            tvOfflineIndicator.setVisibility(View.VISIBLE);
+        } else {
+            tvOfflineIndicator.setVisibility(View.GONE);
+        }
+
         // Register ConnectivityReceiver
         IntentFilter intentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        ConnectivityReceiver connectivityReceiver = new ConnectivityReceiver(new ConnectivityReceiver.ConnectivityReceiverListener() {
+        connectivityReceiver = new ConnectivityReceiver(new ConnectivityReceiver.ConnectivityReceiverListener() {
             @Override
             public void onNetworkConnectionChanged(boolean isConnected) {
                 if (isConnected) {
+                    //Hide the offline indicator
+                    tvOfflineIndicator.setVisibility(View.GONE);
+
                     // Refresh the adapter to update the UI
                     if (isShowingMyMood) {
                         loadMyMoodEvents();
                     } else {
                         loadTheirMoodEvents();
                     }
+                } else {
+                    //Show the offline indicator
+                    tvOfflineIndicator.setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -163,6 +178,17 @@ public class FeedManagerActivity extends AppCompatActivity {
     }
 
     /**
+     * Unregisters ConnectivityReceiver on activity destroy
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (connectivityReceiver != null) {
+            unregisterReceiver(connectivityReceiver);
+        }
+    }
+
+    /**
      * Binds view references from layout XML
      *
      * <p>Initializes:
@@ -180,6 +206,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         tvShareInfo = findViewById(R.id.tvShareInfo);
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
         fabAddMood = findViewById(R.id.fabAddMood);
+        tvOfflineIndicator = findViewById(R.id.tvOfflineIndicator);
     }
 
     /**

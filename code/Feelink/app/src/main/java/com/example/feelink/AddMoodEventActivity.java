@@ -527,9 +527,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
                                 // Offline callback might be delayed
                             }
                             @Override
-                            public void onFailure(String errorMessage) {
-                                // Optionally handle error
-                            }
+                            public void onFailure(String errorMessage) {}
                         });
                         Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
                         finish();

@@ -74,6 +74,11 @@ public class ConnectivityReceiver extends BroadcastReceiver {
                 });
             }
         }
+        else {
+            if (listener != null) {
+                listener.onNetworkConnectionChanged(false);
+            }
+        }
     }
 
     /**
@@ -81,7 +86,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
      * @param context
      * @return True if the device is connected to a network, false otherwise.
      */
-    private boolean isNetworkAvailable(Context context) {
+    public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
