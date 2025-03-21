@@ -117,6 +117,7 @@ public class FirestoreManager {
         moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
+        moodData.put("isPublic", moodEvent.isPublic());
 
         // Only add optional fields if they're not null or empty
         if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
@@ -210,6 +211,9 @@ public class FirestoreManager {
                                 moodEvent.setDocumentId(id);
                                 moodEvent.setImageUrl(imageUrl);
 
+                                Boolean isPublic = document.getBoolean("isPublic");
+                                moodEvent.setPublic(isPublic != null ? isPublic : true);
+
                                 moodEvents.add(moodEvent);
                             }
 
@@ -242,6 +246,7 @@ public class FirestoreManager {
         db.collection(COLLECTION_MOOD_EVENTS)
                 .whereNotEqualTo("userId", this.userId)
 //                .orderBy("userId")  // Required for the not equals query to work
+                .whereEqualTo("isPublic", true)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .orderBy("userId", Query.Direction.DESCENDING)
                 .get()
@@ -265,6 +270,9 @@ public class FirestoreManager {
                                 moodEvent.setId(id.hashCode());
                                 moodEvent.setTimestamp(timestamp);
                                 moodEvent.setImageUrl(imageUrl);
+
+                                Boolean isPublic = document.getBoolean("isPublic");
+                                moodEvent.setPublic(isPublic != null ? isPublic : true);
 
                                 moodEvents.add(moodEvent);
                             }

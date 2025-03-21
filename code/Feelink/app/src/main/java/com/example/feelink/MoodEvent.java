@@ -26,6 +26,8 @@ public class MoodEvent {
     private String reason;
     private String userId;  // Added to support authentication later
     private String imageUrl;
+    private boolean isPublic = true; // Default to public
+
 
     /**
      * Default constructor initializes required temporal fields
@@ -213,5 +215,13 @@ public class MoodEvent {
      */
     public void setDocumentId(String documentId) {
         this.documentId = documentId;
+    }
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

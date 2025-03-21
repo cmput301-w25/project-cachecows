@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -53,6 +54,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private EditText etReason, etTrigger;
     private Spinner socialSituationSpinner;
     private Button btnAddMood;
+    private ToggleButton togglePrivacy;
 
     //State
     String selectedMood = null;
@@ -110,8 +112,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
             String trigger = intent.getStringExtra("TRIGGER");
             String socialSituation = intent.getStringExtra("SOCIAL_SITUATION");
             String imageUrl = intent.getStringExtra("IMAGE_URL");
+            boolean isPublic = intent.getBooleanExtra("IS_PUBLIC", true);
 
-            preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl);
+            preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl,isPublic);
         }
 
         // Set greeting with username (this would normally come from user data)
@@ -138,7 +141,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
      * @param socialSituation Selected social situation
      * @param imageUrl Stored image reference
      */
-    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation, String imageUrl) {
+    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation, String imageUrl, boolean isPublic) {
         // Set the selected mood
         selectedMood = emotionalState;
         highlightSelectedMood(emotionalState);
@@ -172,6 +175,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
         } else {
             btnDeletePhoto.setVisibility(View.GONE);
         }
+
+        togglePrivacy.setChecked(!isPublic);  // Toggle is "Private" when checked
     }
 
     /**
@@ -236,6 +241,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         tvGreeting = findViewById(R.id.tvGreeting);
         etReason = findViewById(R.id.etReason);
         etTrigger = findViewById(R.id.etTrigger);
+        togglePrivacy = findViewById(R.id.togglePrivacy);
         socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
         btnAddMood = findViewById(R.id.btnAddMood);
         tvAddPhoto = findViewById(R.id.tvAddPhoto);
@@ -428,6 +434,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
                 MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
                 moodEvent.setTimestamp(currentDateTime);
+
+                boolean isPublic = !togglePrivacy.isChecked(); // Toggle OFF = Public
+                moodEvent.setPublic(isPublic);
 
                 //If we have an uploaded image url
                 if (uploadedImageUrl != null) {
