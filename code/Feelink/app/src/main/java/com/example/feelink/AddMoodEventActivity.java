@@ -287,6 +287,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
         });
 
         tvAddPhoto.setOnClickListener(v -> {
+            if (!ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)){
+                Toast.makeText(AddMoodEventActivity.this, "You are offline. You cannot upload a photo right now.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
         });
@@ -462,7 +466,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
                         return;
                     }
                     moodEvent.setId(moodEventId);
-                    if (isNetworkAvailable()) {
+                    if (ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)) {
                         moodEvent.setPendingSync(false);
                         firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
                             @Override
@@ -494,7 +498,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     }
                 } else {
                     // Add mode:
-                    if (isNetworkAvailable()) {
+                    if (ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)){
                         moodEvent.setPendingSync(false);
                         firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
                             @Override
@@ -577,12 +581,5 @@ public class AddMoodEventActivity extends AppCompatActivity {
         tvAddPhoto.setText("Add Photograph");
         btnDeletePhoto.setVisibility(View.GONE);
         Snackbar.make(findViewById(R.id.layoutBottomNav),"Photo removed", Snackbar.LENGTH_SHORT).show();
-    }
-
-    // method to check connectivity
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnected();
     }
 }
