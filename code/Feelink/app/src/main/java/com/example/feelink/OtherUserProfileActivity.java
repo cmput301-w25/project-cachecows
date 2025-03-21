@@ -182,17 +182,26 @@ public class OtherUserProfileActivity extends AppCompatActivity {
 
     private void toggleFollow() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        // Check if already following
         db.collection("users").document(currentUserId)
                 .collection("following").document(profileUserId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        // Already following, so unfollow
                         unfollowUser();
                     } else {
-                        // Not following, so follow
-                        followUser();
+                        // Send follow request
+                        FirestoreManager firestoreManager = new FirestoreManager(currentUserId);
+                        firestoreManager.sendFollowRequest(profileUserId, new FirestoreManager.OnFollowRequestListener() {
+                            @Override
+                            public void onSuccess() {
+                                followButton.setText("Requested");
+                                Toast.makeText(OtherUserProfileActivity.this, "Follow request sent", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Toast.makeText(OtherUserProfileActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
                 });
     }

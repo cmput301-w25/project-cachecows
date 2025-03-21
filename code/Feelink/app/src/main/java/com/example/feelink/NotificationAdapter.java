@@ -9,13 +9,21 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
 import java.util.List;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
     private List<Notification> notifications;
+    private FirebaseFirestore db;
 
     public NotificationAdapter(List<Notification> notifications) {
         this.notifications = notifications;
+        this.db = FirebaseFirestore.getInstance();
     }
 
     public void updateNotifications(List<Notification> newNotifications) {
@@ -35,26 +43,68 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Notification notification = notifications.get(position);
 
+        // Load sender's profile picture using Glide
+//        Glide.with(holder.itemView.getContext())
+//                .load(notification.getSenderProfileUrl())
+//                .into(holder.profileImage);
+
         // Set common elements
         holder.message.setText(notification.getMessage());
+        holder.profileImage.setImageResource(R.drawable.ic_nav_profile); // Use your default profile icon
+
+
 
         // Handle different notification types
         if (notification.getType() == Notification.Type.FOLLOW_REQUEST) {
             holder.acceptButton.setVisibility(View.VISIBLE);
             holder.denyButton.setVisibility(View.VISIBLE);
 
-            // Placeholder click listeners
-            holder.acceptButton.setOnClickListener(v -> {
-                // Will implement later
-            });
-
-            holder.denyButton.setOnClickListener(v -> {
-                // Will implement later
-            });
+            holder.acceptButton.setOnClickListener(v -> handleFollowRequest(notification, true));
+            holder.denyButton.setOnClickListener(v -> handleFollowRequest(notification, false));
         } else {
             holder.acceptButton.setVisibility(View.GONE);
             holder.denyButton.setVisibility(View.GONE);
         }
+    }
+
+    private void handleFollowRequest(Notification notification, boolean accepted) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("follow_requests")
+                .document(notification.getId())
+                .update("status", accepted ? "accepted" : "denied")
+                .addOnSuccessListener(aVoid -> {
+                    if (accepted) {
+                        // Add to followers/following
+                        addFollowerRelationship(notification.getSenderId());
+                    }
+                    removeNotification(notification);
+                });
+    }
+
+    private void addFollowerRelationship(String senderId) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        // Add to current user's followers
+        db.collection("users").document(currentUserId)
+                .collection("followers").document(senderId)
+                .set(new HashMap<>());
+
+        // Add to sender's following
+        db.collection("users").document(senderId)
+                .collection("following").document(currentUserId)
+                .set(new HashMap<>());
+
+        // Update counts
+        db.collection("users").document(currentUserId)
+                .update("followers", FieldValue.increment(1));
+        db.collection("users").document(senderId)
+                .update("following", FieldValue.increment(1));
+    }
+
+    private void removeNotification(Notification notification) {
+        int position = notifications.indexOf(notification);
+        notifications.remove(position);
+        notifyItemRemoved(position);
     }
 
     @Override
@@ -62,12 +112,19 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         return notifications.size();
     }
 
+    public void clearNotifications() {
+        this.notifications.clear();
+        notifyDataSetChanged();
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        de.hdodenhof.circleimageview.CircleImageView profileImage;
         TextView message;
         Button acceptButton, denyButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            profileImage = itemView.findViewById(R.id.profileImage);
             message = itemView.findViewById(R.id.message);
             acceptButton = itemView.findViewById(R.id.acceptButton);
             denyButton = itemView.findViewById(R.id.denyButton);

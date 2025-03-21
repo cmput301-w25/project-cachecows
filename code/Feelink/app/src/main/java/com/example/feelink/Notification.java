@@ -9,8 +9,16 @@ public class Notification {
     private String message;
     private boolean isNew;
     private long timestamp;
+    private String senderId;
 
-    // Constructor, getters & setters
+    public String getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
+    }
+
 
     public String getId() {
         return id;

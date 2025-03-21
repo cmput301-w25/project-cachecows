@@ -446,6 +446,63 @@ public class FirestoreManager {
                 });
     }
 
+    public void sendFollowRequest(String receiverId, OnFollowRequestListener listener) {
+        // Fetch the sender's username
+        getUsernameById(this.userId, new OnUsernameListener() {
+            @Override
+            public void onSuccess(String username) {
+                createFollowRequest(receiverId, username, listener);
+            }
+
+            @Override
+            public void onFailure(String fallbackName) {
+                // Fallback to using userId as the name
+                createFollowRequest(receiverId, userId, listener);
+            }
+        });
+    }
+
+    private void createFollowRequest(String receiverId, String senderName, OnFollowRequestListener listener) {
+        Map<String, Object> request = new HashMap<>();
+        request.put("senderId", this.userId);
+        request.put("senderName", senderName);
+        request.put("receiverId", receiverId);
+        request.put("status", "pending");
+        request.put("timestamp", FieldValue.serverTimestamp());
+
+        db.collection("follow_requests")
+                .add(request)
+                .addOnSuccessListener(documentReference -> {
+                    if (listener != null) listener.onSuccess();
+                })
+                .addOnFailureListener(e -> {
+                    if (listener != null) listener.onFailure(e.getMessage());
+                });
+    }
+
+    public void getFollowRequests(OnFollowRequestsListener listener) {
+        db.collection("follow_requests")
+                .whereEqualTo("receiverId", this.userId)
+                .whereEqualTo("status", "pending")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<FollowRequest> requests = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            FollowRequest request = document.toObject(FollowRequest.class);
+                            request.setId(document.getId());
+                            requests.add(request);
+                        }
+                        listener.onSuccess(requests);
+                    } else {
+                        listener.onFailure(task.getException().getMessage());
+                    }
+                });
+    }
+
+
+
 
 //    public Query getPublicMoodEvents(String userId) {
 //        return db.collection("mood_events")
@@ -521,5 +578,15 @@ public class FirestoreManager {
          * @param fallbackName UID used as fallback identifier
          */
         void onFailure(String fallbackName);
+    }
+
+    public interface OnFollowRequestListener {
+        void onSuccess();
+        void onFailure(String error);
+    }
+
+    public interface OnFollowRequestsListener {
+        void onSuccess(List<FollowRequest> requests);
+        void onFailure(String error);
     }
 }
