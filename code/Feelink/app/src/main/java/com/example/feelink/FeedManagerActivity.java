@@ -1,9 +1,11 @@
 package com.example.feelink;
 
-import static android.content.ContentValues.TAG;
+
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.ColorStateList;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,7 +13,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -54,7 +56,7 @@ import java.util.List;
 public class FeedManagerActivity extends AppCompatActivity {
     private Button btnTheirMood, btnMyMood;
     private ImageButton btnFilter;
-    private TextView tvShareInfo, tvEmptyState;
+    private TextView tvShareInfo, tvEmptyState, tvOfflineIndicator;
     private RecyclerView recyclerMoodEvents;
     private FloatingActionButton fabAddMood;
     private FirebaseAuth mAuth;
@@ -64,6 +66,7 @@ public class FeedManagerActivity extends AppCompatActivity {
 
     static boolean SKIP_AUTH_FOR_TESTING = false;
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
+    private ConnectivityReceiver connectivityReceiver;
 
     /**
      * Initializes feed UI and authentication checks
@@ -122,6 +125,50 @@ public class FeedManagerActivity extends AppCompatActivity {
         // Set click listener for Profile navigation (existing code)
         navProfile.setOnClickListener(v -> navigateToProfile());
 
+        // Check initial network state
+        boolean isConnected = ConnectivityReceiver.isNetworkAvailable(this);
+        if (!isConnected) {
+            tvOfflineIndicator.setVisibility(View.VISIBLE);
+        } else {
+            tvOfflineIndicator.setVisibility(View.GONE);
+        }
+
+        // Register ConnectivityReceiver
+        IntentFilter intentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        connectivityReceiver = new ConnectivityReceiver(new ConnectivityReceiver.ConnectivityReceiverListener() {
+            @Override
+            public void onNetworkConnectionChanged(boolean isConnected) {
+                if (isConnected) {
+                    //Hide the offline indicator, "Back Online" will not show up until the first occurrence of offline indicator
+                    //since we require network to authenticate in the first place
+                    tvOfflineIndicator.setText(R.string.back_online);
+                    tvOfflineIndicator.setBackgroundColor(getResources().getColor(R.color.online_indicator_background));
+                    new android.os.Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // reset text/background for next offline stater
+                            tvOfflineIndicator.setText(R.string.you_are_currently_offline);
+                            tvOfflineIndicator.setBackgroundColor(getResources().getColor(R.color.offline_indicator_background));
+                            tvOfflineIndicator.setVisibility(View.GONE);
+                        }
+                    }, 3000); // 3 sec
+
+                    // Refresh the adapter to update the UI
+                    if (isShowingMyMood) {
+                        loadMyMoodEvents();
+                    } else {
+                        loadTheirMoodEvents();
+                    }
+                } else {
+                    //Show the offline indicator
+                    tvOfflineIndicator.setText(R.string.you_are_currently_offline);
+                    tvOfflineIndicator.setBackgroundColor(getResources().getColor(R.color.offline_indicator_background)); // Use the original background color
+                    tvOfflineIndicator.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+        registerReceiver(connectivityReceiver, intentFilter);
+
     }
 
     /**
@@ -146,6 +193,17 @@ public class FeedManagerActivity extends AppCompatActivity {
     }
 
     /**
+     * Unregisters ConnectivityReceiver on activity destroy
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (connectivityReceiver != null) {
+            unregisterReceiver(connectivityReceiver);
+        }
+    }
+
+    /**
      * Binds view references from layout XML
      *
      * <p>Initializes:
@@ -163,6 +221,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         tvShareInfo = findViewById(R.id.tvShareInfo);
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
         fabAddMood = findViewById(R.id.fabAddMood);
+        tvOfflineIndicator = findViewById(R.id.tvOfflineIndicator);
     }
 
     /**
