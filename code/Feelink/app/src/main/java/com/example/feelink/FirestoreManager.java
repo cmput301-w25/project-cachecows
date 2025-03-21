@@ -184,7 +184,7 @@ public class FirestoreManager {
      *
      * @param listener Callback receiving List<MoodEvent>
      */
-    public void getMoodEvents(final OnMoodEventsListener listener) {
+    public void getMoodEvents(Boolean showPublic, final OnMoodEventsListener listener) {
         db.collection(COLLECTION_MOOD_EVENTS)
                 .whereEqualTo("userId", this.userId)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
@@ -204,17 +204,28 @@ public class FirestoreManager {
                                 String userId = document.getString("userId");
                                 String imageUrl = document.getString("imageUrl");
 
-                                MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
-                                moodEvent.setUserId(userId);
-                                moodEvent.setId(id.hashCode());
-                                moodEvent.setTimestamp(timestamp);
-                                moodEvent.setDocumentId(id);
-                                moodEvent.setImageUrl(imageUrl);
-
+                                // Handle legacy moods (missing isPublic field)
                                 Boolean isPublic = document.getBoolean("isPublic");
-                                moodEvent.setPublic(isPublic != null ? isPublic : true);
+                                if (isPublic == null) {
+                                    isPublic = true; // Treat old moods as public
+                                }
 
-                                moodEvents.add(moodEvent);
+                                // Apply filtering based on toggle state
+                                boolean shouldInclude = (showPublic == null) || // For total count
+                                        (showPublic && isPublic) || // Public mode
+                                        (!showPublic && !isPublic); // Private mode
+
+                                if (shouldInclude) {
+                                    MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+                                    moodEvent.setUserId(userId);
+                                    moodEvent.setId(id.hashCode());
+                                    moodEvent.setTimestamp(timestamp);
+                                    moodEvent.setDocumentId(id);
+                                    moodEvent.setImageUrl(imageUrl);
+                                    moodEvent.setPublic(isPublic);
+
+                                    moodEvents.add(moodEvent);
+                                }
                             }
 
                             if (listener != null) {
@@ -245,8 +256,6 @@ public class FirestoreManager {
         // Query all mood events not belonging to current user
         db.collection(COLLECTION_MOOD_EVENTS)
                 .whereNotEqualTo("userId", this.userId)
-//                .orderBy("userId")  // Required for the not equals query to work
-                .whereEqualTo("isPublic", true)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .orderBy("userId", Query.Direction.DESCENDING)
                 .get()
@@ -265,16 +274,23 @@ public class FirestoreManager {
                                 String userId = document.getString("userId");
                                 String imageUrl = document.getString("imageUrl");
 
-                                MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
-                                moodEvent.setUserId(userId);
-                                moodEvent.setId(id.hashCode());
-                                moodEvent.setTimestamp(timestamp);
-                                moodEvent.setImageUrl(imageUrl);
-
+                                // Handle missing isPublic field (default to true)
                                 Boolean isPublic = document.getBoolean("isPublic");
-                                moodEvent.setPublic(isPublic != null ? isPublic : true);
+                                if (isPublic == null) {
+                                    isPublic = true; // Treat old moods as public
+                                }
 
-                                moodEvents.add(moodEvent);
+                                // Only add public moods
+                                if (isPublic) {
+                                    MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+                                    moodEvent.setUserId(userId);
+                                    moodEvent.setId(id.hashCode());
+                                    moodEvent.setTimestamp(timestamp);
+                                    moodEvent.setImageUrl(imageUrl);
+                                    moodEvent.setPublic(isPublic); // Set the privacy status
+
+                                    moodEvents.add(moodEvent);
+                                }
                             }
 
                             if (listener != null) {
