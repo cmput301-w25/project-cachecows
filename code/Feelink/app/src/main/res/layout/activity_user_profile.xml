@@ -19,7 +19,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-
             <!-- Profile Section -->
             <LinearLayout
                 android:id="@+id/profileSection"
@@ -47,19 +46,36 @@
                             android:rotation="45" />
                     </LinearLayout>
 
-                    <ImageButton
-                        android:id="@+id/settingsButton"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:layout_gravity="end"
-                        android:src="@drawable/ic_settings_button"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="Settings"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:layout_margin="10dp"/>
+                        android:orientation="horizontal"
+                        android:padding="4dp"
+                        android:layout_marginTop="32dp">
+
+                        <!-- Filter Button -->
+                        <ImageButton
+                            android:id="@+id/filterButton"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_filter"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Filter"
+                            android:elevation="2dp"
+                            app:tint="#5A4A7E" />
+
+                        <!-- Settings Button -->
+                        <ImageButton
+                            android:id="@+id/settingsButton"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="8dp"
+                            android:src="@drawable/ic_settings_button"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Settings"
+                            app:tint="#5A4A7E" />
+                    </LinearLayout>
                 </FrameLayout>
 
                 <!-- Profile Picture and Username -->
@@ -135,7 +151,7 @@
                             android:id="@id/followerCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="12"
+                            android:text="0"
                             android:textColor="#5A4A7E"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -159,7 +175,7 @@
                             android:id="@id/followingCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="200"
+                            android:text="0"
                             android:textColor="#5A4A7E"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -184,12 +200,22 @@
                     android:textColor="#808080"
                     android:textStyle="italic" />
 
-                <!-- Edit Profile Button and Privacy Toggle -->
+                <!-- Search View Section -->
+                <androidx.appcompat.widget.SearchView
+                    android:id="@+id/searchView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone"
+                    app:queryHint="Search reasons..."
+                    app:iconifiedByDefault="false"/>
+
+                <!-- Action Buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:layout_marginTop="16dp"
+                    android:orientation="horizontal"
                     android:gravity="center">
 
                     <androidx.appcompat.widget.AppCompatButton
@@ -218,11 +244,10 @@
                         android:background="@drawable/selected_tab_background"
                         android:textColor="#FFFFFF"
                         android:textAllCaps="false" />
-
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- RecyclerView Inside Scroll View -->
+            <!-- RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerMoodEvents"
                 android:layout_width="match_parent"
@@ -261,6 +286,14 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:contentDescription="Home tab"
+            android:src="@drawable/ic_nav_home" />
+
+        <ImageView
             android:id="@+id/navSearch"
             android:layout_width="0dp"
             android:layout_height="24dp"
@@ -269,7 +302,7 @@
             android:src="@drawable/ic_search" />
 
         <ImageView
-            android:id="@+id/navHome"
+            android:id="@+id/navMap"
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"

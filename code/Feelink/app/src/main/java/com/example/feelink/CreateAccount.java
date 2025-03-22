@@ -8,6 +8,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -15,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -24,6 +26,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
 
@@ -33,27 +36,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Handles user registration flow with Firebase integration
- *
- * <p>Manages complete account creation process including:</p>
- * <ul>
- *   <li>Real-time username validation</li>
- *   <li>Password complexity enforcement</li>
- *   <li>Firebase Authentication integration</li>
- *   <li>Firestore data storage</li>
- * </ul>
- *
- * <h3>User Stories Implemented:</h3>
- * <ul>
- *   <li>US 03.01.01.01 - Unique username validation</li>
- *   <li>US 03.01.01.02 - Username availability checking</li>
- *   <li>US 03.01.01.03 - Username constraints enforcement</li>
- * </ul>
- *
- * @see FirebaseAuth
- * @see FirebaseFirestore
- */
 public class CreateAccount extends AppCompatActivity {
     private EditText nameEditText, usernameEditText, dobEditText,
             emailEditText, passwordEditText, repeatedPasswordEditText;
@@ -65,33 +47,16 @@ public class CreateAccount extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
     private boolean usernameAvailable = false;
+    private boolean isEditMode = false;
+    private String existingUsername;
 
-    // Adapted regex from Stackoverflow by JvdV:
-    // https://stackoverflow.com/questions/62361928/how-to-validate-username-and-password-on-android-using-java-regex
-    private static final String VALID_USERNAME = "^(?=.*[a-zA-Z])[a-zA-Z0-9_]{3,25}$"; //at least 1 letter, min 3 characters, max 25
-    private static final String VALID_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_+\\-=]{6,}$"; //at least 1 digit, 1 lowercase letter, 1 uppercase, min 6 characters
+    // Regex patterns
+    private static final String VALID_USERNAME = "^(?=.*[a-zA-Z])[a-zA-Z0-9_]{3,25}$";
+    private static final String VALID_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_+\\-=]{6,}$";
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
 
-
-
-    /**
-     * Called when activity is created
-     * Initializes UI components, Firebase & event listeners
-     * Real time username validation
-     * <p>Key setup operations:</p>
-     * <ol>
-     *   <li>Firebase service initialization</li>
-     *   <li>UI component binding</li>
-     *   <li>Real-time username validation (US 03.01.01.02)</li>
-     *   <li>Navigation handlers</li>
-     * </ol>
-     * @param savedInstanceState If the activity is being re-initialized after
-     *     previously being shut down then this Bundle contains the data it most
-     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
-     *
-     */
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_account);
 
@@ -99,7 +64,27 @@ public class CreateAccount extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         usersRef = db.collection("users");
 
-        nameEditText= findViewById(R.id.create_name_text);
+        // Check if in edit mode
+        isEditMode = getIntent().getBooleanExtra("EDIT_MODE", false);
+
+        initializeViews();
+        setupUIForMode();
+        setupDatePicker();
+        setupUsernameValidation();
+
+        createButton.setOnClickListener(v -> {
+            if (isEditMode) {
+                updateProfile();
+            } else {
+                createNewAccount();
+            }
+        });
+
+        backButton.setOnClickListener(v -> handleBackNavigation());
+    }
+
+    private void initializeViews() {
+        nameEditText = findViewById(R.id.create_name_text);
         usernameEditText = findViewById(R.id.create_username_text);
         dobEditText = findViewById(R.id.create_date_of_birth_text);
         emailEditText = findViewById(R.id.create_email_text);
@@ -108,9 +93,62 @@ public class CreateAccount extends AppCompatActivity {
         usernameFeedbackText = findViewById(R.id.create_username_feedback);
         createButton = findViewById(R.id.create_button);
         backButton = findViewById(R.id.back_button);
+    }
 
-        //real-time username validation using textWatcher
-        //https://www.geeksforgeeks.org/how-to-implement-textwatcher-in-android/
+    private void setupUIForMode() {
+        if (isEditMode) {
+            TextView title = findViewById(R.id.create_profile_text);
+            title.setText("Edit Profile");
+            createButton.setText("Save Changes");
+
+            // Hide email and password fields
+            emailEditText.setVisibility(View.GONE);
+            passwordEditText.setVisibility(View.GONE);
+            repeatedPasswordEditText.setVisibility(View.GONE);
+
+            loadUserData();
+        }
+    }
+
+    private void loadUserData() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            db.collection("users").document(currentUser.getUid())
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            nameEditText.setText(documentSnapshot.getString("name"));
+                            usernameEditText.setText(documentSnapshot.getString("username"));
+                            dobEditText.setText(documentSnapshot.getString("dob"));
+                            existingUsername = documentSnapshot.getString("username");
+                        }
+                    });
+        }
+    }
+
+    private void setupDatePicker() {
+        final Calendar calendar = Calendar.getInstance();
+        final DatePickerDialog.OnDateSetListener dateSetListener = (view, year, month, dayOfMonth) -> {
+            calendar.set(Calendar.YEAR, year);
+            calendar.set(Calendar.MONTH, month);
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            updateDateLabel(calendar);
+        };
+
+        dobEditText.setOnClickListener(v -> {
+            DatePickerDialog datePickerDialog = new DatePickerDialog(
+                    CreateAccount.this,
+                    dateSetListener,
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
+            );
+            datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+            datePickerDialog.show();
+        });
+    }
+
+    private void setupUsernameValidation() {
         usernameEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -123,62 +161,14 @@ public class CreateAccount extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {}
         });
-
-        createButton.setOnClickListener(v -> createNewAccount());
-
-        backButton.setOnClickListener(v->{
-            startActivity(new Intent(CreateAccount.this, MainActivity.class));
-        });
-
-        // Set up date picker dialog for DOB field
-        final Calendar calendar = Calendar.getInstance();
-        final DatePickerDialog.OnDateSetListener dateSetListener = new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                calendar.set(Calendar.YEAR, year);
-                calendar.set(Calendar.MONTH, month);
-                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                updateDateLabel(calendar);
-            }
-        };
-
-        dobEditText.setOnClickListener(v -> {
-            // Create date picker with current date as default
-            DatePickerDialog datePickerDialog = new DatePickerDialog(
-                    CreateAccount.this,
-                    dateSetListener,
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH)
-            );
-
-            // Set max date to today (no future dates allowed)
-            datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
-
-            datePickerDialog.show();
-        });
-
     }
+
     private void updateDateLabel(Calendar calendar) {
-        String dateFormat = "dd/MM/yyyy"; // Format matching your validation pattern
+        String dateFormat = "dd/MM/yyyy";
         SimpleDateFormat sdf = new SimpleDateFormat(dateFormat, Locale.getDefault());
         dobEditText.setText(sdf.format(calendar.getTime()));
     }
 
-
-    /**
-     * Validates username format and checks availability in Firestore
-     *
-     * <p>Implements:
-     * <ul>
-     *   <li>Regex validation (US 03.01.01.03)</li>
-     *   <li>Real-time availability check (US 03.01.01.02)</li>
-     * </ul>
-     *
-     * @param username Potential username to validate
-     *
-     * @see #VALID_USERNAME
-     */
     private void checkUsername(String username) {
         if (!ValidationUtils.isUsernameValid(username)) {
             usernameFeedbackText.setText("Invalid username! Use 3-25 characters (letters, numbers, underscores)");
@@ -186,7 +176,12 @@ public class CreateAccount extends AppCompatActivity {
             return;
         }
 
-        // Check usernames collection instead of users
+        if (isEditMode && username.equals(existingUsername)) {
+            usernameAvailable = true;
+            usernameFeedbackText.setText("Available");
+            return;
+        }
+
         db.collection("usernames").document(username).get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -194,47 +189,17 @@ public class CreateAccount extends AppCompatActivity {
                         usernameAvailable = !exists;
                         usernameFeedbackText.setText(exists ? "Username taken" : "Available");
                     } else {
-                        // Handle empty collection case gracefully
                         usernameAvailable = true;
                         usernameFeedbackText.setText("Available");
                     }
                 });
     }
 
-    /**
-     * Validates password against complexity requirements
-     *
-     * <p>Enforces:
-     * <ul>
-     *   <li>6+ characters</li>
-     *   <li>Uppercase and lowercase letters</li>
-     *   <li>At least one numeric character</li>
-     * </ul>
-     *
-     * @param password Password to validate
-     * @return true if password meets complexity rules
-     *
-     * @see #VALID_PASSWORD
-     */
     private boolean isValidPassword(String password) {
-
         return ValidationUtils.isPasswordValid(password);
     }
 
-    /**
-     * Orchestrates complete account creation process
-     *
-     * <p>Performs:
-     * <ol>
-     *   <li>Field validation</li>
-     *   <li>Firebase auth creation</li>
-     *   <li>Firestore data storage</li>
-     *   <li>Username reservation</li>
-     * </ol>
-     *
-     * <p>Implements atomic batch writes for data consistency</p>
-     */
-      void createNewAccount(){
+    void createNewAccount() {
         String name = nameEditText.getText().toString().trim();
         String username = usernameEditText.getText().toString().trim();
         String dob = dobEditText.getText().toString().trim();
@@ -242,103 +207,125 @@ public class CreateAccount extends AppCompatActivity {
         String password = passwordEditText.getText().toString().trim();
         String repeatedPassword = repeatedPasswordEditText.getText().toString().trim();
 
-        if (name.isEmpty() || username.isEmpty() || dob.isEmpty() ||
-                email.isEmpty() || password.isEmpty() || repeatedPassword.isEmpty()) {
-            Snackbar.make(findViewById(android.R.id.content), "Please fill all fields!", Snackbar.LENGTH_SHORT).show();
+        if (validateNewAccountFields(name, username, dob, email, password, repeatedPassword)) return;
+
+        if (SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
+            handleTestingMode(name, username, dob, email);
             return;
         }
 
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-              if (!ValidationUtils.isDateValid(dob)) {
-                  Snackbar.make(findViewById(android.R.id.content), "Invalid date format. Use dd/mm/yyyy.", Snackbar.LENGTH_SHORT).show();
-                  return;
-              }
-          }
-
-          //Email validation
-        //Based on a StackOverflow answer by gaurav jain:
-        //https://stackoverflow.com/questions/77226668/how-allow-email-using-email-validation-regex-in-android
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Snackbar.make(findViewById(android.R.id.content), "Invalid email format!", Snackbar.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (!isValidPassword(password)) {
-            Snackbar.make(findViewById(android.R.id.content), "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number.", Snackbar.LENGTH_LONG).show();
-            return;
-        }
-
-        if (!password.equals(repeatedPassword)) {
-            Snackbar.make(findViewById(android.R.id.content), "Passwords do not match!", Snackbar.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (!usernameAvailable) {
-            Snackbar.make(findViewById(android.R.id.content), "Username not available.", Snackbar.LENGTH_SHORT).show();
-            return;
-        }
-
-          // TESTING BYPASS: Skip Firebase auth for testing
-          if (SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT) {
-              Log.d(TAG, "TESTING MODE: Bypassing Firebase auth and navigating directly");
-              // Create a mock user in test mode for Firestore
-              Map<String, Object> userData = new HashMap<>();
-              userData.put("name", name);
-              userData.put("username", username);
-              userData.put("dob", dob);
-              userData.put("email", email);
-
-              // Navigate directly to FeedManagerActivity
-              Intent intent = new Intent(CreateAccount.this, FeedManagerActivity.class);
-              startActivity(intent);
-              finish();
-              return;
-          }
-
-        // Create user with Firebase Authentication
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "createUserWithEmail:success");
                         FirebaseUser user = mAuth.getCurrentUser();
                         addUserToFirestore(user, name, username, dob, email);
                     } else {
-                        Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                        Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + task.getException().getMessage(), Snackbar.LENGTH_LONG).show();
+                        showSnackbar("Registration failed: " + task.getException().getMessage());
                     }
                 });
     }
 
-    //Adapted from:
-    // https://stackoverflow.com/questions/68910946/how-to-check-if-the-particular-username-exists-in-the-firebase-java-android
+    private boolean validateNewAccountFields(String name, String username, String dob, String email, String password, String repeatedPassword) {
+        if (name.isEmpty() || username.isEmpty() || dob.isEmpty() ||
+                email.isEmpty() || password.isEmpty() || repeatedPassword.isEmpty()) {
+            showSnackbar("Please fill all fields!");
+            return true;
+        }
 
-    /**
-     * Stores user data in Firestore with atomic batch write
-     *
-     * <p>Writes to two collections atomically:
-     * <ol>
-     *   <li>users collection (user profile data)</li>
-     *   <li>usernames collection (username reservation)</li>
-     * </ol>
-     *
-     * @param user Authenticated Firebase user
-     * @param name User's full name
-     * @param username Unique username
-     * @param dob Date of birth
-     * @param email Verified email address
-     */
-    void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
-        if (user == null) {
-            Log.e(TAG, "Cannot add null user to Firestore");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !ValidationUtils.isDateValid(dob)) {
+            showSnackbar("Invalid date format. Use dd/mm/yyyy.");
+            return true;
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            showSnackbar("Invalid email format!");
+            return true;
+        }
+
+        if (!isValidPassword(password)) {
+            showSnackbar("Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number.");
+            return true;
+        }
+
+        if (!password.equals(repeatedPassword)) {
+            showSnackbar("Passwords do not match!");
+            return true;
+        }
+
+        if (!usernameAvailable) {
+            showSnackbar("Username not available.");
+            return true;
+        }
+        return false;
+    }
+
+    private void updateProfile() {
+        String name = nameEditText.getText().toString().trim();
+        String username = usernameEditText.getText().toString().trim();
+        String dob = dobEditText.getText().toString().trim();
+
+        if (name.isEmpty() || username.isEmpty() || dob.isEmpty()) {
+            showSnackbar("Please fill all fields!");
             return;
         }
 
-        Log.d(TAG, "Starting to add user to Firestore: " + username);
+        if (!username.equals(existingUsername) && !usernameAvailable) {
+            showSnackbar("Username not available.");
+            return;
+        }
 
-        // Batch write to both collections
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            WriteBatch batch = db.batch();
+            DocumentReference userRef = db.collection("users").document(user.getUid());
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("name", name);
+            updates.put("username", username);
+            updates.put("dob", dob);
+            batch.update(userRef, updates);
+
+            if (!username.equals(existingUsername)) {
+                updateUsernameReferences(batch, user.getUid(), username);
+            }
+
+            batch.commit()
+                    .addOnSuccessListener(unused -> {
+                        setResult(RESULT_OK);
+                        finish();
+                    })
+                    .addOnFailureListener(e -> showSnackbar("Update failed: " + e.getMessage()));
+        }
+    }
+
+    private void updateUsernameReferences(WriteBatch batch, String uid, String newUsername) {
+        // Remove old username
+        DocumentReference oldUsernameRef = db.collection("usernames").document(existingUsername);
+        batch.delete(oldUsernameRef);
+
+        // Add new username
+        DocumentReference newUsernameRef = db.collection("usernames").document(newUsername);
+        Map<String, Object> usernameData = new HashMap<>();
+        usernameData.put("uid", uid);
+        usernameData.put("email", mAuth.getCurrentUser().getEmail());
+        batch.set(newUsernameRef, usernameData);
+    }
+
+    private void handleTestingMode(String name, String username, String dob, String email) {
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("name", name);
+        userData.put("username", username);
+        userData.put("dob", dob);
+        userData.put("email", email);
+
+        Intent intent = new Intent(CreateAccount.this, FeedManagerActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
         WriteBatch batch = db.batch();
 
-        // 1. Create user document
         DocumentReference userRef = db.collection("users").document(user.getUid());
         Map<String, Object> userData = new HashMap<>();
         userData.put("username", username);
@@ -347,27 +334,36 @@ public class CreateAccount extends AppCompatActivity {
         userData.put("name", name);
         batch.set(userRef, userData);
 
-        // 2. Create username reference
-        // Inside addUserToFirestore()
         DocumentReference usernameRef = db.collection("usernames").document(username);
         Map<String, Object> usernameData = new HashMap<>();
         usernameData.put("uid", user.getUid());
-        usernameData.put("email", email); // Add email here
+        usernameData.put("email", email);
         batch.set(usernameRef, usernameData);
 
-        // Commit batch
         batch.commit()
-                .addOnSuccessListener(unused -> {
-                    Log.d(TAG, "User data successfully written to Firestore");
-                    Intent intent = new Intent(CreateAccount.this, FeedManagerActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear activity stack for testing
-                    startActivity(intent);
-                    finish();
-                })
+                .addOnSuccessListener(unused -> navigateToFeed())
                 .addOnFailureListener(e -> {
-                    // Rollback auth user if Firestore fails
                     user.delete();
-                    Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show();
+                    showSnackbar("Registration failed: " + e.getMessage());
                 });
+    }
+
+    private void navigateToFeed() {
+        Intent intent = new Intent(CreateAccount.this, FeedManagerActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        finish();
+    }
+
+    private void handleBackNavigation() {
+        if (isEditMode) {
+            finish();
+        } else {
+            startActivity(new Intent(CreateAccount.this, MainActivity.class));
+        }
+    }
+
+    private void showSnackbar(String message) {
+        Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show();
     }
 }

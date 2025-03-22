@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -19,6 +20,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import android.view.MenuItem;
+import androidx.appcompat.widget.PopupMenu;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -28,7 +31,7 @@ import java.util.List;
 public class UserProfileActivity extends AppCompatActivity {
     private static final String TAG = "PersonalProfileActivity";
     private ImageView profileImageView;
-    private TextView usernameTextView, bioTextView;
+    private TextView usernameTextView, bioTextView, followerCountTextView, followingCountTextView;
     private String currentUserId;
     private RecyclerView recyclerMoodEvents;
     private MoodEventAdapter moodEventAdapter;
@@ -40,6 +43,9 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private ToggleButton togglePrivacy;
     private boolean isPublicMode = true; // Default to public
+
+    private boolean filterByWeek = false;
+    private String selectedEmotion = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,11 +60,26 @@ public class UserProfileActivity extends AppCompatActivity {
         fabAddMood = findViewById(R.id.fabAddMood);
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
         togglePrivacy = findViewById(R.id.togglePrivacy);
+        ImageButton filterButton = findViewById(R.id.filterButton);
+
+        // Inside UserProfileActivity's onCreate() after initializing views
+        ImageView navSearch = findViewById(R.id.navSearch);
+        ImageView navHome = findViewById(R.id.navHome);
+        ImageView navChats = findViewById(R.id.navChats);
+        ImageView navMap = findViewById(R.id.navMap);
+
+        navSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+        navHome.setOnClickListener(v -> startActivity(new Intent(this, FeedManagerActivity.class)));
+
+        navChats.setOnClickListener(v -> startActivity(new Intent(this, NotificationsActivity.class)));
+
 
         // Set up RecyclerView
         moodEventsList = new ArrayList<>();
         moodEventAdapter = new MoodEventAdapter(moodEventsList, this);
         moodEventAdapter.setMyMoodSection(true);
+        followerCountTextView = findViewById(R.id.followerCount);
+        followingCountTextView = findViewById(R.id.followingCount);
         recyclerMoodEvents.setLayoutManager(new LinearLayoutManager(this));
         recyclerMoodEvents.setAdapter(moodEventAdapter);
 
@@ -82,6 +103,9 @@ public class UserProfileActivity extends AppCompatActivity {
             fetchUserMoodEvents(currentUserId);
         });
 
+        filterButton.setOnClickListener(v -> showFilterMenu());
+
+
         fabAddMood.setOnClickListener(v -> {
             if (mAuth.getCurrentUser() != null) {
                 navigateToAddMood();
@@ -90,6 +114,12 @@ public class UserProfileActivity extends AppCompatActivity {
             }
         }
         );
+        Button editProfileButton = findViewById(R.id.editProfileButton);
+        editProfileButton.setOnClickListener(v -> {
+            Intent intent = new Intent(UserProfileActivity.this, CreateAccount.class);
+            intent.putExtra("EDIT_MODE", true);
+            startActivity(intent);
+        });
 //         Get current user ID
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
@@ -98,20 +128,60 @@ public class UserProfileActivity extends AppCompatActivity {
         fetchTotalMoodEvents(currentUserId);
         fetchUserMoodEvents(currentUserId);
     }
+    private void showFilterMenu() {
+        PopupMenu popup = new PopupMenu(this, findViewById(R.id.filterButton));
+        popup.getMenuInflater().inflate(R.menu.filter_menu, popup.getMenu());
+
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+
+            // Time filters
+            if (id == R.id.filter_week) {
+                filterByWeek = true;
+                selectedEmotion = null;
+            } else if (id == R.id.filter_all) {
+                filterByWeek = false;
+                selectedEmotion = null;
+            }
+            // Emotional state filters
+            else {
+                filterByWeek = false;
+                selectedEmotion = getEmotionFromId(id);
+            }
+
+            fetchUserMoodEvents(currentUserId);
+            return true;
+        });
+        popup.show();
+    }
+
+    private String getEmotionFromId(int id) {
+        if (id == R.id.filter_happy) return "Happy";
+        if (id == R.id.filter_fear) return "Fear";
+        if (id == R.id.filter_shame) return "Shame";
+        if (id == R.id.filter_sad) return "Sad";
+        if (id == R.id.filter_angry) return "Angry";
+        if (id == R.id.filter_surprised) return "Surprised";
+        if (id == R.id.filter_confused) return "Confused";
+        if (id == R.id.filter_disgusted) return "Disgusted";
+        return null;
+    }
 
 
     @Override
     protected void onResume() {
         super.onResume();
+        fetchUserData(currentUserId); // Refresh profile data
         fetchUserMoodEvents(currentUserId); // Refresh mood events
 
     }
     private void fetchTotalMoodEvents(String userId) {
         FirestoreManager firestoreManager = new FirestoreManager(userId);
-        firestoreManager.getMoodEvents(isPublicMode, new FirestoreManager.OnMoodEventsListener() {
+        // Pass null for showPublic to get ALL moods
+        firestoreManager.getMoodEvents(null, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
-                // Update UI with dynamic count
+                // Update UI with TOTAL count (public + private)
                 moodPostsTextView.setText(String.valueOf(moodEvents.size()));
             }
 
@@ -124,7 +194,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     @SuppressLint("NotifyDataSetChanged")
     private void fetchUserMoodEvents(String userId) {
-        firestoreManager.getMoodEvents(isPublicMode, new FirestoreManager.OnMoodEventsListener()  {
+        firestoreManager.getMoodEvents(isPublicMode, filterByWeek,selectedEmotion, new FirestoreManager.OnMoodEventsListener()  {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
                 moodEventsList.clear();
@@ -163,7 +233,10 @@ public class UserProfileActivity extends AppCompatActivity {
                 });
     }
 
+
+
     private void displayUserData(DocumentSnapshot documentSnapshot) {
+        User user = User.fromDocument(documentSnapshot);
         String username = documentSnapshot.getString("username");
         String bio = documentSnapshot.getString("bio");
         String profileImageUrl = documentSnapshot.getString("profileImageUrl");
@@ -180,6 +253,8 @@ public class UserProfileActivity extends AppCompatActivity {
         if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
             Glide.with(this).load(profileImageUrl).into(profileImageView);
         }
+        followerCountTextView.setText(String.valueOf(user.getFollowers()));
+        followingCountTextView.setText(String.valueOf(user.getFollowing()));
     }
 
     private void navigateToAddMood() {

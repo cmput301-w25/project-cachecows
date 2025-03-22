@@ -18,6 +18,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -167,6 +168,7 @@ public class FirestoreManager {
     }
 
 
+
     public void updateUserEmail(String username, String newEmail, OnSuccessListener<Void> success, OnFailureListener failure) {
         db.collection("usernames").document(username)
                 .update("email", newEmail)
@@ -185,18 +187,43 @@ public class FirestoreManager {
      * </ol>
      *
      * @param listener Callback receiving List<MoodEvent>
+     *
+     *
      */
+
+
+
     public void getMoodEvents(Boolean showPublic, final OnMoodEventsListener listener) {
-        db.collection(COLLECTION_MOOD_EVENTS)
+        getMoodEvents(showPublic, false, null, listener); // Default: filterByWeek = false
+    }
+    public void getMoodEvents(Boolean showPublic, boolean filterByWeek, String emotionFilter, final OnMoodEventsListener listener) {
+        // Calculate timestamp for 7 days ago
+        long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
+        Date oneWeekAgo = new Date(oneWeekAgoMillis);
+
+        // Build base query
+        Query query = db.collection(COLLECTION_MOOD_EVENTS)
                 .whereEqualTo("userId", this.userId)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .get()
+                .orderBy("timestamp", Query.Direction.DESCENDING);
+
+        // Add date filter if needed
+        if (filterByWeek) {
+            query = query.whereGreaterThanOrEqualTo("timestamp", oneWeekAgo);
+        }
+
+        // Emotion filter
+        if (emotionFilter != null && !emotionFilter.isEmpty()) {
+            query = query.whereEqualTo("emotionalState", emotionFilter);
+        }
+
+        query.get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             List<MoodEvent> moodEvents = new ArrayList<>();
                             for (QueryDocumentSnapshot document : task.getResult()) {
+                                // Existing field extraction
                                 String id = document.getId();
                                 Date timestamp = document.getDate("timestamp");
                                 String emotionalState = document.getString("emotionalState");
@@ -208,14 +235,12 @@ public class FirestoreManager {
 
                                 // Handle legacy moods (missing isPublic field)
                                 Boolean isPublic = document.getBoolean("isPublic");
-                                if (isPublic == null) {
-                                    isPublic = true; // Treat old moods as public
-                                }
+                                if (isPublic == null) isPublic = true;
 
-                                // Apply filtering based on toggle state
-                                boolean shouldInclude = (showPublic == null) || // For total count
-                                        (showPublic && isPublic) || // Public mode
-                                        (!showPublic && !isPublic); // Private mode
+                                // Preserve original public/private filtering logic
+                                boolean shouldInclude = (showPublic == null) ||
+                                        (showPublic && isPublic) ||
+                                        (!showPublic && !isPublic);
 
                                 if (shouldInclude) {
                                     MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
@@ -225,23 +250,76 @@ public class FirestoreManager {
                                     moodEvent.setDocumentId(id);
                                     moodEvent.setImageUrl(imageUrl);
                                     moodEvent.setPublic(isPublic);
-
                                     moodEvents.add(moodEvent);
                                 }
                             }
-
-                            if (listener != null) {
-                                listener.onSuccess(moodEvents);
-                            }
+                            listener.onSuccess(moodEvents);
                         } else {
                             Log.w(TAG, "Error getting mood events", task.getException());
-                            if (listener != null) {
-                                listener.onFailure(task.getException().getMessage());
-                            }
+                            listener.onFailure(task.getException().getMessage());
                         }
                     }
                 });
     }
+//    public void getMoodEvents(Boolean showPublic, boolean filterByWeek, final OnMoodEventsListener listener) {
+//        long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
+//        Date oneWeekAgo = new Date(oneWeekAgoMillis);
+//
+//        db.collection(COLLECTION_MOOD_EVENTS)
+//                .whereEqualTo("userId", this.userId)
+//                .orderBy("timestamp", Query.Direction.DESCENDING)
+//                .get()
+//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+//                        if (task.isSuccessful()) {
+//                            List<MoodEvent> moodEvents = new ArrayList<>();
+//                            for (QueryDocumentSnapshot document : task.getResult()) {
+//                                String id = document.getId();
+//                                Date timestamp = document.getDate("timestamp");
+//                                String emotionalState = document.getString("emotionalState");
+//                                String trigger = document.getString("trigger");
+//                                String socialSituation = document.getString("socialSituation");
+//                                String reason = document.getString("reason");
+//                                String userId = document.getString("userId");
+//                                String imageUrl = document.getString("imageUrl");
+//
+//                                // Handle legacy moods (missing isPublic field)
+//                                Boolean isPublic = document.getBoolean("isPublic");
+//                                if (isPublic == null) {
+//                                    isPublic = true; // Treat old moods as public
+//                                }
+//
+//                                // Apply filtering based on toggle state
+//                                boolean shouldInclude = (showPublic == null) || // For total count
+//                                        (showPublic && isPublic) || // Public mode
+//                                        (!showPublic && !isPublic); // Private mode
+//
+//                                if (shouldInclude) {
+//                                    MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+//                                    moodEvent.setUserId(userId);
+//                                    moodEvent.setId(id.hashCode());
+//                                    moodEvent.setTimestamp(timestamp);
+//                                    moodEvent.setDocumentId(id);
+//                                    moodEvent.setImageUrl(imageUrl);
+//                                    moodEvent.setPublic(isPublic);
+//
+//                                    moodEvents.add(moodEvent);
+//                                }
+//                            }
+//
+//                            if (listener != null) {
+//                                listener.onSuccess(moodEvents);
+//                            }
+//                        } else {
+//                            Log.w(TAG, "Error getting mood events", task.getException());
+//                            if (listener != null) {
+//                                listener.onFailure(task.getException().getMessage());
+//                            }
+//                        }
+//                    }
+//                });
+//    }
 
     /**
      * Fetches public mood events from other users
@@ -474,6 +552,118 @@ public class FirestoreManager {
                 });
     }
 
+    public void sendFollowRequest(String receiverId, OnFollowRequestListener listener) {
+        // Fetch the sender's username
+        getUsernameById(this.userId, new OnUsernameListener() {
+            @Override
+            public void onSuccess(String username) {
+                createFollowRequest(receiverId, username, listener);
+            }
+
+            @Override
+            public void onFailure(String fallbackName) {
+                // Fallback to using userId as the name
+                createFollowRequest(receiverId, userId, listener);
+            }
+        });
+    }
+
+    private void createFollowRequest(String receiverId, String senderName, OnFollowRequestListener listener) {
+        Map<String, Object> request = new HashMap<>();
+        request.put("senderId", this.userId);
+        request.put("senderName", senderName);
+        request.put("receiverId", receiverId);
+        request.put("status", "pending");
+        request.put("timestamp", FieldValue.serverTimestamp());
+
+        db.collection("follow_requests")
+                .add(request)
+                .addOnSuccessListener(documentReference -> {
+                    if (listener != null) listener.onSuccess();
+                })
+                .addOnFailureListener(e -> {
+                    if (listener != null) listener.onFailure(e.getMessage());
+                });
+    }
+
+    public void getFollowRequests(OnFollowRequestsListener listener) {
+        db.collection("follow_requests")
+                .whereEqualTo("receiverId", this.userId)
+                .whereEqualTo("status", "pending")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<FollowRequest> requests = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            FollowRequest request = document.toObject(FollowRequest.class);
+                            request.setId(document.getId());
+                            requests.add(request);
+                        }
+                        listener.onSuccess(requests);
+                    } else {
+                        listener.onFailure(task.getException().getMessage());
+                    }
+                });
+    }
+
+
+    public void createFollowRelationship(String targetUserId, String targetUsername, OnFollowRequestListener listener) {
+        final String currentUserId = this.userId;
+        // Get current user's username
+        getUsernameById(this.userId, new OnUsernameListener() {
+            @Override
+            public void onSuccess(String currentUsername) {
+                // Current user's following document
+                WriteBatch batch = db.batch();
+                DocumentReference followingRef = db.collection("users")
+                        .document(currentUserId)
+                        .collection("following")
+                        .document(targetUserId);
+
+                Map<String, Object> followingData = new HashMap<>();
+                followingData.put("uid", targetUserId);
+                followingData.put("username", targetUsername);
+                followingData.put("timestamp", FieldValue.serverTimestamp());
+                batch.set(followingRef, followingData);
+
+                // Target user's followers document
+                DocumentReference followersRef = db.collection("users")
+                        .document(targetUserId)
+                        .collection("followers")
+                        .document(currentUserId);
+
+                Map<String, Object> followersData = new HashMap<>();
+                followersData.put("uid", currentUserId);
+                followersData.put("username", currentUsername);
+                followersData.put("timestamp", FieldValue.serverTimestamp());
+                batch.set(followersRef, followersData);
+
+                // Update counts
+                DocumentReference targetUserRef = db.collection("users").document(targetUserId);
+                DocumentReference currentUserRef = db.collection("users").document(userId);
+
+                batch.update(targetUserRef, "followers", FieldValue.increment(1));
+                batch.update(currentUserRef, "following", FieldValue.increment(1));
+
+                batch.commit().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        listener.onSuccess();
+                    } else {
+                        listener.onFailure("Batch commit failed: " + task.getException().getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(String fallbackName) {
+                listener.onFailure("Failed to resolve username");
+            }
+        });
+    }
+
+
+
 
 //    public Query getPublicMoodEvents(String userId) {
 //        return db.collection("mood_events")
@@ -549,6 +739,16 @@ public class FirestoreManager {
          * @param fallbackName UID used as fallback identifier
          */
         void onFailure(String fallbackName);
+    }
+
+    public interface OnFollowRequestListener {
+        void onSuccess();
+        void onFailure(String error);
+    }
+
+    public interface OnFollowRequestsListener {
+        void onSuccess(List<FollowRequest> requests);
+        void onFailure(String error);
     }
 
     /**
