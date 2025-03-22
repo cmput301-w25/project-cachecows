@@ -18,6 +18,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -164,6 +165,7 @@ public class FirestoreManager {
                     }
                 });
     }
+
 
 
     public void updateUserEmail(String username, String newEmail, OnSuccessListener<Void> success, OnFailureListener failure) {
@@ -501,6 +503,61 @@ public class FirestoreManager {
                         listener.onFailure(task.getException().getMessage());
                     }
                 });
+    }
+
+
+    public void createFollowRelationship(String targetUserId, String targetUsername, OnFollowRequestListener listener) {
+        final String currentUserId = this.userId;
+        // Get current user's username
+        getUsernameById(this.userId, new OnUsernameListener() {
+            @Override
+            public void onSuccess(String currentUsername) {
+                // Current user's following document
+                WriteBatch batch = db.batch();
+                DocumentReference followingRef = db.collection("users")
+                        .document(currentUserId)
+                        .collection("following")
+                        .document(targetUserId);
+
+                Map<String, Object> followingData = new HashMap<>();
+                followingData.put("uid", targetUserId);
+                followingData.put("username", targetUsername);
+                followingData.put("timestamp", FieldValue.serverTimestamp());
+                batch.set(followingRef, followingData);
+
+                // Target user's followers document
+                DocumentReference followersRef = db.collection("users")
+                        .document(targetUserId)
+                        .collection("followers")
+                        .document(currentUserId);
+
+                Map<String, Object> followersData = new HashMap<>();
+                followersData.put("uid", currentUserId);
+                followersData.put("username", currentUsername);
+                followersData.put("timestamp", FieldValue.serverTimestamp());
+                batch.set(followersRef, followersData);
+
+                // Update counts
+                DocumentReference targetUserRef = db.collection("users").document(targetUserId);
+                DocumentReference currentUserRef = db.collection("users").document(userId);
+
+                batch.update(targetUserRef, "followers", FieldValue.increment(1));
+                batch.update(currentUserRef, "following", FieldValue.increment(1));
+
+                batch.commit().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        listener.onSuccess();
+                    } else {
+                        listener.onFailure("Batch commit failed: " + task.getException().getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(String fallbackName) {
+                listener.onFailure("Failed to resolve username");
+            }
+        });
     }
 
 

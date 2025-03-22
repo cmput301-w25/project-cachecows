@@ -72,6 +72,7 @@ public class NotificationsActivity extends AppCompatActivity {
         List<Notification> notifications = new ArrayList<>();
         for (FollowRequest request : requests) {
             Notification notification = new Notification();
+            notification.setId(request.getId());
             notification.setType(Notification.Type.FOLLOW_REQUEST);
             notification.setSenderId(request.getSenderId());
             notification.setMessage(request.getSenderName()); // Use senderName

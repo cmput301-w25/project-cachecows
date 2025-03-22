@@ -1,5 +1,6 @@
 package com.example.feelink;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,35 +71,68 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     private void handleFollowRequest(Notification notification, boolean accepted) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("follow_requests")
-                .document(notification.getId())
+                .document(notification.getId()) // Make sure this is the correct document ID
                 .update("status", accepted ? "accepted" : "denied")
                 .addOnSuccessListener(aVoid -> {
                     if (accepted) {
-                        // Add to followers/following
                         addFollowerRelationship(notification.getSenderId());
                     }
                     removeNotification(notification);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Notification", "Error updating request", e);
                 });
     }
 
+    // Replace addFollowerRelationship()
     private void addFollowerRelationship(String senderId) {
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String receiverId = FirebaseAuth.getInstance().getUid(); // Current user (User B)
 
-        // Add to current user's followers
-        db.collection("users").document(currentUserId)
-                .collection("followers").document(senderId)
-                .set(new HashMap<>());
+        // Get User B's username (receiver's username)
+        FirestoreManager receiverManager = new FirestoreManager(receiverId);
+        receiverManager.getUsernameById(receiverId, new FirestoreManager.OnUsernameListener() {
+            @Override
+            public void onSuccess(String receiverUsername) {
+                // User A (sender) should follow User B (receiver)
+                FirestoreManager senderManager = new FirestoreManager(senderId);
+                senderManager.createFollowRelationship(
+                        receiverId,  // Target user (User B's ID)
+                        receiverUsername,  // User B's username
+                        new FirestoreManager.OnFollowRequestListener() {
+                            @Override
+                            public void onSuccess() {
+                                Log.d("Notification", "Follow relationship created");
+                            }
 
-        // Add to sender's following
-        db.collection("users").document(senderId)
-                .collection("following").document(currentUserId)
-                .set(new HashMap<>());
+                            @Override
+                            public void onFailure(String error) {
+                                Log.e("Notification", "Error: " + error);
+                            }
+                        }
+                );
+            }
 
-        // Update counts
-        db.collection("users").document(currentUserId)
-                .update("followers", FieldValue.increment(1));
-        db.collection("users").document(senderId)
-                .update("following", FieldValue.increment(1));
+            @Override
+            public void onFailure(String fallbackId) {
+                // Fallback to using receiverId as username
+                FirestoreManager senderManager = new FirestoreManager(senderId);
+                senderManager.createFollowRelationship(
+                        receiverId,
+                        receiverId, // Fallback to ID as username
+                        new FirestoreManager.OnFollowRequestListener() {
+                            @Override
+                            public void onSuccess() {
+                                Log.d("Notification", "Fallback relationship created");
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Log.e("Notification", "Fallback error: " + error);
+                            }
+                        }
+                );
+            }
+        });
     }
 
     private void removeNotification(Notification notification) {
