@@ -34,10 +34,7 @@
         <activity android:name=".AddMoodEventActivity" />
         <activity android:name=".ForgotPasswordActivity"/>
         <activity android:name=".UploadImageActivity" />
-        <activity
-            android:name=".NotificationsActivity"
-            android:label="Notifications"
-            android:parentActivityName=".FeedManagerActivity" />
+
         <activity android:name=".SettingsActivity"
             android:exported="false" />
 
