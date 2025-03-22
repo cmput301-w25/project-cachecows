@@ -47,19 +47,36 @@
                             android:rotation="45" />
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:orientation="horizontal"
+                        android:padding="4dp"
+                        android:layout_marginTop="32dp">
+
+                    <!-- New Filter Button -->
+                    <ImageButton
+                        android:id="@+id/filterButton"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_filter"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Filter"
+                        android:elevation="2dp"
+                        app:tint="#5A4A7E" />
+
+                    <!-- Existing Settings Button (Adjusted) -->
                     <ImageButton
                         android:id="@+id/settingsButton"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_gravity="end"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginStart="8dp"
                         android:src="@drawable/ic_settings_button"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:contentDescription="Settings"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:layout_margin="10dp"/>
+                        app:tint="#5A4A7E" />
+                    </LinearLayout>
                 </FrameLayout>
 
                 <!-- Profile Picture and Username -->

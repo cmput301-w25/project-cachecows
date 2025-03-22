@@ -185,18 +185,38 @@ public class FirestoreManager {
      * </ol>
      *
      * @param listener Callback receiving List<MoodEvent>
+     *
+     *
      */
+
+
+
     public void getMoodEvents(Boolean showPublic, final OnMoodEventsListener listener) {
-        db.collection(COLLECTION_MOOD_EVENTS)
+        getMoodEvents(showPublic, false, listener); // Default: filterByWeek = false
+    }
+    public void getMoodEvents(Boolean showPublic, boolean filterByWeek, final OnMoodEventsListener listener) {
+        // Calculate timestamp for 7 days ago
+        long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
+        Date oneWeekAgo = new Date(oneWeekAgoMillis);
+
+        // Build base query
+        Query query = db.collection(COLLECTION_MOOD_EVENTS)
                 .whereEqualTo("userId", this.userId)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .get()
+                .orderBy("timestamp", Query.Direction.DESCENDING);
+
+        // Add date filter if needed
+        if (filterByWeek) {
+            query = query.whereGreaterThanOrEqualTo("timestamp", oneWeekAgo);
+        }
+
+        query.get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             List<MoodEvent> moodEvents = new ArrayList<>();
                             for (QueryDocumentSnapshot document : task.getResult()) {
+                                // Existing field extraction
                                 String id = document.getId();
                                 Date timestamp = document.getDate("timestamp");
                                 String emotionalState = document.getString("emotionalState");
@@ -208,14 +228,12 @@ public class FirestoreManager {
 
                                 // Handle legacy moods (missing isPublic field)
                                 Boolean isPublic = document.getBoolean("isPublic");
-                                if (isPublic == null) {
-                                    isPublic = true; // Treat old moods as public
-                                }
+                                if (isPublic == null) isPublic = true;
 
-                                // Apply filtering based on toggle state
-                                boolean shouldInclude = (showPublic == null) || // For total count
-                                        (showPublic && isPublic) || // Public mode
-                                        (!showPublic && !isPublic); // Private mode
+                                // Preserve original public/private filtering logic
+                                boolean shouldInclude = (showPublic == null) ||
+                                        (showPublic && isPublic) ||
+                                        (!showPublic && !isPublic);
 
                                 if (shouldInclude) {
                                     MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
@@ -225,23 +243,76 @@ public class FirestoreManager {
                                     moodEvent.setDocumentId(id);
                                     moodEvent.setImageUrl(imageUrl);
                                     moodEvent.setPublic(isPublic);
-
                                     moodEvents.add(moodEvent);
                                 }
                             }
-
-                            if (listener != null) {
-                                listener.onSuccess(moodEvents);
-                            }
+                            listener.onSuccess(moodEvents);
                         } else {
                             Log.w(TAG, "Error getting mood events", task.getException());
-                            if (listener != null) {
-                                listener.onFailure(task.getException().getMessage());
-                            }
+                            listener.onFailure(task.getException().getMessage());
                         }
                     }
                 });
     }
+//    public void getMoodEvents(Boolean showPublic, boolean filterByWeek, final OnMoodEventsListener listener) {
+//        long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
+//        Date oneWeekAgo = new Date(oneWeekAgoMillis);
+//
+//        db.collection(COLLECTION_MOOD_EVENTS)
+//                .whereEqualTo("userId", this.userId)
+//                .orderBy("timestamp", Query.Direction.DESCENDING)
+//                .get()
+//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+//                        if (task.isSuccessful()) {
+//                            List<MoodEvent> moodEvents = new ArrayList<>();
+//                            for (QueryDocumentSnapshot document : task.getResult()) {
+//                                String id = document.getId();
+//                                Date timestamp = document.getDate("timestamp");
+//                                String emotionalState = document.getString("emotionalState");
+//                                String trigger = document.getString("trigger");
+//                                String socialSituation = document.getString("socialSituation");
+//                                String reason = document.getString("reason");
+//                                String userId = document.getString("userId");
+//                                String imageUrl = document.getString("imageUrl");
+//
+//                                // Handle legacy moods (missing isPublic field)
+//                                Boolean isPublic = document.getBoolean("isPublic");
+//                                if (isPublic == null) {
+//                                    isPublic = true; // Treat old moods as public
+//                                }
+//
+//                                // Apply filtering based on toggle state
+//                                boolean shouldInclude = (showPublic == null) || // For total count
+//                                        (showPublic && isPublic) || // Public mode
+//                                        (!showPublic && !isPublic); // Private mode
+//
+//                                if (shouldInclude) {
+//                                    MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+//                                    moodEvent.setUserId(userId);
+//                                    moodEvent.setId(id.hashCode());
+//                                    moodEvent.setTimestamp(timestamp);
+//                                    moodEvent.setDocumentId(id);
+//                                    moodEvent.setImageUrl(imageUrl);
+//                                    moodEvent.setPublic(isPublic);
+//
+//                                    moodEvents.add(moodEvent);
+//                                }
+//                            }
+//
+//                            if (listener != null) {
+//                                listener.onSuccess(moodEvents);
+//                            }
+//                        } else {
+//                            Log.w(TAG, "Error getting mood events", task.getException());
+//                            if (listener != null) {
+//                                listener.onFailure(task.getException().getMessage());
+//                            }
+//                        }
+//                    }
+//                });
+//    }
 
     /**
      * Fetches public mood events from other users

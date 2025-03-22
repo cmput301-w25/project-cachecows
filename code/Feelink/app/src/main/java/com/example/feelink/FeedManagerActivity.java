@@ -118,11 +118,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         ImageView navProfile = findViewById(R.id.navProfile);
 
         // Find navChats view
-        ImageView navChats = findViewById(R.id.navChats);
-        navChats.setOnClickListener(v -> {
-            Intent intent = new Intent(this, NotificationsActivity.class);
-            startActivity(intent);
-        });
+
 
         // Set click listener for Search navigation
         navSearch.setOnClickListener(v -> navigateToSearch());

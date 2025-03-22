@@ -19,6 +19,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import android.view.MenuItem;
+import androidx.appcompat.widget.PopupMenu;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -41,6 +43,8 @@ public class UserProfileActivity extends AppCompatActivity {
     private ToggleButton togglePrivacy;
     private boolean isPublicMode = true; // Default to public
 
+    private boolean filterByWeek = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +58,8 @@ public class UserProfileActivity extends AppCompatActivity {
         fabAddMood = findViewById(R.id.fabAddMood);
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
         togglePrivacy = findViewById(R.id.togglePrivacy);
+        ImageButton filterButton = findViewById(R.id.filterButton);
+
 
         // Set up RecyclerView
         moodEventsList = new ArrayList<>();
@@ -82,6 +88,9 @@ public class UserProfileActivity extends AppCompatActivity {
             fetchUserMoodEvents(currentUserId);
         });
 
+        filterButton.setOnClickListener(v -> showFilterMenu());
+
+
         fabAddMood.setOnClickListener(v -> {
             if (mAuth.getCurrentUser() != null) {
                 navigateToAddMood();
@@ -97,6 +106,24 @@ public class UserProfileActivity extends AppCompatActivity {
         fetchUserData(currentUserId);
         fetchTotalMoodEvents(currentUserId);
         fetchUserMoodEvents(currentUserId);
+    }
+    private void showFilterMenu() {
+        PopupMenu popup = new PopupMenu(this, findViewById(R.id.filterButton)); // Fix filterButton reference
+        popup.getMenuInflater().inflate(R.menu.filter_menu, popup.getMenu());
+
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.filter_week) {
+                filterByWeek = true; // Update class variable
+                fetchUserMoodEvents(currentUserId);
+                return true;
+            } else if (item.getItemId() == R.id.filter_all) {
+                filterByWeek = false; // Update class variable
+                fetchUserMoodEvents(currentUserId);
+                return true;
+            }
+            return false;
+        });
+        popup.show();
     }
 
 
@@ -124,7 +151,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     @SuppressLint("NotifyDataSetChanged")
     private void fetchUserMoodEvents(String userId) {
-        firestoreManager.getMoodEvents(isPublicMode, new FirestoreManager.OnMoodEventsListener()  {
+        firestoreManager.getMoodEvents(isPublicMode, filterByWeek,new FirestoreManager.OnMoodEventsListener()  {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
                 moodEventsList.clear();
@@ -162,6 +189,8 @@ public class UserProfileActivity extends AppCompatActivity {
                     Toast.makeText(UserProfileActivity.this, "Failed to load user data", Toast.LENGTH_SHORT).show();
                 });
     }
+
+
 
     private void displayUserData(DocumentSnapshot documentSnapshot) {
         String username = documentSnapshot.getString("username");
