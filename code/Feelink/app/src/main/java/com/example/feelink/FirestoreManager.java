@@ -18,6 +18,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -165,6 +166,7 @@ public class FirestoreManager {
                     }
                 });
     }
+
 
 
     public void updateUserEmail(String username, String newEmail, OnSuccessListener<Void> success, OnFailureListener failure) {
@@ -545,6 +547,118 @@ public class FirestoreManager {
                 });
     }
 
+    public void sendFollowRequest(String receiverId, OnFollowRequestListener listener) {
+        // Fetch the sender's username
+        getUsernameById(this.userId, new OnUsernameListener() {
+            @Override
+            public void onSuccess(String username) {
+                createFollowRequest(receiverId, username, listener);
+            }
+
+            @Override
+            public void onFailure(String fallbackName) {
+                // Fallback to using userId as the name
+                createFollowRequest(receiverId, userId, listener);
+            }
+        });
+    }
+
+    private void createFollowRequest(String receiverId, String senderName, OnFollowRequestListener listener) {
+        Map<String, Object> request = new HashMap<>();
+        request.put("senderId", this.userId);
+        request.put("senderName", senderName);
+        request.put("receiverId", receiverId);
+        request.put("status", "pending");
+        request.put("timestamp", FieldValue.serverTimestamp());
+
+        db.collection("follow_requests")
+                .add(request)
+                .addOnSuccessListener(documentReference -> {
+                    if (listener != null) listener.onSuccess();
+                })
+                .addOnFailureListener(e -> {
+                    if (listener != null) listener.onFailure(e.getMessage());
+                });
+    }
+
+    public void getFollowRequests(OnFollowRequestsListener listener) {
+        db.collection("follow_requests")
+                .whereEqualTo("receiverId", this.userId)
+                .whereEqualTo("status", "pending")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<FollowRequest> requests = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            FollowRequest request = document.toObject(FollowRequest.class);
+                            request.setId(document.getId());
+                            requests.add(request);
+                        }
+                        listener.onSuccess(requests);
+                    } else {
+                        listener.onFailure(task.getException().getMessage());
+                    }
+                });
+    }
+
+
+    public void createFollowRelationship(String targetUserId, String targetUsername, OnFollowRequestListener listener) {
+        final String currentUserId = this.userId;
+        // Get current user's username
+        getUsernameById(this.userId, new OnUsernameListener() {
+            @Override
+            public void onSuccess(String currentUsername) {
+                // Current user's following document
+                WriteBatch batch = db.batch();
+                DocumentReference followingRef = db.collection("users")
+                        .document(currentUserId)
+                        .collection("following")
+                        .document(targetUserId);
+
+                Map<String, Object> followingData = new HashMap<>();
+                followingData.put("uid", targetUserId);
+                followingData.put("username", targetUsername);
+                followingData.put("timestamp", FieldValue.serverTimestamp());
+                batch.set(followingRef, followingData);
+
+                // Target user's followers document
+                DocumentReference followersRef = db.collection("users")
+                        .document(targetUserId)
+                        .collection("followers")
+                        .document(currentUserId);
+
+                Map<String, Object> followersData = new HashMap<>();
+                followersData.put("uid", currentUserId);
+                followersData.put("username", currentUsername);
+                followersData.put("timestamp", FieldValue.serverTimestamp());
+                batch.set(followersRef, followersData);
+
+                // Update counts
+                DocumentReference targetUserRef = db.collection("users").document(targetUserId);
+                DocumentReference currentUserRef = db.collection("users").document(userId);
+
+                batch.update(targetUserRef, "followers", FieldValue.increment(1));
+                batch.update(currentUserRef, "following", FieldValue.increment(1));
+
+                batch.commit().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        listener.onSuccess();
+                    } else {
+                        listener.onFailure("Batch commit failed: " + task.getException().getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(String fallbackName) {
+                listener.onFailure("Failed to resolve username");
+            }
+        });
+    }
+
+
+
 
 //    public Query getPublicMoodEvents(String userId) {
 //        return db.collection("mood_events")
@@ -620,6 +734,16 @@ public class FirestoreManager {
          * @param fallbackName UID used as fallback identifier
          */
         void onFailure(String fallbackName);
+    }
+
+    public interface OnFollowRequestListener {
+        void onSuccess();
+        void onFailure(String error);
+    }
+
+    public interface OnFollowRequestsListener {
+        void onSuccess(List<FollowRequest> requests);
+        void onFailure(String error);
     }
 
     /**

@@ -138,38 +138,33 @@ public class OtherUserProfileActivity extends AppCompatActivity {
                 });
     }
 
+    // Update displayUserData()
     private void displayUserData(DocumentSnapshot documentSnapshot) {
-        String username = documentSnapshot.getString("username");
-        String bio = documentSnapshot.getString("bio");
-        String profileImageUrl = documentSnapshot.getString("profileImageUrl");
-        Long followers = documentSnapshot.getLong("followers");
-        Long following = documentSnapshot.getLong("following");
+        User user = User.fromDocument(documentSnapshot);
+        usernameTextView.setText(user.getUsername());
+        bioTextView.setText(user.getBio());
 
-        // Update UI with user data
-        usernameTextView.setText(username);
-        bioTextView.setText(bio);
-
-        if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
-            Glide.with(this).load(profileImageUrl).into(profileImageView);
+        if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
+            Glide.with(this).load(user.getProfileImageUrl()).into(profileImageView);
         } else {
             profileImageView.setImageResource(R.drawable.ic_nav_profile);
         }
 
-        // Update follower and following counts
-        followerCountTextView.setText(followers != null ? followers.toString() : "0");
-        followingCountTextView.setText(following != null ? following.toString() : "0");
+        followerCountTextView.setText(String.valueOf(user.getFollowers()));
+        followingCountTextView.setText(String.valueOf(user.getFollowing()));
     }
 
     private void checkIfFollowing() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users").document(currentUserId)
-                .collection("following").document(profileUserId).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        // Current user is following this profile
+        FirebaseFirestore.getInstance().collection("users")
+                .document(currentUserId)
+                .collection("following")
+                .document(profileUserId)
+                .addSnapshotListener((doc, error) -> {
+                    if (error != null) return;
+
+                    if (doc != null && doc.exists()) {
                         followButton.setText("Unfollow");
                     } else {
-                        // Current user is not following this profile
                         followButton.setText("Follow");
                     }
                 });
@@ -177,53 +172,48 @@ public class OtherUserProfileActivity extends AppCompatActivity {
 
     private void toggleFollow() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        // Check if already following
         db.collection("users").document(currentUserId)
                 .collection("following").document(profileUserId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        // Already following, so unfollow
                         unfollowUser();
                     } else {
-                        // Not following, so follow
-                        followUser();
+                        // Send follow request
+                        FirestoreManager firestoreManager = new FirestoreManager(currentUserId);
+                        firestoreManager.sendFollowRequest(profileUserId, new FirestoreManager.OnFollowRequestListener() {
+                            @Override
+                            public void onSuccess() {
+                                followButton.setText("Requested");
+                                Toast.makeText(OtherUserProfileActivity.this, "Follow request sent", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Toast.makeText(OtherUserProfileActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
                 });
     }
 
     private void followUser() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String targetUsername = usernameTextView.getText().toString();
 
-        // Add to current user's following collection
-        Map<String, Object> followingData = new HashMap<>();
-        followingData.put("timestamp", FieldValue.serverTimestamp());
+        FirestoreManager firestoreManager = new FirestoreManager(currentUserId);
+        firestoreManager.createFollowRelationship(profileUserId, targetUsername, new FirestoreManager.OnFollowRequestListener() {
+            @Override
+            public void onSuccess() {
+                followButton.setText("Following");
+                Toast.makeText(OtherUserProfileActivity.this, "Now following", Toast.LENGTH_SHORT).show();
+                // Refresh counts
+                fetchUserData(profileUserId);
+            }
 
-        db.collection("users").document(currentUserId)
-                .collection("following").document(profileUserId)
-                .set(followingData)
-                .addOnSuccessListener(aVoid -> {
-                    // Add to profile user's followers collection
-                    Map<String, Object> followerData = new HashMap<>();
-                    followerData.put("timestamp", FieldValue.serverTimestamp());
-
-                    db.collection("users").document(profileUserId)
-                            .collection("followers").document(currentUserId)
-                            .set(followerData)
-                            .addOnSuccessListener(aVoid1 -> {
-                                // Update UI
-                                followButton.setText("Unfollow");
-                                Toast.makeText(this, "Following user", Toast.LENGTH_SHORT).show();
-
-                                // Increment followers count
-                                db.collection("users").document(profileUserId)
-                                        .update("followers", FieldValue.increment(1));
-
-                                // Increment following count
-                                db.collection("users").document(currentUserId)
-                                        .update("following", FieldValue.increment(1));
-                            });
-                });
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(OtherUserProfileActivity.this, "Follow failed: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void unfollowUser() {

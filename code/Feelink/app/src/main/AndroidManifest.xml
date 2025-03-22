@@ -34,7 +34,7 @@
         <activity android:name=".AddMoodEventActivity" />
         <activity android:name=".ForgotPasswordActivity"/>
         <activity android:name=".UploadImageActivity" />
-
+        <activity android:name=".NotificationsActivity" />
         <activity android:name=".SettingsActivity"
             android:exported="false" />
 

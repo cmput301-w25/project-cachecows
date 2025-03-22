@@ -30,7 +30,7 @@ import java.util.List;
 public class UserProfileActivity extends AppCompatActivity {
     private static final String TAG = "PersonalProfileActivity";
     private ImageView profileImageView;
-    private TextView usernameTextView, bioTextView;
+    private TextView usernameTextView, bioTextView, followerCountTextView, followingCountTextView;
     private String currentUserId;
     private RecyclerView recyclerMoodEvents;
     private MoodEventAdapter moodEventAdapter;
@@ -65,6 +65,8 @@ public class UserProfileActivity extends AppCompatActivity {
         moodEventsList = new ArrayList<>();
         moodEventAdapter = new MoodEventAdapter(moodEventsList, this);
         moodEventAdapter.setMyMoodSection(true);
+        followerCountTextView = findViewById(R.id.followerCount);
+        followingCountTextView = findViewById(R.id.followingCount);
         recyclerMoodEvents.setLayoutManager(new LinearLayoutManager(this));
         recyclerMoodEvents.setAdapter(moodEventAdapter);
 
@@ -193,6 +195,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
 
     private void displayUserData(DocumentSnapshot documentSnapshot) {
+        User user = User.fromDocument(documentSnapshot);
         String username = documentSnapshot.getString("username");
         String bio = documentSnapshot.getString("bio");
         String profileImageUrl = documentSnapshot.getString("profileImageUrl");
@@ -209,6 +212,8 @@ public class UserProfileActivity extends AppCompatActivity {
         if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
             Glide.with(this).load(profileImageUrl).into(profileImageView);
         }
+        followerCountTextView.setText(String.valueOf(user.getFollowers()));
+        followingCountTextView.setText(String.valueOf(user.getFollowing()));
     }
 
     private void navigateToAddMood() {
