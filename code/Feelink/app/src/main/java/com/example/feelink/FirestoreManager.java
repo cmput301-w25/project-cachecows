@@ -12,6 +12,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentId;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -23,6 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Central Firestore operations handler managing all CRUD operations for mood events and user data
@@ -426,6 +428,8 @@ public class FirestoreManager {
             moodData.put("imageUrl", FieldValue.delete());
         }
 
+        moodData.put("isPublic", moodEvent.isPublic());
+
 
         db.collection(COLLECTION_MOOD_EVENTS)
                 .document(documentId)
@@ -546,4 +550,86 @@ public class FirestoreManager {
          */
         void onFailure(String fallbackName);
     }
+
+    /**
+     * Adds a mood event to Firestore with a specific document ID.
+     * This method is used to ensure that the document ID remains consistent between offline and online states.
+     * It allows you to generate a temporary ID locally and later sync the event with Firestore using the same ID.
+     *
+     * @param moodEvent The mood event to be added to Firestore.
+     * @param documentId The document ID to use for the mood event. This ID should be consistent
+     *                   between offline and online states
+     * @param listener The listener to notify when the operation completes. Can be null if no callback is needed.
+     */
+    public void addMoodEventWithId(MoodEvent moodEvent, String documentId, final OnMoodEventListener listener) {
+        Map<String, Object> moodData = new HashMap<>();
+        moodData.put("userId", this.userId);
+        moodData.put("timestamp", moodEvent.getTimestamp());
+        moodData.put("emotionalState", moodEvent.getEmotionalState());
+        if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
+            moodData.put("reason", moodEvent.getReason());
+        }
+        if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
+            moodData.put("trigger", moodEvent.getTrigger());
+        }
+        if (moodEvent.getSocialSituation() != null && !moodEvent.getSocialSituation().isEmpty()) {
+            moodData.put("socialSituation", moodEvent.getSocialSituation());
+        }
+        if (moodEvent.getImageUrl() != null && !moodEvent.getImageUrl().isEmpty()) {
+            moodData.put("imageUrl", moodEvent.getImageUrl());
+        }
+
+
+        // Use set() with the given documentId so it remains consistent offline and online.
+        db.collection(COLLECTION_MOOD_EVENTS)
+                .document(documentId)
+                .set(moodData)
+                .addOnSuccessListener(documentReference -> {
+                    // Call listener with the moodEvent; optionally update moodEvent's documentId.
+                    moodEvent.setDocumentId(documentId);
+                    if (listener != null) {
+                        listener.onSuccess(moodEvent);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (listener != null) {
+                        listener.onFailure(e.getMessage());
+                    }
+                });
+    }
+
+    /**
+     * Syncs a pending mood event with Firestore by fetching the event using its document ID.
+     * This method is typically used when the app regains connectivity and needs to sync locally saved mood events
+     * with Firestore. It fetches the mood event from Firestore and notifies the caller of the result.
+
+     * @param documentId The document ID of the mood event to sync. Must not be null or empty.
+     * @param listener The listener to notify when the operation completes. Can be null if no callback is needed.
+     */
+    public void syncPendingMoodEvent(String documentId, OnMoodEventListener listener) {
+        // Fetch the mood event from Firestore
+        db.collection(COLLECTION_MOOD_EVENTS)
+                .document(documentId)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            MoodEvent moodEvent = document.toObject(MoodEvent.class);
+                            if (listener != null) {
+                                listener.onSuccess(moodEvent);
+                            }
+                        } else {
+                            if (listener != null) {
+                                listener.onFailure("Document does not exist");
+                            }
+                        }
+                    } else {
+                        if (listener != null) {
+                            listener.onFailure(task.getException().getMessage());
+                        }
+                    }
+                });
+    }
+
 }

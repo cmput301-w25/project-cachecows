@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -26,6 +28,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
@@ -112,6 +115,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     public MoodEventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_mood_event, parent, false);
+
+
         return new MoodEventViewHolder(view);
     }
 
@@ -210,6 +215,19 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             //No image
             holder.photoContainer.setVisibility(View.GONE);
         }
+
+
+        PendingSyncManager pendingSyncManager = new PendingSyncManager(context);
+        if (pendingSyncManager.getPendingIds().contains(moodEvent.getDocumentId())) {
+            holder.lottieSync.setVisibility(View.VISIBLE);
+            holder.lottieSync.setAnimation("loading2.json");
+            if (!holder.lottieSync.isAnimating()) {
+                holder.lottieSync.playAnimation();
+            }
+        } else {
+            holder.lottieSync.cancelAnimation();
+            holder.lottieSync.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -243,21 +261,35 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
      */
     private void deleteMoodEvent(MoodEvent moodEvent) {
         FirestoreManager firestoreManager = new FirestoreManager(moodEvent.getUserId());
-        firestoreManager.deleteMoodEvent(moodEvent.getId(), new FirestoreManager.OnDeleteListener() {
-            @Override
-            public void onSuccess() {
-                // Remove the mood event from the list and notify the adapter
-                moodEvents.remove(moodEvent);
-                notifyDataSetChanged();
-                Toast.makeText(context, "Mood event deleted successfully", Toast.LENGTH_SHORT).show();
-            }
 
-            @Override
-            public void onFailure(String errorMessage) {
-                Toast.makeText(context, "Failed to delete mood event: " + errorMessage, Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (!isNetworkAvailable()) {
+            // Offline: update UI immediately.
+            moodEvents.remove(moodEvent);
+            notifyDataSetChanged();
+            Toast.makeText(context, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
 
+            // Still call delete so Firestore queues it for when connectivity returns.
+            firestoreManager.deleteMoodEvent(moodEvent.getId(), new FirestoreManager.OnDeleteListener() {
+                @Override
+                public void onSuccess() {}
+                @Override
+                public void onFailure(String errorMessage) {}
+            });
+        } else {
+            // Online
+            firestoreManager.deleteMoodEvent(moodEvent.getId(), new FirestoreManager.OnDeleteListener() {
+                @Override
+                public void onSuccess() {
+                    moodEvents.remove(moodEvent);
+                    notifyDataSetChanged();
+                    Toast.makeText(context, "Mood event deleted successfully", Toast.LENGTH_SHORT).show();
+                }
+                @Override
+                public void onFailure(String errorMessage) {
+                    Toast.makeText(context, "Failed to delete mood event: " + errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     /**
@@ -409,6 +441,12 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         notifyDataSetChanged();
     }
 
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.isConnected();
+    }
+
     /**
      * ViewHolder implementation for mood event items
      *
@@ -430,6 +468,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
 
         ImageButton btnEdit, btnDelete;
 
+        LottieAnimationView lottieSync; // UI element for offline behavior
+
         /**
          * Initializes view references and click handlers
          * @param itemView Root view of item layout
@@ -449,8 +489,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             photoContainer = itemView.findViewById(R.id.photoContainer);
             moodPostedImage = itemView.findViewById(R.id.moodImage);
             tvPhotoPlaceholder = itemView.findViewById(R.id.tvPhotoPlaceholder);
+            lottieSync = itemView.findViewById(R.id.lottieSync);
         }
     }
-
 
 }

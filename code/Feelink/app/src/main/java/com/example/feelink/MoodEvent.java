@@ -28,6 +28,8 @@ public class MoodEvent {
     private String imageUrl;
     private boolean isPublic = true; // Default to public
 
+    private String tempLocalImagePath;
+    private boolean isPendingSync;
 
     /**
      * Default constructor initializes required temporal fields
@@ -223,5 +225,21 @@ public class MoodEvent {
 
     public void setPublic(boolean isPublic) {
         this.isPublic = isPublic;
+    }
+
+
+    public void setTempLocalImagePath(String path) {
+        this.tempLocalImagePath = path;
+    }
+    public String getTempLocalImagePath() {
+        return tempLocalImagePath;
+    }
+
+    public boolean isPendingSync() {
+        return isPendingSync;
+    }
+
+    public void setPendingSync(boolean pendingSync) {
+        isPendingSync = pendingSync;
     }
 }

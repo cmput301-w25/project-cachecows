@@ -9,9 +9,15 @@ import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.example.feelink.R;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
 /**
  * Entry point of the application
@@ -37,6 +43,15 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         FirebaseApp.initializeApp(this);
+
+        //Enables Firestore Offline Persistence
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(true)  //this sets the persistence enabled and makes Firestore cache data locally
+                .build();
+        db.setFirestoreSettings(settings);
+
+
         TextView appName = findViewById(R.id.app_name);
         loginButton = findViewById(R.id.button_login);
         createAccountButton = findViewById(R.id.button_create_account);
