@@ -8,11 +8,14 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -32,6 +35,11 @@ public class UserProfileActivity extends AppCompatActivity {
     private List<MoodEvent> moodEventsList;
     private TextView moodPostsTextView;
     private FirestoreManager firestoreManager;
+    private FirebaseAuth mAuth;
+    private FloatingActionButton fabAddMood;
+
+    private ToggleButton togglePrivacy;
+    private boolean isPublicMode = true; // Default to public
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +51,9 @@ public class UserProfileActivity extends AppCompatActivity {
         usernameTextView = findViewById(R.id.username);
         bioTextView = findViewById(R.id.bio);
         moodPostsTextView = findViewById(R.id.moodPosts);
-
+        fabAddMood = findViewById(R.id.fabAddMood);
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
+        togglePrivacy = findViewById(R.id.togglePrivacy);
 
         // Set up RecyclerView
         moodEventsList = new ArrayList<>();
@@ -56,6 +65,7 @@ public class UserProfileActivity extends AppCompatActivity {
         // Initialize FirestoreManager
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         firestoreManager = new FirestoreManager(currentUserId);
+        mAuth = FirebaseAuth.getInstance();
 
         ImageButton settingsButton = findViewById(R.id.settingsButton);
         if (settingsButton != null) {
@@ -66,6 +76,20 @@ public class UserProfileActivity extends AppCompatActivity {
         } else {
             Log.e(TAG, "Settings button not found in layout");
         }
+
+        togglePrivacy.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            isPublicMode = !isChecked; // Toggle state matches text labels
+            fetchUserMoodEvents(currentUserId);
+        });
+
+        fabAddMood.setOnClickListener(v -> {
+            if (mAuth.getCurrentUser() != null) {
+                navigateToAddMood();
+            } else {
+                handleUnauthorizedAccess();
+            }
+        }
+        );
 //         Get current user ID
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
@@ -84,7 +108,7 @@ public class UserProfileActivity extends AppCompatActivity {
     }
     private void fetchTotalMoodEvents(String userId) {
         FirestoreManager firestoreManager = new FirestoreManager(userId);
-        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+        firestoreManager.getMoodEvents(isPublicMode, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
                 // Update UI with dynamic count
@@ -100,16 +124,16 @@ public class UserProfileActivity extends AppCompatActivity {
 
     @SuppressLint("NotifyDataSetChanged")
     private void fetchUserMoodEvents(String userId) {
-        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+        firestoreManager.getMoodEvents(isPublicMode, new FirestoreManager.OnMoodEventsListener()  {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
                 moodEventsList.clear();
                 moodEventsList.addAll(moodEvents);
                 moodEventAdapter.notifyDataSetChanged();
 
-                if (moodEvents.isEmpty()) {
-                    Toast.makeText(UserProfileActivity.this, "No moods found", Toast.LENGTH_SHORT).show();
-                }
+                if (moodEvents.isEmpty()) Toast.makeText(UserProfileActivity.this,
+                        "No " + (isPublicMode ? "public" : "private") + " moods found",
+                        Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -156,6 +180,17 @@ public class UserProfileActivity extends AppCompatActivity {
         if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
             Glide.with(this).load(profileImageUrl).into(profileImageView);
         }
+    }
+
+    private void navigateToAddMood() {
+        Intent intent = new Intent(UserProfileActivity.this, AddMoodEventActivity.class);
+        startActivity(intent);
+    }
+
+    private void handleUnauthorizedAccess() {
+        // Redirect to login
+        startActivity(new Intent(this, Login.class));
+        finish();
     }
 
 
