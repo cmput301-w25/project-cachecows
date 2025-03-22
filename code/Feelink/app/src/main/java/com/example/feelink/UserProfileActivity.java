@@ -44,6 +44,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private boolean isPublicMode = true; // Default to public
 
     private boolean filterByWeek = false;
+    private String selectedEmotion = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,22 +111,42 @@ public class UserProfileActivity extends AppCompatActivity {
         fetchUserMoodEvents(currentUserId);
     }
     private void showFilterMenu() {
-        PopupMenu popup = new PopupMenu(this, findViewById(R.id.filterButton)); // Fix filterButton reference
+        PopupMenu popup = new PopupMenu(this, findViewById(R.id.filterButton));
         popup.getMenuInflater().inflate(R.menu.filter_menu, popup.getMenu());
 
         popup.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.filter_week) {
-                filterByWeek = true; // Update class variable
-                fetchUserMoodEvents(currentUserId);
-                return true;
-            } else if (item.getItemId() == R.id.filter_all) {
-                filterByWeek = false; // Update class variable
-                fetchUserMoodEvents(currentUserId);
-                return true;
+            int id = item.getItemId();
+
+            // Time filters
+            if (id == R.id.filter_week) {
+                filterByWeek = true;
+                selectedEmotion = null;
+            } else if (id == R.id.filter_all) {
+                filterByWeek = false;
+                selectedEmotion = null;
             }
-            return false;
+            // Emotional state filters
+            else {
+                filterByWeek = false;
+                selectedEmotion = getEmotionFromId(id);
+            }
+
+            fetchUserMoodEvents(currentUserId);
+            return true;
         });
         popup.show();
+    }
+
+    private String getEmotionFromId(int id) {
+        if (id == R.id.filter_happy) return "Happy";
+        if (id == R.id.filter_fear) return "Fear";
+        if (id == R.id.filter_shame) return "Shame";
+        if (id == R.id.filter_sad) return "Sad";
+        if (id == R.id.filter_angry) return "Angry";
+        if (id == R.id.filter_surprised) return "Surprised";
+        if (id == R.id.filter_confused) return "Confused";
+        if (id == R.id.filter_disgusted) return "Disgusted";
+        return null;
     }
 
 
@@ -137,10 +158,11 @@ public class UserProfileActivity extends AppCompatActivity {
     }
     private void fetchTotalMoodEvents(String userId) {
         FirestoreManager firestoreManager = new FirestoreManager(userId);
-        firestoreManager.getMoodEvents(isPublicMode, new FirestoreManager.OnMoodEventsListener() {
+        // Pass null for showPublic to get ALL moods
+        firestoreManager.getMoodEvents(null, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
-                // Update UI with dynamic count
+                // Update UI with TOTAL count (public + private)
                 moodPostsTextView.setText(String.valueOf(moodEvents.size()));
             }
 
@@ -153,7 +175,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     @SuppressLint("NotifyDataSetChanged")
     private void fetchUserMoodEvents(String userId) {
-        firestoreManager.getMoodEvents(isPublicMode, filterByWeek,new FirestoreManager.OnMoodEventsListener()  {
+        firestoreManager.getMoodEvents(isPublicMode, filterByWeek,selectedEmotion, new FirestoreManager.OnMoodEventsListener()  {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
                 moodEventsList.clear();

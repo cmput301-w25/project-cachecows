@@ -194,9 +194,9 @@ public class FirestoreManager {
 
 
     public void getMoodEvents(Boolean showPublic, final OnMoodEventsListener listener) {
-        getMoodEvents(showPublic, false, listener); // Default: filterByWeek = false
+        getMoodEvents(showPublic, false, null, listener); // Default: filterByWeek = false
     }
-    public void getMoodEvents(Boolean showPublic, boolean filterByWeek, final OnMoodEventsListener listener) {
+    public void getMoodEvents(Boolean showPublic, boolean filterByWeek, String emotionFilter, final OnMoodEventsListener listener) {
         // Calculate timestamp for 7 days ago
         long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
         Date oneWeekAgo = new Date(oneWeekAgoMillis);
@@ -209,6 +209,11 @@ public class FirestoreManager {
         // Add date filter if needed
         if (filterByWeek) {
             query = query.whereGreaterThanOrEqualTo("timestamp", oneWeekAgo);
+        }
+
+        // Emotion filter
+        if (emotionFilter != null && !emotionFilter.isEmpty()) {
+            query = query.whereEqualTo("emotionalState", emotionFilter);
         }
 
         query.get()

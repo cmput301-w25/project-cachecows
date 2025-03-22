@@ -87,11 +87,12 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         followButton.setOnClickListener(v -> toggleFollow());
     }
     private void fetchTotalMoodEvents(String userId) {
-        // Use existing firestoreManager instance and filter public moods
-        firestoreManager.getMoodEvents(true, new FirestoreManager.OnMoodEventsListener() {
+        FirestoreManager firestoreManager = new FirestoreManager(userId);
+        // Pass null for showPublic to get ALL moods
+        firestoreManager.getMoodEvents(null, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
-                // Directly use filtered count from FirestoreManager
+                // Update UI with TOTAL count (public + private)
                 moodPostsTextView.setText(String.valueOf(moodEvents.size()));
             }
 
