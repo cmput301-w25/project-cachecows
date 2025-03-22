@@ -48,6 +48,7 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         followingCountTextView = findViewById(R.id.followingCount);
         moodPostsTextView = findViewById(R.id.moodPosts);
 
+
         followButton = findViewById(R.id.followButton);
 
         // Get current user ID
@@ -86,11 +87,11 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         followButton.setOnClickListener(v -> toggleFollow());
     }
     private void fetchTotalMoodEvents(String userId) {
-        FirestoreManager firestoreManager = new FirestoreManager(userId);
-        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+        // Use existing firestoreManager instance and filter public moods
+        firestoreManager.getMoodEvents(true, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
-                // Update UI with dynamic count
+                // Directly use filtered count from FirestoreManager
                 moodPostsTextView.setText(String.valueOf(moodEvents.size()));
             }
 
@@ -101,16 +102,10 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        fetchUserMoodEvents(profileUserId);
-    }
-
-    // Add this method to load mood events
     @SuppressLint("NotifyDataSetChanged")
     private void fetchUserMoodEvents(String userId) {
-        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+        // Get only public moods (including legacy)
+        firestoreManager.getMoodEvents(true, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
                 moodEventsList.clear();

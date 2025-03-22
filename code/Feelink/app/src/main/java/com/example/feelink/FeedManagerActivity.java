@@ -327,7 +327,7 @@ public class FeedManagerActivity extends AppCompatActivity {
      * </ol>
      */
     private void loadMyMoodEvents() {
-        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+        firestoreManager.getMoodEvents(null, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
                 Log.d("FeedManagerActivity", "Fetched mood events: " + moodEvents.size());

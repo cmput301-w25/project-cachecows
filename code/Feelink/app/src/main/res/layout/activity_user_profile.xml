@@ -184,19 +184,42 @@
                     android:textColor="#808080"
                     android:textStyle="italic" />
 
-                <!-- Edit Profile Button -->
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/editProfileButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center"
+                <!-- Edit Profile Button and Privacy Toggle -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
                     android:layout_marginTop="16dp"
-                    android:background="@drawable/selected_tab_background"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:text="Edit Profile"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF" />
+                    android:gravity="center">
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/editProfileButton"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/selected_tab_background"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:text="Edit Profile"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFF" />
+
+                    <Space
+                        android:layout_width="16dp"
+                        android:layout_height="0dp" />
+
+                    <ToggleButton
+                        android:id="@+id/togglePrivacy"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:textOff="Public"
+                        android:textOn="Private"
+                        android:background="@drawable/selected_tab_background"
+                        android:textColor="#FFFFFF"
+                        android:textAllCaps="false" />
+
+                </LinearLayout>
             </LinearLayout>
 
             <!-- RecyclerView Inside Scroll View -->
