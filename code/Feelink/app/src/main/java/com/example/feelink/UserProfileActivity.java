@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -61,6 +62,17 @@ public class UserProfileActivity extends AppCompatActivity {
         togglePrivacy = findViewById(R.id.togglePrivacy);
         ImageButton filterButton = findViewById(R.id.filterButton);
 
+        // Inside UserProfileActivity's onCreate() after initializing views
+        ImageView navSearch = findViewById(R.id.navSearch);
+        ImageView navHome = findViewById(R.id.navHome);
+        ImageView navChats = findViewById(R.id.navChats);
+        ImageView navMap = findViewById(R.id.navMap);
+
+        navSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+        navHome.setOnClickListener(v -> startActivity(new Intent(this, FeedManagerActivity.class)));
+
+        navChats.setOnClickListener(v -> startActivity(new Intent(this, NotificationsActivity.class)));
+
 
         // Set up RecyclerView
         moodEventsList = new ArrayList<>();
@@ -102,6 +114,12 @@ public class UserProfileActivity extends AppCompatActivity {
             }
         }
         );
+        Button editProfileButton = findViewById(R.id.editProfileButton);
+        editProfileButton.setOnClickListener(v -> {
+            Intent intent = new Intent(UserProfileActivity.this, CreateAccount.class);
+            intent.putExtra("EDIT_MODE", true);
+            startActivity(intent);
+        });
 //         Get current user ID
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
@@ -153,6 +171,7 @@ public class UserProfileActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        fetchUserData(currentUserId); // Refresh profile data
         fetchUserMoodEvents(currentUserId); // Refresh mood events
 
     }

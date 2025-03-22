@@ -1,8 +1,10 @@
 package com.example.feelink;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -42,6 +44,15 @@ public class NotificationsActivity extends AppCompatActivity {
 
         setupTabLayout();
         checkEmptyState();
+
+        // Inside NotificationsActivity's onCreate() after initializing views
+        ImageView navSearch = findViewById(R.id.navSearch);
+        ImageView navHome = findViewById(R.id.navHome);
+        ImageView navProfile = findViewById(R.id.navProfile);
+
+        navSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+        navHome.setOnClickListener(v -> startActivity(new Intent(this, FeedManagerActivity.class)));
+        navProfile.setOnClickListener(v -> startActivity(new Intent(this, UserProfileActivity.class)));
     }
 
     private void updateNotifications(int tabPosition) {

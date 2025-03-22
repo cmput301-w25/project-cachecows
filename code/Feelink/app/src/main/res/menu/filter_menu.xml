@@ -5,6 +5,9 @@
         android:id="@+id/filter_week"
         android:title="Last 7 Days" />
 
+    <item
+        android:id="@+id/filter_search_reason"
+        android:title="Search by Reason" />
 
     <!-- Emotional State Filters -->
     <item android:title="Emotional States">
