@@ -1,6 +1,9 @@
 package com.example.feelink;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -25,6 +28,7 @@ import com.google.firebase.auth.FirebaseUser;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Central activity for creating and editing mood events with full CRUD operations.
@@ -91,14 +95,27 @@ public class AddMoodEventActivity extends AppCompatActivity {
             // Use test user ID if needed for testing
             String uid = user != null ? user.getUid() : "test_user_id";
             firestoreManager = new FirestoreManager(uid);
-        }
 
+            // Fetch the username
+            firestoreManager.getUsernameById(uid, new FirestoreManager.OnUsernameListener() {
+                @Override
+                public void onSuccess(String username) {
+                    // Set greeting with the actual username
+                    tvGreeting.setText("Hey " + username + "!");
+                }
+
+                @Override
+                public void onFailure(String fallbackName) {
+                    // If username fetch fails, use the UID or a fallback
+                    tvGreeting.setText("Hey " + fallbackName + "!");
+                }
+            });
+        }
 
         // Initialize views
         initializeViews();
         setupMoodSelectors();
         setupSocialSituationSpinner();
-        setupAddButton();
 
         Intent intent = getIntent();
         if (intent != null && intent.getBooleanExtra("EDIT_MODE", false)) {
@@ -114,9 +131,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
             preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl);
         }
 
+        setupAddButton();
+
         // Set greeting with username (this would normally come from user data)
-        String username = "User"; // Replace with actual username later
-        tvGreeting.setText("Hey " + username + "!");
+        tvGreeting.setText("Hey there!"); // Temporary placeholder
         currentDateTime = new Date();
 
     }
@@ -269,6 +287,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
         });
 
         tvAddPhoto.setOnClickListener(v -> {
+            if (!ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)){
+                Toast.makeText(AddMoodEventActivity.this, "You are offline. You cannot upload a photo right now.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
         });
@@ -405,26 +427,26 @@ public class AddMoodEventActivity extends AppCompatActivity {
         btnAddMood.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Ensure a mood is selected
                 if (selectedMood == null) {
                     Snackbar.make(v, "Please select a mood", Snackbar.LENGTH_SHORT).show();
                     return;
                 }
                 currentDateTime = new Date();
-
                 // Show loading state (could add a progress indicator here)
                 btnAddMood.setEnabled(false);
 
                 // Get input values
                 String reason = etReason.getText().toString().trim();
-                // Validate reason field one more time before proceeding
-                if (reason.length() > 20 || (reason.split("\\s+").length > 3 && !reason.isEmpty())) {
+                if (reason.length() > 20 || (!reason.isEmpty() && reason.split("\\s+").length > 3)) {
                     etReason.setError("Reason must be limited to 20 characters or 3 words");
+                    btnAddMood.setEnabled(true);
                     return;
                 }
-
                 String trigger = etTrigger.getText().toString().trim();
                 String selectedValue = socialSituationSpinner.getSelectedItem().toString();
                 String socialSituation = selectedValue.equals("None") ? "" : selectedValue;
+
 
                 MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
                 moodEvent.setTimestamp(currentDateTime);
@@ -435,49 +457,90 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 }
 
                 if (isEditMode) {
-                    // Get the document ID from the intent
+                    // For update mode
                     String documentId = getIntent().getStringExtra("DOCUMENT_ID");
-
                     if (documentId == null) {
                         Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();
                         btnAddMood.setEnabled(true);
                         return;
                     }
-
-                    // Update the existing mood event
                     moodEvent.setId(moodEventId);
-                    firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
-                        @Override
-                        public void onSuccess(MoodEvent moodEvent) {
-                            Snackbar.make(v, "Mood updated successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();
-                            finish();
-                        }
-
-                        @Override
-                        public void onFailure(String errorMessage) {
-                            Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).setDuration(5000).show();
-                            btnAddMood.setEnabled(true);
-                        }
-                    });
+                    if (ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)) {
+                        moodEvent.setPendingSync(false);
+                        firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
+                            @Override
+                            public void onSuccess(MoodEvent moodEvent) {
+                                // Remove from pending list if present
+                                new PendingSyncManager(AddMoodEventActivity.this).removePendingId(moodEvent.getDocumentId());
+                                Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).show();
+                                moodEvent.setPendingSync(false);
+                                finish();
+                            }
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
+                                btnAddMood.setEnabled(true);
+                            }
+                        });
+                    } else {
+                        moodEvent.setPendingSync(true);
+                        // Offline: add the pending document id to the local pending set.
+                        new PendingSyncManager(AddMoodEventActivity.this).addPendingId(documentId);
+                        firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
+                            @Override
+                            public void onSuccess(MoodEvent moodEvent) {}
+                            @Override
+                            public void onFailure(String errorMessage) {}
+                        });
+                        Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
                 } else {
-                    // Save a new mood event (existing code remains the same)
-                    firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
-                        @Override
-                        public void onSuccess(MoodEvent moodEvent) {
-                            Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).setDuration(5000).show();
-                            finish();
+                    // Add mode:
+                    if (ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)){
+                        moodEvent.setPendingSync(false);
+                        firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
+                            @Override
+                            public void onSuccess(MoodEvent moodEvent) {
+                                new PendingSyncManager(AddMoodEventActivity.this).removePendingId(moodEvent.getDocumentId());
+                                Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).show();
+                                moodEvent.setPendingSync(false);
+                                finish();
+                            }
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
+                                btnAddMood.setEnabled(true);
+                            }
+                        });
+                    } else {
+                        moodEvent.setPendingSync(true);
+                        // If no document ID is available, generate one
+                        if (moodEvent.getDocumentId() == null || moodEvent.getDocumentId().isEmpty()) {
+                            // Generate a temporary ID
+                            String tempId = UUID.randomUUID().toString();
+                            moodEvent.setDocumentId(tempId);
                         }
-
-                        @Override
-                        public void onFailure(String errorMessage) {
-                            Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
-                            btnAddMood.setEnabled(true);
-                        }
-                    });
+                        // Add this document ID to PendingSyncManager
+                        new PendingSyncManager(AddMoodEventActivity.this).addPendingId(moodEvent.getDocumentId());
+                        // Use the new method that uses set() with the provided ID:
+                        firestoreManager.addMoodEventWithId(moodEvent, moodEvent.getDocumentId(), new FirestoreManager.OnMoodEventListener() {
+                            @Override
+                            public void onSuccess(MoodEvent moodEvent) {
+                                // Offline callback might be delayed
+                            }
+                            @Override
+                            public void onFailure(String errorMessage) {}
+                        });
+                        Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
                 }
             }
         });
     }
+
+
 
     /**
      * Handles image upload results from UploadImageActivity
@@ -517,7 +580,5 @@ public class AddMoodEventActivity extends AppCompatActivity {
         tvAddPhoto.setText("Add Photograph");
         btnDeletePhoto.setVisibility(View.GONE);
         Snackbar.make(findViewById(R.id.layoutBottomNav),"Photo removed", Snackbar.LENGTH_SHORT).show();
-
-
     }
 }

@@ -134,6 +134,19 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1" />
 
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/lottieSync"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_margin="8dp"
+                android:layout_gravity="end"
+                app:lottie_fileName="loading2.json"
+                android:visibility="gone"
+                app:lottie_autoPlay="false"
+                app:lottie_colorFilter="@color/grey_violet"
+                app:lottie_loop="true"
+                />
+
             <!-- Mood emoji -->
             <ImageView
                 android:id="@+id/ivMoodIcon"
