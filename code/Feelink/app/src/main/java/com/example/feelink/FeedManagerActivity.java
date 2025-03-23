@@ -218,8 +218,8 @@ public class FeedManagerActivity extends AppCompatActivity {
      * </ul>
      */
     private void initializeViews() {
-        btnTheirMood = findViewById(R.id.btnTheirMood);
-        btnMyMood = findViewById(R.id.btnMyMood);
+        btnTheirMood = findViewById(R.id.btnAllMoods);
+        btnMyMood = findViewById(R.id.btnFollowingMoods);
         btnFilter = findViewById(R.id.btnFilter);
         tvShareInfo = findViewById(R.id.tvShareInfo);
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
@@ -332,18 +332,30 @@ public class FeedManagerActivity extends AppCompatActivity {
      * </ol>
      */
     private void loadMyMoodEvents() {
-        firestoreManager.getMoodEvents(null, new FirestoreManager.OnMoodEventsListener() {
+        firestoreManager.getFollowedUserIds(new FirestoreManager.OnFollowedUserIdsListener() {
             @Override
-            public void onSuccess(List<MoodEvent> moodEvents) {
-                Log.d("FeedManagerActivity", "Fetched mood events: " + moodEvents.size());
-                adapter.updateMoodEvents(moodEvents);
-                checkEmptyState(moodEvents);
+            public void onSuccess(List<String> followedUserIds) {
+                firestoreManager.getFollowedUsersMoodEvents(followedUserIds,
+                        new FirestoreManager.OnMoodEventsListener() {
+                            @Override
+                            public void onSuccess(List<MoodEvent> moodEvents) {
+                                Log.d("FeedManager", "Followed moods: " + moodEvents.size());
+                                adapter.updateMoodEvents(moodEvents);
+                                checkEmptyState(moodEvents);
+                            }
+
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                Log.e("FeedManager", "Followed moods error: " + errorMessage);
+                                adapter.updateMoodEvents(new ArrayList<>());
+                                checkEmptyState(new ArrayList<>());
+                            }
+                        });
             }
 
             @Override
             public void onFailure(String errorMessage) {
-                // Handle error
-                Log.e("FeedManagerActivity", "Failed to fetch mood events: " + errorMessage);
+                Log.e("FeedManager", "Followed IDs error: " + errorMessage);
                 adapter.updateMoodEvents(new ArrayList<>());
                 checkEmptyState(new ArrayList<>());
             }
@@ -386,7 +398,16 @@ public class FeedManagerActivity extends AppCompatActivity {
     }
 
     private void checkEmptyState(List<MoodEvent> moodEvents) {
-        // Todo: Implement empty state handling
+        if (tvEmptyState == null) return;
+
+        if (moodEvents.isEmpty()) {
+            tvEmptyState.setVisibility(View.VISIBLE);
+            tvEmptyState.setText(isShowingMyMood ?
+                    "No public moods from people you follow" :
+                    "No shared moods available");
+        } else {
+            tvEmptyState.setVisibility(View.GONE);
+        }
     }
 
     private void showFilterOptions() {

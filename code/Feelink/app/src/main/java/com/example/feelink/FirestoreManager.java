@@ -662,6 +662,110 @@ public class FirestoreManager {
         });
     }
 
+    public void getFollowedUsersMoodEvents(List<String> followedUserIds, OnMoodEventsListener listener) {
+        if (followedUserIds.isEmpty()) {
+            listener.onSuccess(new ArrayList<>());
+            return;
+        }
+
+        List<Task<QuerySnapshot>> tasks = new ArrayList<>();
+        List<List<String>> chunks = partitionList(followedUserIds, 10);
+
+        for (List<String> chunk : chunks) {
+            // Remove the isPublic filter from the query
+            Query query = db.collection(COLLECTION_MOOD_EVENTS)
+                    .whereIn("userId", chunk)
+                    .orderBy("timestamp", Query.Direction.DESCENDING); // Keep timestamp ordering
+
+            tasks.add(query.get());
+        }
+
+        Tasks.whenAllSuccess(tasks)
+                .addOnSuccessListener(querySnapshots -> {
+                    List<MoodEvent> allEvents = new ArrayList<>();
+                    for (Object result : querySnapshots) {
+                        QuerySnapshot snapshot = (QuerySnapshot) result;
+                        for (QueryDocumentSnapshot document : snapshot) {
+                            MoodEvent event = parseDocumentToMoodEvent(document);
+                            // Add to list only if public (including legacy moods)
+                            if (event.isPublic()) {
+                                allEvents.add(event);
+                            }
+                        }
+                    }
+                    // Sort combined results by timestamp
+                    allEvents.sort((e1, e2) -> e2.getTimestamp().compareTo(e1.getTimestamp()));
+                    listener.onSuccess(allEvents);
+                })
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+    }
+
+    // Add this helper method
+    private MoodEvent parseDocumentToMoodEvent(QueryDocumentSnapshot document) {
+        String id = document.getId();
+        Date timestamp = document.getDate("timestamp");
+        String emotionalState = document.getString("emotionalState");
+        String trigger = document.getString("trigger");
+        String socialSituation = document.getString("socialSituation");
+        String reason = document.getString("reason");
+        String userId = document.getString("userId");
+        String imageUrl = document.getString("imageUrl");
+        Boolean isPublic = document.getBoolean("isPublic");
+        if (isPublic == null) isPublic = true;
+
+        MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+        moodEvent.setUserId(userId);
+        moodEvent.setId(id.hashCode());
+        moodEvent.setTimestamp(timestamp);
+        moodEvent.setDocumentId(id);
+        moodEvent.setImageUrl(imageUrl);
+        moodEvent.setPublic(isPublic);
+        return moodEvent;
+    }
+
+    // Add method to get followed user IDs
+    public void getFollowedUserIds(OnFollowedUserIdsListener listener) {
+        List<String> userIds = new ArrayList<>();
+        CollectionReference followingRef = db.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("following");
+
+        followingRef.get()
+                .addOnSuccessListener(querySnapshot -> {
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        String uid = doc.getString("uid");
+                        if (uid != null) userIds.add(uid);
+                    }
+
+                    // Check if there are more documents to fetch
+                    if (querySnapshot.size() >= 100) { // Firestore's default limit
+                        fetchAllFollowedUsersPaginated(followingRef, querySnapshot, userIds, listener);
+                    } else {
+                        listener.onSuccess(userIds);
+                    }
+                })
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+    }
+
+    private void fetchAllFollowedUsersPaginated(CollectionReference ref, QuerySnapshot lastSnapshot,
+                                                List<String> userIds, OnFollowedUserIdsListener listener) {
+        Query nextQuery = ref.startAfter(lastSnapshot.getDocuments()
+                .get(lastSnapshot.size() - 1));
+
+        nextQuery.get().addOnSuccessListener(snapshot -> {
+            for (QueryDocumentSnapshot doc : snapshot) {
+                String uid = doc.getString("uid");
+                if (uid != null) userIds.add(uid);
+            }
+
+            if (snapshot.size() >= 100) {
+                fetchAllFollowedUsersPaginated(ref, snapshot, userIds, listener);
+            } else {
+                listener.onSuccess(userIds);
+            }
+        }).addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+    }
+
 
 
 
@@ -751,6 +855,19 @@ public class FirestoreManager {
         void onFailure(String error);
     }
 
+    public interface OnFollowedUserIdsListener {
+        void onSuccess(List<String> userIds);
+        void onFailure(String errorMessage);
+    }
+
+    private List<List<String>> partitionList(List<String> list, int chunkSize) {
+        List<List<String>> chunks = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += chunkSize) {
+            chunks.add(list.subList(i, Math.min(i + chunkSize, list.size())));
+        }
+        return chunks;
+    }
+
     /**
      * Adds a mood event to Firestore with a specific document ID.
      * This method is used to ensure that the document ID remains consistent between offline and online states.
@@ -766,6 +883,8 @@ public class FirestoreManager {
         moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
+        moodData.put("isPublic", moodEvent.isPublic());
+
         if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
             moodData.put("reason", moodEvent.getReason());
         }
