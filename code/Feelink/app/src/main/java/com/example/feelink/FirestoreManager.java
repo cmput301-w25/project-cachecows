@@ -120,7 +120,6 @@ public class FirestoreManager {
         moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
-        moodData.put("isPublic", moodEvent.isPublic());
 
         // Only add optional fields if they're not null or empty
         if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
@@ -187,9 +186,6 @@ public class FirestoreManager {
      *
      *
      */
-
-
-
     public void getMoodEvents(Boolean showPublic, final OnMoodEventsListener listener) {
         getMoodEvents(showPublic, false, null, listener); // Default: filterByWeek = false
     }
@@ -650,7 +646,7 @@ public class FirestoreManager {
         });
     }
 
-    public void getFollowedUsersMoodEvents(List<String> followedUserIds, OnMoodEventsListener listener) {
+    public void getFollowedUsersMoodEvents(List<String> followedUserIds, boolean filterByWeek, String emotionFilter, OnMoodEventsListener listener) {
         if (followedUserIds.isEmpty()) {
             listener.onSuccess(new ArrayList<>());
             return;
@@ -659,11 +655,27 @@ public class FirestoreManager {
         List<Task<QuerySnapshot>> tasks = new ArrayList<>();
         List<List<String>> chunks = partitionList(followedUserIds, 10);
 
+        // Calculate timestamp for 7 days ago if needed
+        Date oneWeekAgo = null;
+        if (filterByWeek) {
+            long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
+            oneWeekAgo = new Date(oneWeekAgoMillis);
+        }
+
         for (List<String> chunk : chunks) {
-            // Remove the isPublic filter from the query
             Query query = db.collection(COLLECTION_MOOD_EVENTS)
                     .whereIn("userId", chunk)
-                    .orderBy("timestamp", Query.Direction.DESCENDING); // Keep timestamp ordering
+                    .orderBy("timestamp", Query.Direction.DESCENDING);
+
+            // Add week filter
+            if (filterByWeek && oneWeekAgo != null) {
+                query = query.whereGreaterThanOrEqualTo("timestamp", oneWeekAgo);
+            }
+
+            // Add emotion filter
+            if (emotionFilter != null && !emotionFilter.isEmpty()) {
+                query = query.whereEqualTo("emotionalState", emotionFilter);
+            }
 
             tasks.add(query.get());
         }
@@ -675,7 +687,6 @@ public class FirestoreManager {
                         QuerySnapshot snapshot = (QuerySnapshot) result;
                         for (QueryDocumentSnapshot document : snapshot) {
                             MoodEvent event = parseDocumentToMoodEvent(document);
-                            // Add to list only if public (including legacy moods)
                             if (event.isPublic()) {
                                 allEvents.add(event);
                             }
@@ -753,6 +764,55 @@ public class FirestoreManager {
         }).addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 
+    public void getComments(String moodEventId, OnCommentsListener listener) {
+        db.collection("mood_events").document(moodEventId).collection("comments")
+                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<Comment> comments = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Comment comment = document.toObject(Comment.class);
+                            comment.setId(document.getId());
+                            // Directly add comment without username resolution here
+                            comments.add(comment);
+                        }
+                        listener.onSuccess(comments);
+                    } else {
+                        listener.onFailure(task.getException().getMessage());
+                    }
+                });
+    }
+
+    public void addComment(String moodEventId, Comment comment, OnCommentListener listener) {
+        Map<String, Object> commentData = new HashMap<>();
+        commentData.put("text", comment.getText());
+        commentData.put("userId", userId);
+        commentData.put("timestamp", FieldValue.serverTimestamp());
+
+        db.collection("mood_events").document(moodEventId).collection("comments")
+                .add(commentData)
+                .addOnSuccessListener(documentReference -> {
+                    comment.setId(documentReference.getId());
+                    listener.onSuccess(comment);
+                })
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+    }
+
+    public void checkFollowStatus(String targetUserId, OnFollowCheckListener listener) {
+        db.collection("users")
+                .document(userId)
+                .collection("following")
+                .document(targetUserId)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        listener.onSuccess(task.getResult().exists());
+                    } else {
+                        listener.onFailure(task.getException().getMessage());
+                    }
+                });
+    }
 
 
 
@@ -854,6 +914,22 @@ public class FirestoreManager {
         }
         return chunks;
     }
+
+    public interface OnCommentsListener {
+        void onSuccess(List<Comment> comments);
+        void onFailure(String errorMessage);
+    }
+
+    public interface OnCommentListener {
+        void onSuccess(Comment comment);
+        void onFailure(String errorMessage);
+    }
+
+    public interface OnFollowCheckListener {
+        void onSuccess(boolean isFollowing);
+        void onFailure(String errorMessage);
+    }
+
 
     /**
      * Adds a mood event to Firestore with a specific document ID.

@@ -10,10 +10,10 @@
         android:id="@+id/tvGreeting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="22dp"
         android:text="Hey *Username*!"
         android:textColor="#FFFFFF"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:fontFamily="@font/poppins_bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -321,6 +321,7 @@
             android:fontFamily="@font/poppins_regular"
             android:background="@android:drawable/btn_dropdown"
             android:spinnerMode="dropdown"/>
+
     </LinearLayout>
 
     <!-- Location and Photo options adjusted -->
@@ -418,6 +419,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/grey_violet"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="32dp"
         android:backgroundTint="@android:color/white"
         android:text="Add Mood"
         android:textSize="20dp"

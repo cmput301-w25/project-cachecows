@@ -165,8 +165,12 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             // Handle like action
         });
 
+        // Modify the comment button click listener in onBindViewHolder
         holder.btnComment.setOnClickListener(v -> {
-            // Handle comment action
+            Intent intent = new Intent(context, CommentsActivity.class);
+            intent.putExtra("MOOD_EVENT_ID", moodEvent.getDocumentId());
+            intent.putExtra("MOOD_EVENT_OWNER_ID", moodEvent.getUserId()); // Add this line
+            context.startActivity(intent);
         });
         holder.btnExpand.setOnClickListener(v -> {
             showDetailsDialog(moodEvent);
