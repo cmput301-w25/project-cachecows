@@ -14,7 +14,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
-import android.widget.SearchView;
+import androidx.appcompat.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,10 +72,11 @@ public class FeedManagerActivity extends AppCompatActivity {
     static boolean SKIP_AUTH_FOR_TESTING = false;
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private ConnectivityReceiver connectivityReceiver;
-    private boolean showThreeMostRecent = true; // Default to showing 3
+    private boolean showThreeMostRecent = false;
     private boolean filterByWeek = false;
     private String selectedEmotion = null;
     private String searchReasonQuery = null;
+    private SearchView searchView;
 
 
     /**
@@ -119,6 +120,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         initializeViews();
         setupListeners();
         setupRecyclerView();
+        updateTabSelection(false);
 
         // Default to "Their Mood" tab
         loadTheirMoodEvents();
@@ -231,7 +233,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         btnTheirMood = findViewById(R.id.btnAllMoods);
         btnMyMood = findViewById(R.id.btnFollowingMoods);
         btnFilter = findViewById(R.id.btnFilter);
-        tvShareInfo = findViewById(R.id.tvShareInfo);
+        searchView = findViewById(R.id.searchView);;
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
         fabAddMood = findViewById(R.id.fabAddMood);
         tvOfflineIndicator = findViewById(R.id.tvOfflineIndicator);
@@ -305,6 +307,15 @@ public class FeedManagerActivity extends AppCompatActivity {
         isShowingMyMood = showMyMood;
         adapter.setMyMoodSection(showMyMood);
         // Get color state lists for selected and unselected states
+
+        // Add search view visibility control
+        if (!showMyMood) { // When switching to "All Moods"
+            searchView.setVisibility(View.GONE);
+            searchView.setQuery("", false); // Clear search text
+            searchReasonQuery = null; // Reset filter
+        }
+
+        btnFilter.setVisibility(showMyMood ? View.VISIBLE : View.GONE);
         ColorStateList selectedColor = ColorStateList.valueOf(getResources().getColor(R.color.selected_tab_color)); // Replace with your selected color
         ColorStateList unselectedColor = ColorStateList.valueOf(getResources().getColor(R.color.unselected_tab_color)); // Replace with your unselected color
 
@@ -492,59 +503,89 @@ public class FeedManagerActivity extends AppCompatActivity {
         popup.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
 
-            // Reset search query for all filters except reason search
-            if (id != R.id.filter_search_reason) {
-                searchReasonQuery = null;
-            }
-
+            // Handle all filters
             if (id == R.id.filter_three_recent) {
                 showThreeMostRecent = true;
                 filterByWeek = false;
                 selectedEmotion = null;
+                searchReasonQuery = null;
+                searchView.setVisibility(View.GONE);
             } else if (id == R.id.filter_week) {
                 showThreeMostRecent = false;
                 filterByWeek = true;
                 selectedEmotion = null;
+                searchReasonQuery = null;
+                searchView.setVisibility(View.GONE);
             } else if (id == R.id.filter_all) {
                 showThreeMostRecent = false;
                 filterByWeek = false;
                 selectedEmotion = null;
+                searchReasonQuery = null;
+                searchView.setVisibility(View.GONE);
             } else if (id == R.id.filter_search_reason) {
-                handleSearchReason();
-                return true;
+                showThreeMostRecent = false;
+                filterByWeek = false;
+                selectedEmotion = null;
+                searchView.setVisibility(View.VISIBLE);
+                searchView.setQuery("", false);
+                searchView.requestFocus();
+
+                // Set up search listener
+                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        searchReasonQuery = newText.trim();
+                        loadCurrentFeed();
+                        return false;
+                    }
+                });
             } else {
                 // Emotion filters
                 showThreeMostRecent = false;
                 filterByWeek = false;
                 selectedEmotion = getEmotionFromId(id);
+                searchReasonQuery = null;
+                searchView.setVisibility(View.GONE);
             }
 
-            loadMyMoodEvents();
+            loadCurrentFeed();
             return true;
         });
         popup.show();
     }
-
-    private void handleSearchReason() {
-        SearchView searchView = new SearchView(this);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                .setTitle("Search by Exact Words")
-                .setView(searchView)
-                .setPositiveButton("Search", (dialog, which) -> {
-                    // Clear other filters when searching
-                    searchReasonQuery = searchView.getQuery().toString().trim();
-                    showThreeMostRecent = false;
-                    filterByWeek = false;
-                    selectedEmotion = null;
-                    loadMyMoodEvents();
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> {
-                    searchReasonQuery = null;
-                    loadMyMoodEvents();
-                });
-
-        builder.show();
+    private void loadCurrentFeed() {
+        if (isShowingMyMood) {
+            loadMyMoodEvents();
+        } else {
+            loadSharedMoodEvents();
+        }
     }
+
+//    private void handleSearchReason() {
+//        SearchView searchView = new SearchView(this);
+//        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+//                .setTitle("Search by Exact Words")
+//                .setView(searchView)
+//                .setPositiveButton("Search", (dialog, which) -> {
+//                    // Clear other filters when searching
+//                    searchReasonQuery = searchView.getQuery().toString().trim();
+//                    showThreeMostRecent = false;
+//                    filterByWeek = false;
+//                    selectedEmotion = null;
+//                    loadMyMoodEvents();
+//                })
+//                .setNegativeButton("Cancel", (dialog, which) -> {
+//                    searchReasonQuery = null;
+//                    loadMyMoodEvents();
+//                });
+//
+//        builder.show();
+//    }
     /**
      * Navigates to AddMoodEventActivity
      *

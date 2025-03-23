@@ -42,18 +42,20 @@
             android:textColor="#FFFFFF" />
     </LinearLayout>
 
-    <!-- Share information -->
-    <TextView
-        android:id="@+id/tvShareInfo"
-        android:layout_width="wrap_content"
+
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:text="Shared by 'soul inspirer'..."
-        android:textColor="#666666"
-        android:textSize="12sp"
+        android:layout_marginEnd="16dp"
+        android:visibility="gone"
+        app:queryHint="Search reasons..."
+        app:iconifiedByDefault="false"
+        app:layout_constraintEnd_toStartOf="@+id/btnFilter"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tabLayout" />
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout"/>
 
     <TextView
         android:id="@+id/tvOfflineIndicator"
@@ -84,7 +86,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/recyclerMoodEvents" />
 
-    <!-- RecyclerView for mood events -->
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/headerBarrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="searchView,btnFilter"/>
+
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerMoodEvents"
         android:layout_width="0dp"
@@ -95,8 +104,8 @@
         app:layout_constraintBottom_toTopOf="@+id/layoutBottomNav"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvShareInfo"
-        tools:listitem="@layout/item_mood_event" />
+        app:layout_constraintTop_toBottomOf="@+id/headerBarrier"
+        tools:listitem="@layout/item_mood_event"/>
 
     <!-- Floating Action Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
