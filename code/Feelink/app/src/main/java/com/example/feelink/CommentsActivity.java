@@ -50,6 +50,17 @@ public class CommentsActivity extends AppCompatActivity {
         // Load existing comments
         loadComments();
 
+        // Add automatic scrolling when keyboard appears
+        recyclerView.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            if (bottom < oldBottom) { // Keyboard opened
+                recyclerView.postDelayed(() -> {
+                    if (!comments.isEmpty()) {
+                        recyclerView.smoothScrollToPosition(comments.size() - 1);
+                    }
+                }, 100);
+            }
+        });
+
         // Send comment button handler
         btnSend.setOnClickListener(v -> {
             String commentText = etComment.getText().toString().trim();

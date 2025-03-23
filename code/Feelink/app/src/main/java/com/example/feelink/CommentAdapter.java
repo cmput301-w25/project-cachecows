@@ -8,7 +8,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
 
@@ -28,6 +30,12 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     @Override
     public void onBindViewHolder(@NonNull CommentViewHolder holder, int position) {
         Comment comment = comments.get(position);
+
+        // Format timestamp
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
+        String formattedDate = sdf.format(comment.getTimestamp());
+        holder.tvTimestamp.setText(formattedDate);
+
 
         // Add username resolution
         FirestoreManager firestoreManager = new FirestoreManager(comment.getUserId());
@@ -52,12 +60,13 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     }
 
     static class CommentViewHolder extends RecyclerView.ViewHolder {
-        TextView tvUsername, tvComment;
+        TextView tvUsername, tvComment, tvTimestamp;
 
         public CommentViewHolder(@NonNull View itemView) {
             super(itemView);
             tvUsername = itemView.findViewById(R.id.tvUsername);
             tvComment = itemView.findViewById(R.id.tvComment);
+            tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
         }
     }
 }
