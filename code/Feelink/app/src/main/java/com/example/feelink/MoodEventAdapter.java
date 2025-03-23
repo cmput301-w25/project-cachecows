@@ -447,6 +447,16 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         return networkInfo != null && networkInfo.isConnected();
     }
 
+    public int findPositionById(String documentId) {
+        if (moodEvents == null) return -1;
+        for (int i = 0; i < moodEvents.size(); i++) {
+            if (moodEvents.get(i).getDocumentId().equals(documentId)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     /**
      * ViewHolder implementation for mood event items
      *

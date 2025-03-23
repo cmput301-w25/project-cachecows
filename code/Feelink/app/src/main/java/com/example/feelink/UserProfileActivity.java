@@ -1,9 +1,14 @@
 package com.example.feelink;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -12,6 +17,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -20,10 +26,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import android.view.MenuItem;
+
 import androidx.appcompat.widget.PopupMenu;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +50,14 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private boolean filterByWeek = false;
     private String selectedEmotion = null;
+    private ConnectivityReceiver connectivityReceiver;
+    private final BroadcastReceiver syncReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String docId = intent.getStringExtra("DOCUMENT_ID");
+            removeAnimation(docId);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +79,28 @@ public class UserProfileActivity extends AppCompatActivity {
         ImageView navHome = findViewById(R.id.navHome);
         ImageView navChats = findViewById(R.id.navChats);
         ImageView navMap = findViewById(R.id.navMap);
+        TextView tvOfflineIndicator = findViewById(R.id.tvOfflineIndicator);
+
+        // Set up connectivity receiver
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        connectivityReceiver = new ConnectivityReceiver(new ConnectivityReceiver.ConnectivityReceiverListener() {
+            @Override
+            public void onNetworkConnectionChanged(boolean isConnected) {
+                ConnectivityReceiver.handleBanner(isConnected, tvOfflineIndicator, UserProfileActivity.this);
+            }
+        });
+        registerReceiver(connectivityReceiver, filter);
+
+        boolean initiallyConnected = ConnectivityReceiver.isNetworkAvailable(this);
+        if (!initiallyConnected) {
+            tvOfflineIndicator.setVisibility(View.VISIBLE);
+            tvOfflineIndicator.setText(R.string.you_are_currently_offline);
+        } else {
+            tvOfflineIndicator.setVisibility(View.GONE);
+        }
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(syncReceiver,
+                new IntentFilter("MOOD_EVENT_SYNCED"));
 
         navSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
         navHome.setOnClickListener(v -> startActivity(new Intent(this, FeedManagerActivity.class)));
@@ -127,6 +161,14 @@ public class UserProfileActivity extends AppCompatActivity {
         fetchUserData(currentUserId);
         fetchTotalMoodEvents(currentUserId);
         fetchUserMoodEvents(currentUserId);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (connectivityReceiver != null) {
+            unregisterReceiver(connectivityReceiver);
+        }
     }
     private void showFilterMenu() {
         PopupMenu popup = new PopupMenu(this, findViewById(R.id.filterButton));
@@ -268,5 +310,10 @@ public class UserProfileActivity extends AppCompatActivity {
         finish();
     }
 
-
+    private void removeAnimation(String docId) {
+        int position = moodEventAdapter.findPositionById(docId);
+        if (position != -1) {
+            moodEventAdapter.notifyItemChanged(position);
+        }
+    }
 }

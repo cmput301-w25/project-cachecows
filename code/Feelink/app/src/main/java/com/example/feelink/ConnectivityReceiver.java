@@ -5,6 +5,12 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.content.BroadcastReceiver;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.View;
+import android.widget.TextView;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 /**
  * A BroadcastReceiver that listens for changes in network connectivity.
@@ -34,6 +40,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
     }
 
     private ConnectivityReceiverListener listener;
+    private static boolean wasOffline = false;  //to check if the uses was offline at least once
 
     /**
      * Constructor for the ConnectivityReceiver.
@@ -54,6 +61,10 @@ public class ConnectivityReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         boolean isConnected = isNetworkAvailable(context);
         if (isConnected) {
+            //if no pending items to sync, notify listener
+            if (listener != null) {
+                listener.onNetworkConnectionChanged(true);
+            }
             // Connectivity is restored, check for pending syncs
             PendingSyncManager pendingSyncManager = new PendingSyncManager(context);
             FirestoreManager firestoreManager = new FirestoreManager("current_user_id");
@@ -65,9 +76,10 @@ public class ConnectivityReceiver extends BroadcastReceiver {
                     public void onSuccess(MoodEvent moodEvent) {
                         // Sync successful so remove from pending list
                         pendingSyncManager.removePendingId(documentId);
-                        if (listener != null) {
-                            listener.onNetworkConnectionChanged(true);
-                        }
+
+                        Intent intent = new Intent("MOOD_EVENT_SYNCED");
+                        intent.putExtra("DOCUMENT_ID", documentId);
+                        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
                     }
                     @Override
                     public void onFailure(String errorMessage) {}
@@ -75,6 +87,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
             }
         }
         else {
+            //notify listener offline
             if (listener != null) {
                 listener.onNetworkConnectionChanged(false);
             }
@@ -91,5 +104,36 @@ public class ConnectivityReceiver extends BroadcastReceiver {
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnected();
+    }
+
+    public static void handleBanner(boolean isConnected, TextView tvOfflineIndicator, Context context) {
+        if (tvOfflineIndicator == null) return;
+        if (isConnected) {
+            if (wasOffline){
+                tvOfflineIndicator.setText(R.string.back_online);
+                tvOfflineIndicator.setBackgroundColor(
+                        context.getResources().getColor(R.color.online_indicator_background));
+                tvOfflineIndicator.setVisibility(View.VISIBLE);
+
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    tvOfflineIndicator.setText(R.string.you_are_currently_offline);
+                    tvOfflineIndicator.setBackgroundColor(
+                            context.getResources().getColor(R.color.offline_indicator_background)
+                    );
+                    tvOfflineIndicator.setVisibility(View.GONE);
+                }, 3000);
+                wasOffline = false;
+            } else {
+                tvOfflineIndicator.setVisibility(View.GONE);
+            }
+        } else {
+            wasOffline = true;
+            wasOffline = true;
+            tvOfflineIndicator.setText(R.string.you_are_currently_offline);
+            tvOfflineIndicator.setBackgroundColor(
+                    context.getResources().getColor(R.color.offline_indicator_background)
+            );
+            tvOfflineIndicator.setVisibility(View.VISIBLE);
+        }
     }
 }
