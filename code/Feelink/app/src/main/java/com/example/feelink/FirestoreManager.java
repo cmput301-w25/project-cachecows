@@ -658,7 +658,7 @@ public class FirestoreManager {
         });
     }
 
-    public void getFollowedUsersMoodEvents(List<String> followedUserIds, OnMoodEventsListener listener) {
+    public void getFollowedUsersMoodEvents(List<String> followedUserIds, boolean filterByWeek, String emotionFilter, OnMoodEventsListener listener) {
         if (followedUserIds.isEmpty()) {
             listener.onSuccess(new ArrayList<>());
             return;
@@ -667,11 +667,27 @@ public class FirestoreManager {
         List<Task<QuerySnapshot>> tasks = new ArrayList<>();
         List<List<String>> chunks = partitionList(followedUserIds, 10);
 
+        // Calculate timestamp for 7 days ago if needed
+        Date oneWeekAgo = null;
+        if (filterByWeek) {
+            long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
+            oneWeekAgo = new Date(oneWeekAgoMillis);
+        }
+
         for (List<String> chunk : chunks) {
-            // Remove the isPublic filter from the query
             Query query = db.collection(COLLECTION_MOOD_EVENTS)
                     .whereIn("userId", chunk)
-                    .orderBy("timestamp", Query.Direction.DESCENDING); // Keep timestamp ordering
+                    .orderBy("timestamp", Query.Direction.DESCENDING);
+
+            // Add week filter
+            if (filterByWeek && oneWeekAgo != null) {
+                query = query.whereGreaterThanOrEqualTo("timestamp", oneWeekAgo);
+            }
+
+            // Add emotion filter
+            if (emotionFilter != null && !emotionFilter.isEmpty()) {
+                query = query.whereEqualTo("emotionalState", emotionFilter);
+            }
 
             tasks.add(query.get());
         }
@@ -683,7 +699,6 @@ public class FirestoreManager {
                         QuerySnapshot snapshot = (QuerySnapshot) result;
                         for (QueryDocumentSnapshot document : snapshot) {
                             MoodEvent event = parseDocumentToMoodEvent(document);
-                            // Add to list only if public (including legacy moods)
                             if (event.isPublic()) {
                                 allEvents.add(event);
                             }

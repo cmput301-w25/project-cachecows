@@ -2,6 +2,7 @@ package com.example.feelink;
 
 
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.ColorStateList;
@@ -12,7 +13,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
+import android.widget.SearchView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import androidx.activity.EdgeToEdge;
@@ -29,6 +33,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 
 /**
@@ -67,6 +72,11 @@ public class FeedManagerActivity extends AppCompatActivity {
     static boolean SKIP_AUTH_FOR_TESTING = false;
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private ConnectivityReceiver connectivityReceiver;
+    private boolean showThreeMostRecent = true; // Default to showing 3
+    private boolean filterByWeek = false;
+    private String selectedEmotion = null;
+    private String searchReasonQuery = null;
+
 
     /**
      * Initializes feed UI and authentication checks
@@ -251,7 +261,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         btnFilter.setOnClickListener(v -> {
             // Implement filter functionality
             // This could show a dialog with filter options
-            showFilterOptions();
+            showFilterMenu();
         });
 
         fabAddMood.setOnClickListener(v -> {
@@ -335,29 +345,55 @@ public class FeedManagerActivity extends AppCompatActivity {
         firestoreManager.getFollowedUserIds(new FirestoreManager.OnFollowedUserIdsListener() {
             @Override
             public void onSuccess(List<String> followedUserIds) {
-                firestoreManager.getFollowedUsersMoodEvents(followedUserIds,
+                Log.d("FeedManager", "Retrieved followed user IDs: " + followedUserIds.size());
+
+                firestoreManager.getFollowedUsersMoodEvents(followedUserIds, filterByWeek, selectedEmotion,
                         new FirestoreManager.OnMoodEventsListener() {
                             @Override
                             public void onSuccess(List<MoodEvent> moodEvents) {
-                                Log.d("FeedManager", "Followed moods: " + moodEvents.size());
+                                Log.d("FeedManager", "Initial followed moods count: " + moodEvents.size());
+
+                                // Apply client-side filters
+                                if (searchReasonQuery != null && !searchReasonQuery.isEmpty()) {
+                                    Log.d("FeedManager", "Applying reason filter: " + searchReasonQuery);
+                                    moodEvents = filterByReason(moodEvents, searchReasonQuery);
+                                    Log.d("FeedManager", "Post-reason filter count: " + moodEvents.size());
+                                }
+
+                                // Apply 3 most recent if needed
+                                if (showThreeMostRecent) {
+                                    int originalSize = moodEvents.size();
+                                    moodEvents = moodEvents.size() > 3 ?
+                                            moodEvents.subList(0, 3) : moodEvents;
+                                    Log.d("FeedManager", "Showing " + moodEvents.size() +
+                                            "/" + originalSize + " recent moods");
+                                }
+
                                 adapter.updateMoodEvents(moodEvents);
                                 checkEmptyState(moodEvents);
+                                Log.d("FeedManager", "Final displayed moods: " + moodEvents.size());
                             }
 
                             @Override
                             public void onFailure(String errorMessage) {
-                                Log.e("FeedManager", "Followed moods error: " + errorMessage);
+                                Log.e("FeedManager", "Error getting followed moods: " + errorMessage);
                                 adapter.updateMoodEvents(new ArrayList<>());
                                 checkEmptyState(new ArrayList<>());
+                                Toast.makeText(FeedManagerActivity.this,
+                                        "Failed to load moods",
+                                        Toast.LENGTH_SHORT).show();
                             }
                         });
             }
 
             @Override
             public void onFailure(String errorMessage) {
-                Log.e("FeedManager", "Followed IDs error: " + errorMessage);
+                Log.e("FeedManager", "Error getting followed user IDs: " + errorMessage);
                 adapter.updateMoodEvents(new ArrayList<>());
                 checkEmptyState(new ArrayList<>());
+                Toast.makeText(FeedManagerActivity.this,
+                        "Failed to load followed users",
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -366,6 +402,44 @@ public class FeedManagerActivity extends AppCompatActivity {
         // This would need to be implemented in FirestoreManager to get other users' moods
         // For now, we'll use a placeholder method that could be added to FirestoreManager
         loadSharedMoodEvents();
+    }
+
+
+    // Add this method to map menu IDs to emotion strings
+    private String getEmotionFromId(int id) {
+        if (id == R.id.filter_happy) return "Happy";
+        if (id == R.id.filter_fear) return "Fear";
+        if (id == R.id.filter_shame) return "Shame";
+        if (id == R.id.filter_sad) return "Sad";
+        if (id == R.id.filter_angry) return "Angry";
+        if (id == R.id.filter_surprised) return "Surprised";
+        if (id == R.id.filter_confused) return "Confused";
+        if (id == R.id.filter_disgusted) return "Disgusted";
+        return null;
+    }
+
+    // Add this method to filter by reason text
+    private List<MoodEvent> filterByReason(List<MoodEvent> events, String query) {
+        List<MoodEvent> filtered = new ArrayList<>();
+        String lowerQuery = query.toLowerCase();
+
+        String[] searchTerms = lowerQuery.split("\\s+");
+
+        for (MoodEvent event : events) {
+            if (event.getReason() != null) {
+                String reason = event.getReason().toLowerCase();
+
+                // Check if any search term appears as whole word
+                for (String term : searchTerms) {
+                    if (!term.isEmpty() &&
+                            reason.matches(".*\\b" + Pattern.quote(term) + "\\b.*")) {
+                        filtered.add(event);
+                        break; // Add once if any term matches
+                    }
+                }
+            }
+        }
+        return filtered;
     }
 
     /**
@@ -410,10 +484,67 @@ public class FeedManagerActivity extends AppCompatActivity {
         }
     }
 
-    private void showFilterOptions() {
-        // Todo: Implement filter options dialog
+    // Modified showFilterMenu
+    private void showFilterMenu() {
+        PopupMenu popup = new PopupMenu(this, findViewById(R.id.btnFilter));
+        popup.getMenuInflater().inflate(R.menu.feed_filter_menu, popup.getMenu());
+
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+
+            // Reset search query for all filters except reason search
+            if (id != R.id.filter_search_reason) {
+                searchReasonQuery = null;
+            }
+
+            if (id == R.id.filter_three_recent) {
+                showThreeMostRecent = true;
+                filterByWeek = false;
+                selectedEmotion = null;
+            } else if (id == R.id.filter_week) {
+                showThreeMostRecent = false;
+                filterByWeek = true;
+                selectedEmotion = null;
+            } else if (id == R.id.filter_all) {
+                showThreeMostRecent = false;
+                filterByWeek = false;
+                selectedEmotion = null;
+            } else if (id == R.id.filter_search_reason) {
+                handleSearchReason();
+                return true;
+            } else {
+                // Emotion filters
+                showThreeMostRecent = false;
+                filterByWeek = false;
+                selectedEmotion = getEmotionFromId(id);
+            }
+
+            loadMyMoodEvents();
+            return true;
+        });
+        popup.show();
     }
 
+    private void handleSearchReason() {
+        SearchView searchView = new SearchView(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle("Search by Exact Words")
+                .setView(searchView)
+                .setPositiveButton("Search", (dialog, which) -> {
+                    // Clear other filters when searching
+                    searchReasonQuery = searchView.getQuery().toString().trim();
+                    showThreeMostRecent = false;
+                    filterByWeek = false;
+                    selectedEmotion = null;
+                    loadMyMoodEvents();
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    searchReasonQuery = null;
+                    loadMyMoodEvents();
+                });
+
+        builder.show();
+    }
     /**
      * Navigates to AddMoodEventActivity
      *

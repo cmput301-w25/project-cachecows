@@ -72,19 +72,6 @@
         app:layout_constraintBottom_toTopOf="@id/recyclerMoodEvents"/>
 
     <!-- Filter Button -->
-
-    <ImageButton
-        android:id="@+id/btnSort"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Filter"
-        android:src="@drawable/ic_sort"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerMoodEvents"
-        app:layout_constraintEnd_toStartOf="@+id/btnFilter"
-        app:layout_constraintTop_toBottomOf="@+id/tabLayout" />
-
-
     <ImageButton
         android:id="@+id/btnFilter"
         android:layout_width="48dp"
