@@ -353,10 +353,13 @@ public class FeedManagerActivity extends AppCompatActivity {
      * </ol>
      */
     private void loadMyMoodEvents() {
+        adapter.setMyMoodSection(false);
+        adapter.setPublicFeed(false);
         firestoreManager.getFollowedUserIds(new FirestoreManager.OnFollowedUserIdsListener() {
             @Override
             public void onSuccess(List<String> followedUserIds) {
                 Log.d("FeedManager", "Retrieved followed user IDs: " + followedUserIds.size());
+                adapter.setMyMoodSection(false);
 
                 firestoreManager.getFollowedUsersMoodEvents(followedUserIds, filterByWeek, selectedEmotion,
                         new FirestoreManager.OnMoodEventsListener() {
@@ -410,8 +413,8 @@ public class FeedManagerActivity extends AppCompatActivity {
     }
 
     private void loadTheirMoodEvents() {
-        // This would need to be implemented in FirestoreManager to get other users' moods
-        // For now, we'll use a placeholder method that could be added to FirestoreManager
+        adapter.setMyMoodSection(false);
+        adapter.setPublicFeed(true);
         loadSharedMoodEvents();
     }
 
