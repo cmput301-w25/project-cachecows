@@ -30,6 +30,8 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UserProfileActivity extends AppCompatActivity {
     private static final String TAG = "PersonalProfileActivity";
@@ -196,9 +198,21 @@ public class UserProfileActivity extends AppCompatActivity {
     }
     private void filterMoodEventsByReason(String query) {
         List<MoodEvent> filteredList = new ArrayList<>();
+        String queryLower = query.toLowerCase().trim(); // Normalize the query
+        if (queryLower.isEmpty()) {
+            moodEventAdapter.updateMoodEvents(moodEventsList); // Show all if query is empty
+            return;
+        }
+
+        // Regex to match exact word with word boundaries, case-insensitive
+        Pattern pattern = Pattern.compile("\\b" + Pattern.quote(queryLower) + "\\b", Pattern.CASE_INSENSITIVE);
+
         for (MoodEvent event : moodEventsList) {
-            if (event.getReason() != null && event.getReason().toLowerCase().contains(query.toLowerCase())) {
-                filteredList.add(event);
+            if (event.getReason() != null) {
+                Matcher matcher = pattern.matcher(event.getReason().toLowerCase());
+                if (matcher.find()) {
+                    filteredList.add(event);
+                }
             }
         }
         moodEventAdapter.updateMoodEvents(filteredList);
