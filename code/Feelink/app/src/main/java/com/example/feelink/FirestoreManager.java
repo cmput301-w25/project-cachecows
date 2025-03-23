@@ -127,9 +127,6 @@ public class FirestoreManager {
             moodData.put("reason", moodEvent.getReason());
         }
 
-        if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
-            moodData.put("trigger", moodEvent.getTrigger());
-        }
 
         if (moodEvent.getSocialSituation() != null && !moodEvent.getSocialSituation().isEmpty()) {
             moodData.put("socialSituation", moodEvent.getSocialSituation());
@@ -227,7 +224,6 @@ public class FirestoreManager {
                                 String id = document.getId();
                                 Date timestamp = document.getDate("timestamp");
                                 String emotionalState = document.getString("emotionalState");
-                                String trigger = document.getString("trigger");
                                 String socialSituation = document.getString("socialSituation");
                                 String reason = document.getString("reason");
                                 String userId = document.getString("userId");
@@ -243,7 +239,7 @@ public class FirestoreManager {
                                         (!showPublic && !isPublic);
 
                                 if (shouldInclude) {
-                                    MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+                                    MoodEvent moodEvent = new MoodEvent(emotionalState, socialSituation, reason);
                                     moodEvent.setUserId(userId);
                                     moodEvent.setId(id.hashCode());
                                     moodEvent.setTimestamp(timestamp);
@@ -278,7 +274,6 @@ public class FirestoreManager {
 //                                String id = document.getId();
 //                                Date timestamp = document.getDate("timestamp");
 //                                String emotionalState = document.getString("emotionalState");
-//                                String trigger = document.getString("trigger");
 //                                String socialSituation = document.getString("socialSituation");
 //                                String reason = document.getString("reason");
 //                                String userId = document.getString("userId");
@@ -296,7 +291,7 @@ public class FirestoreManager {
 //                                        (!showPublic && !isPublic); // Private mode
 //
 //                                if (shouldInclude) {
-//                                    MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+//                                    MoodEvent moodEvent = new MoodEvent(emotionalState, socialSituation, reason);
 //                                    moodEvent.setUserId(userId);
 //                                    moodEvent.setId(id.hashCode());
 //                                    moodEvent.setTimestamp(timestamp);
@@ -348,7 +343,6 @@ public class FirestoreManager {
                                 String id = document.getId();
                                 Date timestamp = document.getDate("timestamp");
                                 String emotionalState = document.getString("emotionalState");
-                                String trigger = document.getString("trigger");
                                 String socialSituation = document.getString("socialSituation");
                                 String reason = document.getString("reason");
                                 String userId = document.getString("userId");
@@ -362,7 +356,7 @@ public class FirestoreManager {
 
                                 // Only add public moods
                                 if (isPublic) {
-                                    MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+                                    MoodEvent moodEvent = new MoodEvent(emotionalState, socialSituation, reason);
                                     moodEvent.setUserId(userId);
                                     moodEvent.setId(id.hashCode());
                                     moodEvent.setTimestamp(timestamp);
@@ -485,12 +479,6 @@ public class FirestoreManager {
             moodData.put("reason", FieldValue.delete());
         }
 
-        String trigger = moodEvent.getTrigger();
-        if (trigger != null && !trigger.isEmpty()) {
-            moodData.put("trigger", trigger);
-        } else {
-            moodData.put("trigger", FieldValue.delete());
-        }
 
         String socialSituation = moodEvent.getSocialSituation();
         if (socialSituation != null && !socialSituation.isEmpty()) {
@@ -705,7 +693,6 @@ public class FirestoreManager {
         String id = document.getId();
         Date timestamp = document.getDate("timestamp");
         String emotionalState = document.getString("emotionalState");
-        String trigger = document.getString("trigger");
         String socialSituation = document.getString("socialSituation");
         String reason = document.getString("reason");
         String userId = document.getString("userId");
@@ -713,7 +700,7 @@ public class FirestoreManager {
         Boolean isPublic = document.getBoolean("isPublic");
         if (isPublic == null) isPublic = true;
 
-        MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
+        MoodEvent moodEvent = new MoodEvent(emotionalState, socialSituation, reason);
         moodEvent.setUserId(userId);
         moodEvent.setId(id.hashCode());
         moodEvent.setTimestamp(timestamp);
@@ -888,9 +875,7 @@ public class FirestoreManager {
         if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
             moodData.put("reason", moodEvent.getReason());
         }
-        if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
-            moodData.put("trigger", moodEvent.getTrigger());
-        }
+
         if (moodEvent.getSocialSituation() != null && !moodEvent.getSocialSituation().isEmpty()) {
             moodData.put("socialSituation", moodEvent.getSocialSituation());
         }

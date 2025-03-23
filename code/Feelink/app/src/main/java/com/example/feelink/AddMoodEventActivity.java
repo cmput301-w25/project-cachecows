@@ -55,7 +55,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private TextView tvGreeting, tvAddPhoto;
     private LinearLayout moodHappy, moodSad, moodAngry, moodSurprised,
             moodConfused, moodDisgusted, moodShame, moodFear;
-    private EditText etReason, etTrigger;
+    private EditText etReason;
     private Spinner socialSituationSpinner;
     private Button btnAddMood;
     private ToggleButton togglePrivacy;
@@ -126,12 +126,11 @@ public class AddMoodEventActivity extends AppCompatActivity {
             moodEventId = intent.getLongExtra("MOOD_EVENT_ID", -1);
             String emotionalState = intent.getStringExtra("EMOTIONAL_STATE");
             String reason = intent.getStringExtra("REASON");
-            String trigger = intent.getStringExtra("TRIGGER");
             String socialSituation = intent.getStringExtra("SOCIAL_SITUATION");
             String imageUrl = intent.getStringExtra("IMAGE_URL");
             boolean isPublic = intent.getBooleanExtra("IS_PUBLIC", true);
 
-            preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl,isPublic);
+            preFillFields(emotionalState, reason, socialSituation, imageUrl,isPublic);
         }
 
         setupAddButton();
@@ -155,18 +154,17 @@ public class AddMoodEventActivity extends AppCompatActivity {
      *
      * @param emotionalState Previously saved emotional state
      * @param reason Stored reason text
-     * @param trigger Stored trigger text
      * @param socialSituation Selected social situation
      * @param imageUrl Stored image reference
      */
-    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation, String imageUrl, boolean isPublic) {
+    private void preFillFields(String emotionalState, String reason, String socialSituation, String imageUrl, boolean isPublic) {
         // Set the selected mood
         selectedMood = emotionalState;
         highlightSelectedMood(emotionalState);
 
-        // Set reason and trigger
+        // Set reason
         etReason.setText(reason);
-        etTrigger.setText(trigger);
+
 
 
         // Set social situation in spinner
@@ -258,7 +256,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private void initializeViews() {
         tvGreeting = findViewById(R.id.tvGreeting);
         etReason = findViewById(R.id.etReason);
-        etTrigger = findViewById(R.id.etTrigger);
         togglePrivacy = findViewById(R.id.togglePrivacy);
         socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
         btnAddMood = findViewById(R.id.btnAddMood);
@@ -449,12 +446,11 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     btnAddMood.setEnabled(true);
                     return;
                 }
-                String trigger = etTrigger.getText().toString().trim();
                 String selectedValue = socialSituationSpinner.getSelectedItem().toString();
                 String socialSituation = selectedValue.equals("None") ? "" : selectedValue;
 
 
-                MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
+                MoodEvent moodEvent = new MoodEvent(selectedMood, socialSituation, reason);
                 moodEvent.setTimestamp(currentDateTime);
 
                 boolean isPublic = !togglePrivacy.isChecked(); // Toggle OFF = Public
