@@ -1,10 +1,12 @@
 package com.example.feelink;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -139,12 +141,20 @@ public class UserProfileActivity extends AppCompatActivity {
         popup.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
 
-            // Inside showFilterMenu()'s OnMenuItemClickListener
             if (id == R.id.filter_search_reason) {
                 filterByWeek = false;
                 selectedEmotion = null;
                 searchView.setVisibility(View.VISIBLE);
-                searchView.setQuery("", false); // Clear previous query
+                searchView.setQuery("", false);
+                searchView.requestFocus();
+
+                // Show keyboard
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.showSoftInput(searchView, InputMethodManager.SHOW_IMPLICIT);
+                }
+
+                // Set up search listener
                 searchView.setOnQueryTextListener(new androidx.appcompat.widget.SearchView.OnQueryTextListener() {
                     @Override
                     public boolean onQueryTextSubmit(String query) {
@@ -157,22 +167,29 @@ public class UserProfileActivity extends AppCompatActivity {
                         return false;
                     }
                 });
-                fetchUserMoodEvents(currentUserId); // Fetch all events without filters
+                fetchUserMoodEvents(currentUserId);
             }
             else if (id == R.id.filter_week) {
                 filterByWeek = true;
                 selectedEmotion = null;
                 searchView.setVisibility(View.GONE);
-            } else if (id == R.id.filter_all) {
+                searchView.setQuery("", false);
+                fetchUserMoodEvents(currentUserId);
+            }
+            else if (id == R.id.filter_all) {
                 filterByWeek = false;
                 selectedEmotion = null;
                 searchView.setVisibility(View.GONE);
-            } else {
+                searchView.setQuery("", false);
+                fetchUserMoodEvents(currentUserId);
+            }
+            else {
                 filterByWeek = false;
                 selectedEmotion = getEmotionFromId(id);
                 searchView.setVisibility(View.GONE);
+                searchView.setQuery("", false);
+                fetchUserMoodEvents(currentUserId);
             }
-            fetchUserMoodEvents(currentUserId);
             return true;
         });
         popup.show();
@@ -226,16 +243,26 @@ public class UserProfileActivity extends AppCompatActivity {
 
     @SuppressLint("NotifyDataSetChanged")
     private void fetchUserMoodEvents(String userId) {
-        firestoreManager.getMoodEvents(isPublicMode, filterByWeek,selectedEmotion, new FirestoreManager.OnMoodEventsListener()  {
+        firestoreManager.getMoodEvents(isPublicMode, filterByWeek, selectedEmotion, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
                 moodEventsList.clear();
                 moodEventsList.addAll(moodEvents);
-                moodEventAdapter.notifyDataSetChanged();
 
-                if (moodEvents.isEmpty()) Toast.makeText(UserProfileActivity.this,
-                        "No " + (isPublicMode ? "public" : "private") + " moods found",
-                        Toast.LENGTH_SHORT).show();
+                // Update adapter with new data
+                moodEventAdapter.updateMoodEvents(moodEventsList);
+
+                // Re-apply search filter if search is active
+                if (searchView.getVisibility() == View.VISIBLE) {
+                    String currentQuery = searchView.getQuery().toString();
+                    filterMoodEventsByReason(currentQuery);
+                }
+
+                if (moodEvents.isEmpty()) {
+                    Toast.makeText(UserProfileActivity.this,
+                            "No " + (isPublicMode ? "public" : "private") + " moods found",
+                            Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
