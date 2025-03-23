@@ -1,6 +1,7 @@
 package com.example.feelink;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -95,6 +96,10 @@ public class CommentsActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Comment addedComment) {
                 // Add username resolution
+                String moodOwnerId = getIntent().getStringExtra("MOOD_EVENT_OWNER_ID");
+                if (!userId.equals(moodOwnerId)) {
+                    createCommentNotification(moodOwnerId, userId, commentText);
+                }
                 firestoreManager.getUsernameById(userId, new FirestoreManager.OnUsernameListener() {
                     @Override
                     public void onSuccess(String username) {
@@ -123,6 +128,22 @@ public class CommentsActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void createCommentNotification(String receiverId, String senderId, String commentText) {
+        FirestoreManager notificationManager = new FirestoreManager(senderId);
+        notificationManager.createCommentNotification(receiverId, moodEventId, commentText,
+                new FirestoreManager.OnNotificationListener() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d("Notifications", "Comment notification created");
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Log.e("Notifications", "Error creating notification: " + error);
+                    }
+                });
     }
 
     private void loadComments() {

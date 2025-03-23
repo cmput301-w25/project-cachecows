@@ -830,9 +830,64 @@ public class FirestoreManager {
 //                .whereEqualTo("userId", userId); // Fetch all events regardless of visibility
 //    }
 
+
+    public void createCommentNotification(String receiverId, String moodEventId, String commentText, OnNotificationListener listener) {
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("type", "COMMENT");
+        notification.put("senderId", this.userId);
+        notification.put("receiverId", receiverId);
+        notification.put("moodEventId", moodEventId);
+        notification.put("text", commentText);
+        notification.put("timestamp", FieldValue.serverTimestamp());
+        notification.put("read", false);
+
+        db.collection("notifications")
+                .add(notification)
+                .addOnSuccessListener(documentReference -> listener.onSuccess())
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+    }
+
+    public void getCommentNotifications(OnNotificationsListener listener) {
+        db.collection("notifications")
+                .whereEqualTo("receiverId", userId)
+                .whereEqualTo("type", "COMMENT")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<Notification> notifications = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Notification notification = new Notification();
+                            notification.setId(document.getId());
+                            notification.setType(Notification.Type.COMMENT);
+                            notification.setMessage(document.getString("text"));
+                            notification.setSenderId(document.getString("senderId"));
+                            notification.setTimestamp(document.getDate("timestamp").getTime());
+                            notifications.add(notification);
+                        }
+                        listener.onSuccess(notifications);
+                    } else {
+                        listener.onFailure(task.getException().getMessage());
+                    }
+                });
+    }
+
     void setDb(FirebaseFirestore db) {
         this.db = db;
     }
+
+
+    public interface OnNotificationsListener {
+        void onSuccess(List<Notification> notifications);
+        void onFailure(String errorMessage);
+    }
+
+    public interface OnNotificationListener {
+        void onSuccess();
+        void onFailure(String error);
+    }
+
+
 
     /**
      * Callback interface for deletion operations

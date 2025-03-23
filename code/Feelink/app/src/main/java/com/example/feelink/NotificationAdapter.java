@@ -15,8 +15,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
     private List<Notification> notifications;
@@ -65,6 +68,31 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         } else {
             holder.acceptButton.setVisibility(View.GONE);
             holder.denyButton.setVisibility(View.GONE);
+        }
+
+        // Inside the COMMENT type block in onBindViewHolder
+        if (notification.getType() == Notification.Type.COMMENT) {
+            holder.acceptButton.setVisibility(View.GONE);
+            holder.denyButton.setVisibility(View.GONE);
+
+            FirestoreManager firestoreManager = new FirestoreManager(notification.getSenderId());
+            firestoreManager.getUsernameById(notification.getSenderId(), new FirestoreManager.OnUsernameListener() {
+                @Override
+                public void onSuccess(String username) {
+                    Date date = new Date(notification.getTimestamp());
+                    SimpleDateFormat sdf = new SimpleDateFormat("h:mm a - MMM dd, yyyy", Locale.getDefault());
+                    String formattedDate = sdf.format(date);
+                    holder.message.setText(username + " commented at " + formattedDate + "\n" + notification.getMessage());
+                }
+
+                @Override
+                public void onFailure(String fallbackName) {
+                    Date date = new Date(notification.getTimestamp());
+                    SimpleDateFormat sdf = new SimpleDateFormat("h:mm a - MMM dd, yyyy", Locale.getDefault());
+                    String formattedDate = sdf.format(date);
+                    holder.message.setText(fallbackName + " commented at " + formattedDate + "\n" + notification.getMessage());
+                }
+            });
         }
     }
 
