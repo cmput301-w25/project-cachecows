@@ -10,10 +10,10 @@
         android:id="@+id/tvGreeting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="22dp"
         android:text="Hey *Username*!"
         android:textColor="#FFFFFF"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:fontFamily="@font/poppins_bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -24,10 +24,10 @@
         android:id="@+id/tvQuestion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="10dp"
         android:text="How are you feeling?"
         android:textColor="#FFFFFF"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:fontFamily="@font/poppins_regular"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,10 +37,10 @@
         android:id="@+id/tvSelectMood"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:text="Select a Mood"
         android:textColor="#FFFFFF"
-        android:textSize="14sp"
+        android:textSize="12sp"
         android:fontFamily="@font/poppins_regular"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,7 +51,7 @@
         android:id="@+id/layoutMoodsRow1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@+id/tvSelectMood">
@@ -60,13 +60,13 @@
             android:id="@+id/moodHappy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:src="@drawable/ic_mood_happy"
                 android:contentDescription="Happy mood" />
 
@@ -83,13 +83,13 @@
             android:id="@+id/moodFear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:src="@drawable/ic_mood_fear"
                 android:contentDescription="Fear mood" />
 
@@ -106,13 +106,13 @@
             android:id="@+id/moodShame"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:src="@drawable/ic_mood_shame"
                 android:contentDescription="Shame mood" />
 
@@ -129,13 +129,13 @@
             android:id="@+id/moodSad"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:src="@drawable/ic_mood_sad"
                 android:contentDescription="Sad mood" />
 
@@ -154,7 +154,7 @@
         android:id="@+id/layoutMoodsRow2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@+id/layoutMoodsRow1">
@@ -163,13 +163,13 @@
             android:id="@+id/moodAngry"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:src="@drawable/ic_mood_angry"
                 android:contentDescription="Angry mood" />
 
@@ -186,13 +186,13 @@
             android:id="@+id/moodSurprised"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:src="@drawable/ic_mood_surprised"
                 android:contentDescription="Surprised mood" />
 
@@ -209,13 +209,13 @@
             android:id="@+id/moodConfused"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:src="@drawable/ic_mood_confused"
                 android:contentDescription="Confused mood" />
 
@@ -232,13 +232,13 @@
             android:id="@+id/moodDisgusted"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:src="@drawable/ic_mood_disgusted"
                 android:contentDescription="Disgusted mood" />
 
@@ -258,7 +258,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="10dp"
         android:text="Reason"
         android:fontFamily="@font/poppins_regular"
         android:textColor="#FFFFFF"
@@ -289,7 +289,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="10dp"
         android:text="Trigger"
         android:fontFamily="@font/poppins_regular"
         android:textColor="#FFFFFF"
@@ -320,7 +320,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="10dp"
         android:text="Social Situation"
         android:fontFamily="@font/poppins_regular"
         android:textColor="#FFFFFF"
@@ -454,7 +454,7 @@
         android:layout_marginEnd="32dp"
         android:backgroundTint="@android:color/white"
         android:text="Add Mood"
-        android:textSize="20dp"
+        android:textSize="18dp"
         android:fontFamily="@font/poppins_bold"
         android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="parent"

@@ -120,7 +120,6 @@ public class FirestoreManager {
         moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
-        moodData.put("isPublic", moodEvent.isPublic());
 
         // Only add optional fields if they're not null or empty
         if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
@@ -190,9 +189,6 @@ public class FirestoreManager {
      *
      *
      */
-
-
-
     public void getMoodEvents(Boolean showPublic, final OnMoodEventsListener listener) {
         getMoodEvents(showPublic, false, null, listener); // Default: filterByWeek = false
     }
@@ -766,6 +762,8 @@ public class FirestoreManager {
         moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
+        moodData.put("isPublic", moodEvent.isPublic());
+
         if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
             moodData.put("reason", moodEvent.getReason());
         }
