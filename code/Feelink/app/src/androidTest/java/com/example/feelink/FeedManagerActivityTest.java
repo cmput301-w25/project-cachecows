@@ -7,13 +7,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
-import static org.hamcrest.CoreMatchers.containsString;
-
 import android.content.Context;
-import android.view.View;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.test.espresso.UiController;
-import androidx.test.espresso.ViewAction;
 //import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.espresso.intent.Intents;
 import androidx.test.espresso.intent.matcher.IntentMatchers;
@@ -25,7 +19,6 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,7 +26,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,7 +168,7 @@ public class FeedManagerActivityTest {
     @Test
     public void testSwitchToMyMoodTab() {
         // Click on My Mood tab
-        onView(withId(R.id.btnMyMood)).perform(click());
+        onView(withId(R.id.btnFollowingMoods)).perform(click());
 
         // Verify My Mood tab is displayed
         onView(withText("My Mood")).check(matches(isDisplayed()));
@@ -189,7 +181,7 @@ public class FeedManagerActivityTest {
     @Test
     public void testSwitchToTheirMoodTab() {
         // Click on Their Mood tab
-        onView(withId(R.id.btnTheirMood)).perform(click());
+        onView(withId(R.id.btnAllMoods)).perform(click());
 
         // Verify Their Mood tab is displayed
         onView(withText("Their Mood")).check(matches(isDisplayed()));
@@ -235,10 +227,10 @@ public class FeedManagerActivityTest {
         // But we can ensure the activity loads without crashing
 
         // First switch to My Mood tab
-        onView(withId(R.id.btnMyMood)).perform(click());
+        onView(withId(R.id.btnFollowingMoods)).perform(click());
 
         // Then switch to Their Mood tab
-        onView(withId(R.id.btnTheirMood)).perform(click());
+        onView(withId(R.id.btnAllMoods)).perform(click());
 
         // Verify the activity is still displayed
         onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
@@ -247,13 +239,13 @@ public class FeedManagerActivityTest {
     @Test
     public void testTabSelectionVisualFeedback() {
         // Click on My Mood tab
-        onView(withId(R.id.btnMyMood)).perform(click());
+        onView(withId(R.id.btnFollowingMoods)).perform(click());
 
         // Verify My Mood tab is displayed
         onView(withText("My Mood")).check(matches(isDisplayed()));
 
         // Click on Their Mood tab
-        onView(withId(R.id.btnTheirMood)).perform(click());
+        onView(withId(R.id.btnAllMoods)).perform(click());
 
         // Verify Their Mood tab is displayed
         onView(withText("Their Mood")).check(matches(isDisplayed()));
