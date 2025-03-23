@@ -262,7 +262,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     private void deleteMoodEvent(MoodEvent moodEvent) {
         FirestoreManager firestoreManager = new FirestoreManager(moodEvent.getUserId());
 
-        if (!isNetworkAvailable()) {
+        if (!ConnectivityReceiver.isNetworkAvailable(context)) {
             // Offline: update UI immediately.
             moodEvents.remove(moodEvent);
             notifyDataSetChanged();
@@ -440,13 +440,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         this.moodEvents = moodEvents;
         notifyDataSetChanged();
     }
-
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnected();
-    }
-
     public int findPositionById(String documentId) {
         if (moodEvents == null) return -1;
         for (int i = 0; i < moodEvents.size(); i++) {

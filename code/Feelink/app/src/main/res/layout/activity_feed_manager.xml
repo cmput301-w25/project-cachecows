@@ -7,6 +7,21 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
+    <TextView
+        android:id="@+id/tvOfflineIndicator"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/offline_indicator_background"
+        android:text="You are currently offline"
+        android:textColor="@android:color/black"
+        android:fontFamily="@font/poppins_regular"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
     <!-- Tab Selection Layout -->
     <LinearLayout
         android:id="@+id/tabLayout"
@@ -17,7 +32,7 @@
         android:layout_marginEnd="8dp"
         android:background="#FFFFFF"
         android:orientation="horizontal"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvOfflineIndicator"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -54,21 +69,6 @@
         android:textSize="12sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tabLayout" />
-
-    <TextView
-        android:id="@+id/tvOfflineIndicator"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="#DCDCDC"
-        android:text="You are currently offline"
-        android:textColor="@android:color/black"
-        android:textSize="14sp"
-        android:gravity="center"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@+id/btnFilter"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/recyclerMoodEvents"/>
 
     <!-- Filter Button -->
 
