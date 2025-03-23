@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -46,6 +47,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private boolean filterByWeek = false;
     private String selectedEmotion = null;
+    private androidx.appcompat.widget.SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +63,8 @@ public class UserProfileActivity extends AppCompatActivity {
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
         togglePrivacy = findViewById(R.id.togglePrivacy);
         ImageButton filterButton = findViewById(R.id.filterButton);
+
+        searchView = findViewById(R.id.searchView);
 
         // Inside UserProfileActivity's onCreate() after initializing views
         ImageView navSearch = findViewById(R.id.navSearch);
@@ -135,24 +139,52 @@ public class UserProfileActivity extends AppCompatActivity {
         popup.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
 
-            // Time filters
-            if (id == R.id.filter_week) {
+            // Inside showFilterMenu()'s OnMenuItemClickListener
+            if (id == R.id.filter_search_reason) {
+                filterByWeek = false;
+                selectedEmotion = null;
+                searchView.setVisibility(View.VISIBLE);
+                searchView.setQuery("", false); // Clear previous query
+                searchView.setOnQueryTextListener(new androidx.appcompat.widget.SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        filterMoodEventsByReason(newText);
+                        return false;
+                    }
+                });
+                fetchUserMoodEvents(currentUserId); // Fetch all events without filters
+            }
+            else if (id == R.id.filter_week) {
                 filterByWeek = true;
                 selectedEmotion = null;
+                searchView.setVisibility(View.GONE);
             } else if (id == R.id.filter_all) {
                 filterByWeek = false;
                 selectedEmotion = null;
-            }
-            // Emotional state filters
-            else {
+                searchView.setVisibility(View.GONE);
+            } else {
                 filterByWeek = false;
                 selectedEmotion = getEmotionFromId(id);
+                searchView.setVisibility(View.GONE);
             }
-
             fetchUserMoodEvents(currentUserId);
             return true;
         });
         popup.show();
+    }
+    private void filterMoodEventsByReason(String query) {
+        List<MoodEvent> filteredList = new ArrayList<>();
+        for (MoodEvent event : moodEventsList) {
+            if (event.getReason() != null && event.getReason().toLowerCase().contains(query.toLowerCase())) {
+                filteredList.add(event);
+            }
+        }
+        moodEventAdapter.updateMoodEvents(filteredList);
     }
 
     private String getEmotionFromId(int id) {
