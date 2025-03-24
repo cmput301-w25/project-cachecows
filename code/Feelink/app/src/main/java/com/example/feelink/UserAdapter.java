@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.List;
 
@@ -20,9 +21,11 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     private List<User> users;
     private Context context;
 
+    private String currentUserId;
     public UserAdapter(List<User> users, Context context) {
         this.users = users;
         this.context = context;
+        this.currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
     }
 
     @NonNull
@@ -61,6 +64,19 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             Intent intent = new Intent(context, OtherUserProfileActivity.class);
             intent.putExtra("userId", user.getId());
             context.startActivity(intent);
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            if (user.getId().equals(currentUserId)) {
+                // Navigate to own profile
+                Intent intent = new Intent(context, UserProfileActivity.class);
+                context.startActivity(intent);
+            } else {
+                // Navigate to other user's profile
+                Intent intent = new Intent(context, OtherUserProfileActivity.class);
+                intent.putExtra("userId", user.getId());
+                context.startActivity(intent);
+            }
         });
     }
 

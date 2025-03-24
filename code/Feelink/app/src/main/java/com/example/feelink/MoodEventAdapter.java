@@ -62,6 +62,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     private Context context;
 
     private boolean isMyMoodSection = false;
+    private boolean isPublicFeed = false;
+
 
     // Map mood types to emoji icons
     // Map mood types to drawable resources (matching add_mood_event.xml)
@@ -126,7 +128,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
      * <p>Handles:
      * <ul>
      *   <li>Color theming based on emotional state</li>
-     *   <li>Reason/trigger text display</li>
      *   <li>Image loading with Glide</li>
      *   <li>Edit/delete button visibility</li>
      * </ul>
@@ -167,16 +168,23 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             // Handle like action
         });
 
+        // Modify the comment button click listener in onBindViewHolder
         holder.btnComment.setOnClickListener(v -> {
-            // Handle comment action
+            Intent intent = new Intent(context, CommentsActivity.class);
+            intent.putExtra("MOOD_EVENT_ID", moodEvent.getDocumentId());
+            intent.putExtra("MOOD_EVENT_OWNER_ID", moodEvent.getUserId()); // Add this line
+            context.startActivity(intent);
         });
-        holder.btnExpand.setOnClickListener(v -> {
-            showDetailsDialog(moodEvent);
-        });
+        holder.cardView.setOnClickListener(v -> showDetailsDialog(moodEvent));
+
         // Handle delete button click
         holder.btnDelete.setOnClickListener(v -> {
             showDeleteConfirmationDialog(moodEvent);
         });
+
+        int socialVisibility = isPublicFeed ? View.GONE : View.VISIBLE;
+        holder.btnLike.setVisibility(socialVisibility);
+        holder.btnComment.setVisibility(socialVisibility);
 
         if (isMyMoodSection) {
             holder.btnEdit.setVisibility(View.VISIBLE);
@@ -195,7 +203,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             intent.putExtra("DOCUMENT_ID", moodEvent.getDocumentId());
             intent.putExtra("EMOTIONAL_STATE", moodEvent.getEmotionalState());
             intent.putExtra("REASON", moodEvent.getReason());
-            intent.putExtra("TRIGGER", moodEvent.getTrigger());
             intent.putExtra("SOCIAL_SITUATION", moodEvent.getSocialSituation());
             intent.putExtra("IMAGE_URL", moodEvent.getImageUrl());
             intent.putExtra("IS_PUBLIC", moodEvent.isPublic());
@@ -321,7 +328,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         TextView tvTimestamp = dialogView.findViewById(R.id.tvTimestamp);
         TextView tvUsername = dialogView.findViewById(R.id.tvUsername); // New username TextView
         TextView tvLocation = dialogView.findViewById(R.id.tvLocation);
-        TextView tvTrigger = dialogView.findViewById(R.id.tvTrigger);
         TextView tvContent = dialogView.findViewById(R.id.tvContent);
         ImageView ivMoodIcon = dialogView.findViewById(R.id.ivMoodIcon);
         ImageView ivProfilePic = dialogView.findViewById(R.id.ivProfilePic);
@@ -397,12 +403,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             tvLocation.setText("None");
         }
 
-        // Set trigger (if available)
-        if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
-            tvTrigger.setText(moodEvent.getTrigger());
-        } else {
-            tvTrigger.setText("None");
-        }
+
 
         // Set the content/reason
         tvContent.setText(moodEvent.getReason());
@@ -463,6 +464,14 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         return -1;
     }
 
+    public boolean isPublicFeed() {
+        return isPublicFeed;
+    }
+
+    public void setPublicFeed(boolean isPublicFeed) {
+        this.isPublicFeed = isPublicFeed;
+    }
+
     /**
      * ViewHolder implementation for mood event items
      *
@@ -480,7 +489,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         View btnLike;
         View btnComment;
         CardView cardView;
-        View btnExpand;
 
         ImageButton btnEdit, btnDelete;
 
@@ -499,7 +507,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             btnLike = itemView.findViewById(R.id.btnLike);
             btnComment = itemView.findViewById(R.id.btnComment);
             cardView = itemView.findViewById(R.id.cardView);
-            btnExpand = itemView.findViewById(R.id.btnExpand);
+
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
             photoContainer = itemView.findViewById(R.id.photoContainer);

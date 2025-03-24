@@ -72,10 +72,21 @@ public class NotificationsActivity extends AppCompatActivity {
                     Log.e("Error loading requests",error);
                 }
             });
-        } else {
-            // Load interactions
-            adapter.updateNotifications(new ArrayList<>());
-            checkEmptyState();
+        } else { // Interactions tab
+            firestoreManager.getCommentNotifications(new FirestoreManager.OnNotificationsListener() {
+                @Override
+                public void onSuccess(List<Notification> notifications) {
+                    adapter.updateNotifications(notifications);
+                    checkEmptyState();
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Toast.makeText(NotificationsActivity.this,
+                            "Error loading interactions: " + error, Toast.LENGTH_SHORT).show();
+                    Log.e("Error loading interactions",error);
+                }
+            });
         }
 
     }

@@ -119,6 +119,7 @@ public class UserProfileActivity extends AppCompatActivity {
         moodEventsList = new ArrayList<>();
         moodEventAdapter = new MoodEventAdapter(moodEventsList, this);
         moodEventAdapter.setMyMoodSection(true);
+        moodEventAdapter.setPublicFeed(false);
         followerCountTextView = findViewById(R.id.followerCount);
         followingCountTextView = findViewById(R.id.followingCount);
         recyclerMoodEvents.setLayoutManager(new LinearLayoutManager(this));
