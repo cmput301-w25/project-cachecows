@@ -294,10 +294,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
         });
 
         tvAddPhoto.setOnClickListener(v -> {
-//            if (!ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)){
-//                Toast.makeText(AddMoodEventActivity.this, "You are offline. You cannot upload a photo right now.", Toast.LENGTH_SHORT).show();
-//                return;
-//            }
             Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
         });
@@ -465,11 +461,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
     private MoodEvent createMoodEventFromInputs() {
         String reason = etReason.getText().toString().trim();
-        String trigger = etTrigger.getText().toString().trim();
         String selectedValue = socialSituationSpinner.getSelectedItem().toString();
         String socialSituation = selectedValue.equals("None") ? "" : selectedValue;
 
-        MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
+        MoodEvent moodEvent = new MoodEvent(selectedMood, socialSituation, reason);
         moodEvent.setTimestamp(new Date());
         moodEvent.setPublic(!togglePrivacy.isChecked());
 
@@ -604,11 +599,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 Snackbar.make(findViewById(android.R.id.content), "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT)
                         .setDuration(5000).show();
                 this.uploadedImageUrl = downloadedUrl;
-                // Clear any previous offline path if available
                 tempLocalImagePath = null;
                 btnDeletePhoto.setVisibility(View.VISIBLE);
             } else{
-                // When offline, UploadImageActivity should save the image locally and return the local path in "localPath"
                 String localPath = data.getStringExtra("localImagePath");
                 if (localPath != null) {
                     this.uploadedImageUrl = null;
