@@ -38,6 +38,11 @@
         <activity android:name=".SettingsActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".CommentsActivity"
+            android:windowSoftInputMode="adjustResize|stateAlwaysVisible"
+            android:screenOrientation="portrait"/>
+
         <activity android:name=".UserProfileActivity"
         android:exported="false"/>
         <activity android:name=".SearchActivity" android:exported="false" />
