@@ -12,6 +12,8 @@ import android.widget.TextView;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 /**
  * A BroadcastReceiver that listens for changes in network connectivity.
  * When the device's network connection is restored, it checks for pending mood events
@@ -67,19 +69,50 @@ public class ConnectivityReceiver extends BroadcastReceiver {
             }
             // Connectivity is restored, check for pending syncs
             PendingSyncManager pendingSyncManager = new PendingSyncManager(context);
-            FirestoreManager firestoreManager = new FirestoreManager("current_user_id");
+            String uid = FirebaseAuth.getInstance().getCurrentUser() != null ?
+                    FirebaseAuth.getInstance().getCurrentUser().getUid() : "default_user";
+            FirestoreManager firestoreManager = new FirestoreManager(uid);
 
             for (String documentId : pendingSyncManager.getPendingIds()) {
                 // Attempt to sync the pending mood event
                 firestoreManager.syncPendingMoodEvent(documentId, new FirestoreManager.OnMoodEventListener() {
                     @Override
                     public void onSuccess(MoodEvent moodEvent) {
-                        // Sync successful so remove from pending list
-                        pendingSyncManager.removePendingId(documentId);
+                        if (moodEvent.getImageUrl() == null && moodEvent.getTempLocalImagePath() != null) {
+                            firestoreManager.uploadLocalFileThenUpdateDocument(
+                                    moodEvent.getTempLocalImagePath(),
+                                    moodEvent.getDocumentId(),
+                                    new FirestoreManager.OnImageUploadListener() {
+                                        @Override
+                                        public void onImageUploadSuccess(String newImageUrl) {
+                                            // 2) Update the mood doc with the real image URL
+                                            moodEvent.setImageUrl(newImageUrl);
+                                            moodEvent.setTempLocalImagePath(null);
 
-                        Intent intent = new Intent("MOOD_EVENT_SYNCED");
-                        intent.putExtra("DOCUMENT_ID", documentId);
-                        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+                                            firestoreManager.updateMoodEvent(moodEvent, moodEvent.getDocumentId(), new FirestoreManager.OnMoodEventListener() {
+                                                @Override
+                                                public void onSuccess(MoodEvent updated) {
+                                                    // Done => remove from pending
+                                                    pendingSyncManager.removePendingId(documentId);
+                                                }
+                                                @Override
+                                                public void onFailure(String errorMessage) {}
+                                            });
+                                        }
+                                        @Override
+                                        public void onImageUploadFailure(String error) {
+                                            // remain pending
+                                        }
+                                    }
+                            );
+                        } else {
+                            // Sync successful so remove from pending list
+                            pendingSyncManager.removePendingId(documentId);
+
+                            Intent intent = new Intent("MOOD_EVENT_SYNCED");
+                            intent.putExtra("DOCUMENT_ID", documentId);
+                            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+                        }
                     }
                     @Override
                     public void onFailure(String errorMessage) {}
@@ -127,7 +160,6 @@ public class ConnectivityReceiver extends BroadcastReceiver {
                 tvOfflineIndicator.setVisibility(View.GONE);
             }
         } else {
-            wasOffline = true;
             wasOffline = true;
             tvOfflineIndicator.setText(R.string.you_are_currently_offline);
             tvOfflineIndicator.setBackgroundColor(

@@ -1,5 +1,6 @@
 package com.example.feelink;
 
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -19,7 +20,10 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,6 +48,11 @@ import java.util.UUID;
  * @see FirebaseFirestore
  */
 public class FirestoreManager {
+
+    public interface OnImageUploadListener {
+        void onImageUploadSuccess(String newImageUrl);
+        void onImageUploadFailure(String error);
+    }
     private static final String TAG = "FirestoreManager";
 
     // Collection names
@@ -63,12 +72,6 @@ public class FirestoreManager {
         db = FirebaseFirestore.getInstance();
         this.userId = userId;
     }
-
-//    public FirestoreManager(String userId, FirebaseFirestore firestore) {
-//        this.db = firestore;
-//        this.userId = userId;
-//    }
-
     public void updateAllUsersWithLowercaseUsername() {
         Log.d(TAG, "Starting update of all users with lowercase usernames");
 
@@ -136,6 +139,10 @@ public class FirestoreManager {
 
         if (moodEvent.getImageUrl() != null && !moodEvent.getImageUrl().isEmpty()) {
             moodData.put("imageUrl", moodEvent.getImageUrl());
+        }
+
+        if (moodEvent.getTempLocalImagePath() != null && !moodEvent.getTempLocalImagePath().isEmpty()) {
+            moodData.put("tempLocalImagePath", moodEvent.getTempLocalImagePath());
         }
 
         // Add to Firestore
@@ -228,6 +235,8 @@ public class FirestoreManager {
                                 String reason = document.getString("reason");
                                 String userId = document.getString("userId");
                                 String imageUrl = document.getString("imageUrl");
+                                String tempPath = document.getString("tempLocalImagePath");
+
 
                                 // Handle legacy moods (missing isPublic field)
                                 Boolean isPublic = document.getBoolean("isPublic");
@@ -246,6 +255,9 @@ public class FirestoreManager {
                                     moodEvent.setDocumentId(id);
                                     moodEvent.setImageUrl(imageUrl);
                                     moodEvent.setPublic(isPublic);
+                                    if (tempPath != null && !tempPath.isEmpty()) {
+                                        moodEvent.setTempLocalImagePath(tempPath);
+                                    }
                                     moodEvents.add(moodEvent);
                                 }
                             }
@@ -257,65 +269,6 @@ public class FirestoreManager {
                     }
                 });
     }
-//    public void getMoodEvents(Boolean showPublic, boolean filterByWeek, final OnMoodEventsListener listener) {
-//        long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
-//        Date oneWeekAgo = new Date(oneWeekAgoMillis);
-//
-//        db.collection(COLLECTION_MOOD_EVENTS)
-//                .whereEqualTo("userId", this.userId)
-//                .orderBy("timestamp", Query.Direction.DESCENDING)
-//                .get()
-//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                        if (task.isSuccessful()) {
-//                            List<MoodEvent> moodEvents = new ArrayList<>();
-//                            for (QueryDocumentSnapshot document : task.getResult()) {
-//                                String id = document.getId();
-//                                Date timestamp = document.getDate("timestamp");
-//                                String emotionalState = document.getString("emotionalState");
-//                                String trigger = document.getString("trigger");
-//                                String socialSituation = document.getString("socialSituation");
-//                                String reason = document.getString("reason");
-//                                String userId = document.getString("userId");
-//                                String imageUrl = document.getString("imageUrl");
-//
-//                                // Handle legacy moods (missing isPublic field)
-//                                Boolean isPublic = document.getBoolean("isPublic");
-//                                if (isPublic == null) {
-//                                    isPublic = true; // Treat old moods as public
-//                                }
-//
-//                                // Apply filtering based on toggle state
-//                                boolean shouldInclude = (showPublic == null) || // For total count
-//                                        (showPublic && isPublic) || // Public mode
-//                                        (!showPublic && !isPublic); // Private mode
-//
-//                                if (shouldInclude) {
-//                                    MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation, reason);
-//                                    moodEvent.setUserId(userId);
-//                                    moodEvent.setId(id.hashCode());
-//                                    moodEvent.setTimestamp(timestamp);
-//                                    moodEvent.setDocumentId(id);
-//                                    moodEvent.setImageUrl(imageUrl);
-//                                    moodEvent.setPublic(isPublic);
-//
-//                                    moodEvents.add(moodEvent);
-//                                }
-//                            }
-//
-//                            if (listener != null) {
-//                                listener.onSuccess(moodEvents);
-//                            }
-//                        } else {
-//                            Log.w(TAG, "Error getting mood events", task.getException());
-//                            if (listener != null) {
-//                                listener.onFailure(task.getException().getMessage());
-//                            }
-//                        }
-//                    }
-//                });
-//    }
 
     /**
      * Fetches public mood events from other users
@@ -500,6 +453,13 @@ public class FirestoreManager {
             moodData.put("imageUrl", imageUrl);
         } else {
             moodData.put("imageUrl", FieldValue.delete());
+        }
+
+        String tempPath = moodEvent.getTempLocalImagePath();
+        if (tempPath != null && !tempPath.isEmpty()) {
+            moodData.put("tempLocalImagePath", tempPath);
+        } else {
+            moodData.put("tempLocalImagePath", FieldValue.delete());
         }
 
         moodData.put("isPublic", moodEvent.isPublic());
@@ -777,23 +737,6 @@ public class FirestoreManager {
         }).addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 
-
-
-
-//    public Query getPublicMoodEvents(String userId) {
-//        return db.collection("mood_events")
-//                .whereEqualTo("userId", userId)
-//                .whereEqualTo("isPublic", true); // Only fetch public events
-//    }
-
-    /**
-     * Fetches all mood events for the current authenticated user (private and public).
-     */
-//    public Query getAllMoodEvents(String userId) {
-//        return db.collection("mood_events")
-//                .whereEqualTo("userId", userId); // Fetch all events regardless of visibility
-//    }
-
     void setDb(FirebaseFirestore db) {
         this.db = db;
     }
@@ -905,26 +848,26 @@ public class FirestoreManager {
         if (moodEvent.getSocialSituation() != null && !moodEvent.getSocialSituation().isEmpty()) {
             moodData.put("socialSituation", moodEvent.getSocialSituation());
         }
+        // Only add imageUrl if available (for online case)
         if (moodEvent.getImageUrl() != null && !moodEvent.getImageUrl().isEmpty()) {
             moodData.put("imageUrl", moodEvent.getImageUrl());
         }
+        // Add the local image path and flag if image is saved locally
+        if (moodEvent.getTempLocalImagePath() != null && !moodEvent.getTempLocalImagePath().isEmpty()) {
+            moodData.put("tempLocalImagePath", moodEvent.getTempLocalImagePath());
+        }
 
 
-        // Use set() with the given documentId so it remains consistent offline and online.
         db.collection(COLLECTION_MOOD_EVENTS)
                 .document(documentId)
                 .set(moodData)
-                .addOnSuccessListener(documentReference -> {
-                    // Call listener with the moodEvent; optionally update moodEvent's documentId.
+                .addOnSuccessListener(aVoid -> {
                     moodEvent.setDocumentId(documentId);
-                    if (listener != null) {
-                        listener.onSuccess(moodEvent);
-                    }
+                    moodEvent.setId(documentId.hashCode());
+                    if (listener != null) listener.onSuccess(moodEvent);
                 })
                 .addOnFailureListener(e -> {
-                    if (listener != null) {
-                        listener.onFailure(e.getMessage());
-                    }
+                    if (listener != null) listener.onFailure(e.getMessage());
                 });
     }
 
@@ -936,30 +879,49 @@ public class FirestoreManager {
      * @param documentId The document ID of the mood event to sync. Must not be null or empty.
      * @param listener The listener to notify when the operation completes. Can be null if no callback is needed.
      */
-    public void syncPendingMoodEvent(String documentId, OnMoodEventListener listener) {
-        // Fetch the mood event from Firestore
+    public void syncPendingMoodEvent(String documentId, final OnMoodEventListener listener) {
         db.collection(COLLECTION_MOOD_EVENTS)
                 .document(documentId)
                 .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot document = task.getResult();
-                        if (document.exists()) {
-                            MoodEvent moodEvent = document.toObject(MoodEvent.class);
-                            if (listener != null) {
-                                listener.onSuccess(moodEvent);
-                            }
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Convert the document to a MoodEvent object
+                        MoodEvent moodEvent = documentSnapshot.toObject(MoodEvent.class);
+                        if (moodEvent != null) {
+                            moodEvent.setDocumentId(documentId);
+                            listener.onSuccess(moodEvent);
                         } else {
-                            if (listener != null) {
-                                listener.onFailure("Document does not exist");
-                            }
+                            listener.onFailure("Failed to convert document to MoodEvent.");
                         }
                     } else {
-                        if (listener != null) {
-                            listener.onFailure(task.getException().getMessage());
-                        }
+                        listener.onFailure("Mood event document does not exist.");
                     }
-                });
+                })
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 
+    public void uploadLocalFileThenUpdateDocument(String localPath, String documentId, OnImageUploadListener listener) {
+        // Create a reference similar to the one in UploadImageActivity
+        File file = new File(localPath);
+        String extension = localPath.substring(localPath.lastIndexOf("."));
+        String fileName = "img_" + System.currentTimeMillis() + extension;
+        StorageReference fileRef = FirebaseStorage.getInstance().getReference()
+                .child("user-mood-images").child(fileName);
+
+        fileRef.putFile(Uri.fromFile(file))
+                .addOnSuccessListener(taskSnapshot -> {
+                    fileRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                        // Update Firestore document with the download URL and remove the local image path
+                        Map<String, Object> updateData = new HashMap<>();
+                        updateData.put("imageUrl", downloadUri.toString());
+                        updateData.put("tempLocalImagePath", FieldValue.delete());
+                        db.collection(COLLECTION_MOOD_EVENTS)
+                                .document(documentId)
+                                .update(updateData)
+                                .addOnSuccessListener(aVoid -> listener.onImageUploadSuccess(downloadUri.toString()))
+                                .addOnFailureListener(e -> listener.onImageUploadFailure(e.getMessage()));
+                    }).addOnFailureListener(e -> listener.onImageUploadFailure(e.getMessage()));
+                })
+                .addOnFailureListener(e -> listener.onImageUploadFailure(e.getMessage()));
+    }
 }

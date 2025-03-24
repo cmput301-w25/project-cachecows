@@ -28,10 +28,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import android.view.MenuItem;
 import androidx.appcompat.widget.PopupMenu;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,8 +59,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private final BroadcastReceiver syncReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String docId = intent.getStringExtra("DOCUMENT_ID");
-            removeAnimation(docId);
+            fetchUserMoodEvents(currentUserId);
         }
     };
 
@@ -172,6 +169,7 @@ public class UserProfileActivity extends AppCompatActivity {
         fetchTotalMoodEvents(currentUserId);
         fetchUserMoodEvents(currentUserId);
     }
+
 
     @Override
     protected void onDestroy() {
@@ -309,6 +307,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
                 // Update adapter with new data
                 moodEventAdapter.updateMoodEvents(moodEventsList);
+                moodEventAdapter.notifyDataSetChanged();
 
                 // Re-apply search filter if search is active
                 if (searchView.getVisibility() == View.VISIBLE) {

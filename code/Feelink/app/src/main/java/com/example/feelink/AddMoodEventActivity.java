@@ -63,7 +63,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
     //State
     String selectedMood = null;
     private String uploadedImageUrl = null;
+    private String tempLocalImagePath = null;
     private FirestoreManager firestoreManager;
+    private PendingSyncManager pendingSyncManager;
+    private String docId;
     private Date currentDateTime;
     private boolean isEditMode = false;
     private long moodEventId = -1;
@@ -97,6 +100,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
             // Use test user ID if needed for testing
             String uid = user != null ? user.getUid() : "test_user_id";
             firestoreManager = new FirestoreManager(uid);
+            pendingSyncManager = new PendingSyncManager(this);
 
             // Fetch the username
             firestoreManager.getUsernameById(uid, new FirestoreManager.OnUsernameListener() {
@@ -293,10 +297,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
         });
 
         tvAddPhoto.setOnClickListener(v -> {
-            if (!ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)){
-                Toast.makeText(AddMoodEventActivity.this, "You are offline. You cannot upload a photo right now.", Toast.LENGTH_SHORT).show();
-                return;
-            }
+//            if (!ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)){
+//                Toast.makeText(AddMoodEventActivity.this, "You are offline. You cannot upload a photo right now.", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
             Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
         });
@@ -430,125 +434,157 @@ public class AddMoodEventActivity extends AppCompatActivity {
      * </ul>
      */
     private void setupAddButton() {
-        btnAddMood.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Ensure a mood is selected
-                if (selectedMood == null) {
-                    Snackbar.make(v, "Please select a mood", Snackbar.LENGTH_SHORT).show();
-                    return;
-                }
-                currentDateTime = new Date();
-                // Show loading state (could add a progress indicator here)
-                btnAddMood.setEnabled(false);
+        btnAddMood.setOnClickListener(v -> {
+            if (!validateInputs(v)) {
+                return;
+            }
 
-                // Get input values
-                String reason = etReason.getText().toString().trim();
-                if (reason.length() > 20 || (!reason.isEmpty() && reason.split("\\s+").length > 3)) {
-                    etReason.setError("Reason must be limited to 20 characters or 3 words");
-                    btnAddMood.setEnabled(true);
-                    return;
-                }
-                String trigger = etTrigger.getText().toString().trim();
-                String selectedValue = socialSituationSpinner.getSelectedItem().toString();
-                String socialSituation = selectedValue.equals("None") ? "" : selectedValue;
+            btnAddMood.setEnabled(false); // Disable button to prevent multiple clicks
 
-
-                MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
-                moodEvent.setTimestamp(currentDateTime);
-
-                boolean isPublic = !togglePrivacy.isChecked(); // Toggle OFF = Public
-                moodEvent.setPublic(isPublic);
-
-                //If we have an uploaded image url
-                if (uploadedImageUrl != null) {
-                    moodEvent.setImageUrl(uploadedImageUrl);
-                }
-
-                if (isEditMode) {
-                    // For update mode
-                    String documentId = getIntent().getStringExtra("DOCUMENT_ID");
-                    if (documentId == null) {
-                        Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();
-                        btnAddMood.setEnabled(true);
-                        return;
-                    }
-                    moodEvent.setId(moodEventId);
-                    if (ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)) {
-                        moodEvent.setPendingSync(false);
-                        firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
-                            @Override
-                            public void onSuccess(MoodEvent moodEvent) {
-                                // Remove from pending list if present
-                                new PendingSyncManager(AddMoodEventActivity.this).removePendingId(moodEvent.getDocumentId());
-                                Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).show();
-                                moodEvent.setPendingSync(false);
-                                finish();
-                            }
-                            @Override
-                            public void onFailure(String errorMessage) {
-                                Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
-                                btnAddMood.setEnabled(true);
-                            }
-                        });
-                    } else {
-                        moodEvent.setPendingSync(true);
-                        // Offline: add the pending document id to the local pending set.
-                        new PendingSyncManager(AddMoodEventActivity.this).addPendingId(documentId);
-                        firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
-                            @Override
-                            public void onSuccess(MoodEvent moodEvent) {}
-                            @Override
-                            public void onFailure(String errorMessage) {}
-                        });
-                        Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
-                        finish();
-                    }
-                } else {
-                    // Add mode:
-                    if (ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)){
-                        moodEvent.setPendingSync(false);
-                        firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
-                            @Override
-                            public void onSuccess(MoodEvent moodEvent) {
-                                new PendingSyncManager(AddMoodEventActivity.this).removePendingId(moodEvent.getDocumentId());
-                                Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).show();
-                                moodEvent.setPendingSync(false);
-                                finish();
-                            }
-                            @Override
-                            public void onFailure(String errorMessage) {
-                                Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
-                                btnAddMood.setEnabled(true);
-                            }
-                        });
-                    } else {
-                        moodEvent.setPendingSync(true);
-                        // If no document ID is available, generate one
-                        if (moodEvent.getDocumentId() == null || moodEvent.getDocumentId().isEmpty()) {
-                            // Generate a temporary ID
-                            String tempId = UUID.randomUUID().toString();
-                            moodEvent.setDocumentId(tempId);
-                        }
-                        // Add this document ID to PendingSyncManager
-                        new PendingSyncManager(AddMoodEventActivity.this).addPendingId(moodEvent.getDocumentId());
-                        // Use the new method that uses set() with the provided ID:
-                        firestoreManager.addMoodEventWithId(moodEvent, moodEvent.getDocumentId(), new FirestoreManager.OnMoodEventListener() {
-                            @Override
-                            public void onSuccess(MoodEvent moodEvent) {
-                                // Offline callback might be delayed
-                            }
-                            @Override
-                            public void onFailure(String errorMessage) {}
-                        });
-                        Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
-                        finish();
-                    }
-                }
+            MoodEvent moodEvent = createMoodEventFromInputs();
+            if (isEditMode) {
+                handleEditMode(v, moodEvent);
+            } else {
+                handleAddMode(v, moodEvent);
             }
         });
     }
 
+    private boolean validateInputs(View v) {
+        if (selectedMood == null) {
+            Snackbar.make(v, "Please select a mood", Snackbar.LENGTH_SHORT).show();
+            return false;
+        }
+
+        String reason = etReason.getText().toString().trim();
+        if (reason.length() > 20 || (!reason.isEmpty() && reason.split("\\s+").length > 3)) {
+            etReason.setError("Reason must be limited to 20 characters or 3 words");
+            btnAddMood.setEnabled(true);
+            return false;
+        }
+
+        return true;
+    }
+
+    private MoodEvent createMoodEventFromInputs() {
+        String reason = etReason.getText().toString().trim();
+        String trigger = etTrigger.getText().toString().trim();
+        String selectedValue = socialSituationSpinner.getSelectedItem().toString();
+        String socialSituation = selectedValue.equals("None") ? "" : selectedValue;
+
+        MoodEvent moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, reason);
+        moodEvent.setTimestamp(new Date());
+        moodEvent.setPublic(!togglePrivacy.isChecked());
+
+        if (uploadedImageUrl != null && !uploadedImageUrl.isEmpty()) {
+            moodEvent.setImageUrl(uploadedImageUrl);
+        } else if (tempLocalImagePath != null && !tempLocalImagePath.isEmpty()) {
+            moodEvent.setTempLocalImagePath(tempLocalImagePath);
+        }
+
+        return moodEvent;
+    }
+
+    private void handleEditMode(View v, MoodEvent moodEvent) {
+        String documentId = getIntent().getStringExtra("DOCUMENT_ID");
+        if (documentId == null) {
+            Snackbar.make(v, "Error: Cannot find mood event", Snackbar.LENGTH_SHORT).show();
+            btnAddMood.setEnabled(true);
+            return;
+        }
+
+        moodEvent.setId(moodEventId);
+        if (ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)) {
+            updateMoodEventOnline(v, moodEvent, documentId);
+        } else {
+            updateMoodEventOffline(v, moodEvent, documentId);
+        }
+    }
+
+    private void updateMoodEventOnline(View v, MoodEvent moodEvent, String documentId) {
+        moodEvent.setPendingSync(false);
+        firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
+            @Override
+            public void onSuccess(MoodEvent moodEvent) {
+                new PendingSyncManager(AddMoodEventActivity.this).removePendingId(moodEvent.getDocumentId());
+                Snackbar.make(v, "Mood updated successfully!", Snackbar.LENGTH_SHORT).show();
+                finish();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
+                btnAddMood.setEnabled(true);
+            }
+        });
+    }
+
+    private void updateMoodEventOffline(View v, MoodEvent moodEvent, String documentId) {
+        moodEvent.setPendingSync(true);
+        new PendingSyncManager(AddMoodEventActivity.this).addPendingId(documentId);
+        firestoreManager.updateMoodEvent(moodEvent, documentId, new FirestoreManager.OnMoodEventListener() {
+            @Override
+            public void onSuccess(MoodEvent moodEvent) {
+                // No action needed for offline success
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                // No action needed for offline failure
+            }
+        });
+        Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
+        finish();
+    }
+
+    private void handleAddMode(View v, MoodEvent moodEvent) {
+        if (ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)) {
+            addMoodEventOnline(v, moodEvent);
+        } else {
+            addMoodEventOffline(v, moodEvent);
+        }
+    }
+
+    private void addMoodEventOnline(View v, MoodEvent moodEvent) {
+        moodEvent.setPendingSync(false);
+        firestoreManager.addMoodEvent(moodEvent, new FirestoreManager.OnMoodEventListener() {
+            @Override
+            public void onSuccess(MoodEvent moodEvent) {
+                if (tempLocalImagePath != null) {
+                    new PendingSyncManager(AddMoodEventActivity.this).removePendingId(moodEvent.getDocumentId());
+                }
+                Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).show();
+                finish();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
+                btnAddMood.setEnabled(true);
+            }
+        });
+    }
+
+    private void addMoodEventOffline(View v, MoodEvent moodEvent) {
+        moodEvent.setPendingSync(true);
+        if (moodEvent.getDocumentId() == null || moodEvent.getDocumentId().isEmpty()) {
+            moodEvent.setDocumentId(UUID.randomUUID().toString());
+        }
+        new PendingSyncManager(AddMoodEventActivity.this).addPendingId(moodEvent.getDocumentId());
+        firestoreManager.addMoodEventWithId(moodEvent, moodEvent.getDocumentId(), new FirestoreManager.OnMoodEventListener() {
+            @Override
+            public void onSuccess(MoodEvent moodEvent) {
+                // No action needed for offline success
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                // No action needed for offline failure
+            }
+        });
+        Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
+        finish();
+    }
 
 
     /**
@@ -567,14 +603,24 @@ public class AddMoodEventActivity extends AppCompatActivity {
         if (requestCode == IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             String downloadedUrl = data.getStringExtra("imageUrl");
             Log.d("AddMoodEventActivity", "downloadedUrl=" + downloadedUrl);
-            if (downloadedUrl != null) {
-                Snackbar.make(findViewById(android.R.id.content), "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT).setDuration(5000).show();
+            if (downloadedUrl != null && ConnectivityReceiver.isNetworkAvailable(this)) {
+                Snackbar.make(findViewById(android.R.id.content), "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT)
+                        .setDuration(5000).show();
                 this.uploadedImageUrl = downloadedUrl;
-            }
-            if (downloadedUrl != null) {
+                // Clear any previous offline path if available
+                tempLocalImagePath = null;
                 btnDeletePhoto.setVisibility(View.VISIBLE);
+            } else{
+                // When offline, UploadImageActivity should save the image locally and return the local path in "localPath"
+                String localPath = data.getStringExtra("localImagePath");
+                if (localPath != null) {
+                    this.uploadedImageUrl = null;
+                    this.tempLocalImagePath = localPath;
+                    btnDeletePhoto.setVisibility(View.VISIBLE);
+                    Snackbar.make(findViewById(android.R.id.content),
+                                    "Offline mode: image saved locally and will be uploaded later.", Snackbar.LENGTH_SHORT).show();
+                }
             }
-
         }
     }
 

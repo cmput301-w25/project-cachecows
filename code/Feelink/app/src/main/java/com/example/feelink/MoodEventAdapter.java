@@ -34,6 +34,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -202,7 +203,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         });
 
         String imageUrl = moodEvent.getImageUrl();
-        if (imageUrl != null && !imageUrl.isEmpty()){
+        if (imageUrl != null && !imageUrl.isEmpty()) {
             holder.photoContainer.setVisibility(View.VISIBLE);
             holder.moodPostedImage.setVisibility(View.VISIBLE);
             holder.tvPhotoPlaceholder.setVisibility(View.GONE);
@@ -212,8 +213,20 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
                     .fitCenter()
                     .into(holder.moodPostedImage);
         } else {
-            //No image
-            holder.photoContainer.setVisibility(View.GONE);
+            String localPath = moodEvent.getTempLocalImagePath();
+            if (localPath != null && !localPath.isEmpty()) {
+                holder.photoContainer.setVisibility(View.VISIBLE);
+                holder.moodPostedImage.setVisibility(View.VISIBLE);
+                holder.tvPhotoPlaceholder.setVisibility(View.GONE);
+
+                Glide.with(context)
+                        .load(new File(localPath))
+                        .fitCenter()
+                        .into(holder.moodPostedImage);
+            } else {
+                //No image
+                holder.photoContainer.setVisibility(View.GONE);
+            }
         }
 
 
