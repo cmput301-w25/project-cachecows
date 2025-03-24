@@ -16,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -156,6 +157,7 @@ public class OtherUserProfileActivity extends AppCompatActivity {
     }
 
     private void checkIfFollowing() {
+        // Check existing following status
         FirebaseFirestore.getInstance().collection("users")
                 .document(currentUserId)
                 .collection("following")
@@ -166,33 +168,73 @@ public class OtherUserProfileActivity extends AppCompatActivity {
                     if (doc != null && doc.exists()) {
                         followButton.setText("Unfollow");
                     } else {
-                        followButton.setText("Follow");
+                        // Check for pending follow requests
+                        FirebaseFirestore.getInstance().collection("follow_requests")
+                                .whereEqualTo("senderId", currentUserId)
+                                .whereEqualTo("receiverId", profileUserId)
+                                .whereEqualTo("status", "pending")
+                                .addSnapshotListener((querySnapshot, e) -> {
+                                    if (e != null) return;
+
+                                    if (querySnapshot != null && !querySnapshot.isEmpty()) {
+                                        followButton.setText("Requested");
+                                    } else {
+                                        followButton.setText("Follow");
+                                    }
+                                });
                     }
                 });
     }
 
     private void toggleFollow() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users").document(currentUserId)
-                .collection("following").document(profileUserId).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        unfollowUser();
-                    } else {
-                        // Send follow request
-                        FirestoreManager firestoreManager = new FirestoreManager(currentUserId);
-                        firestoreManager.sendFollowRequest(profileUserId, new FirestoreManager.OnFollowRequestListener() {
-                            @Override
-                            public void onSuccess() {
-                                followButton.setText("Requested");
-                                Toast.makeText(OtherUserProfileActivity.this, "Follow request sent", Toast.LENGTH_SHORT).show();
-                            }
+        String currentState = followButton.getText().toString();
 
-                            @Override
-                            public void onFailure(String error) {
-                                Toast.makeText(OtherUserProfileActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
-                            }
-                        });
+        if (currentState.equals("Requested")) {
+            cancelFollowRequest();
+        } else if (currentState.equals("Follow")) {
+            sendFollowRequest();
+        } else if (currentState.equals("Unfollow")) {
+            unfollowUser();
+        }
+    }
+
+    private void sendFollowRequest() {
+        FirestoreManager firestoreManager = new FirestoreManager(currentUserId);
+        firestoreManager.sendFollowRequest(profileUserId, new FirestoreManager.OnFollowRequestListener() {
+            @Override
+            public void onSuccess() {
+                followButton.setText("Requested");
+                Toast.makeText(OtherUserProfileActivity.this, "Follow request sent", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(OtherUserProfileActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void cancelFollowRequest() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("follow_requests")
+                .whereEqualTo("senderId", currentUserId)
+                .whereEqualTo("receiverId", profileUserId)
+                .whereEqualTo("status", "pending")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            document.getReference().delete()
+                                    .addOnSuccessListener(aVoid -> {
+                                        followButton.setText("Follow");
+                                        Toast.makeText(OtherUserProfileActivity.this, "Request canceled", Toast.LENGTH_SHORT).show();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(OtherUserProfileActivity.this, "Failed to cancel request", Toast.LENGTH_SHORT).show();
+                                    });
+                        }
+                    } else {
+                        Toast.makeText(OtherUserProfileActivity.this, "Error checking requests", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
