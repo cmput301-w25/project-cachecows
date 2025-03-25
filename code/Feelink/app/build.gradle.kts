@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.recyclerview)
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation(libs.work.runtime)
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     testImplementation(libs.junit)
@@ -62,4 +63,7 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation ("com.google.code.gson:gson:2.12.1")
+    implementation("com.google.guava:guava:32.1.3-android")
+    implementation("com.airbnb.android:lottie:6.6.3")
 }

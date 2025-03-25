@@ -8,7 +8,6 @@ import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
@@ -16,7 +15,6 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.not;
 
 import android.content.Intent;
-import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.test.core.app.ActivityScenario;
@@ -131,6 +129,7 @@ public class AddMoodEventActivityTest {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
         // Add a delay to allow Firestore operation to complete
+        // This is a compromise since we can't modify FirestoreManager to expose its async state
         try {
             Thread.sleep(2000); // 2 seconds should be enough for the operation to complete
         } catch (InterruptedException e) {
@@ -147,7 +146,7 @@ public class AddMoodEventActivityTest {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
         // Switch to "My Mood" tab and ensure it's fully visible
-        onView(withId(R.id.btnMyMood)).perform(click());
+        onView(withId(R.id.btnFollowingMoods)).perform(click());
 
         // Wait for UI thread to be idle after tab switch
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();

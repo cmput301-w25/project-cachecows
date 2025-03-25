@@ -10,10 +10,10 @@
         android:id="@+id/tvGreeting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="22dp"
         android:text="Hey *Username*!"
         android:textColor="#FFFFFF"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:fontFamily="@font/poppins_bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -283,36 +283,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvReason" />
 
-    <!-- Trigger input -->
-    <TextView
-        android:id="@+id/tvTrigger"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="12dp"
-        android:text="Trigger"
-        android:fontFamily="@font/poppins_regular"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etReason" />
-
-    <EditText
-        android:id="@+id/etTrigger"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="32dp"
-        android:background="@drawable/rounded_edittext"
-        android:hint="Enter trigger..."
-        android:fontFamily="@font/poppins_regular"
-        android:padding="8dp"
-        android:textColorHint="#80FFFFFF"
-        android:textColor="#FFFFFF"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvTrigger" />
 
     <!-- Social Situation -->
     <TextView
@@ -326,7 +296,7 @@
         android:textColor="#FFFFFF"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etTrigger" />
+        app:layout_constraintTop_toBottomOf="@+id/etReason" />
 
     <LinearLayout
         android:id="@+id/layoutSearch"
@@ -354,13 +324,13 @@
 
     </LinearLayout>
 
-    <!-- Location and Photo options -->
+    <!-- Location and Photo options adjusted -->
     <LinearLayout
         android:id="@+id/layoutOptions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
@@ -409,10 +379,44 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Privacy Toggle -->
+    <LinearLayout
+        android:id="@+id/layoutPrivacy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layoutOptions">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Privacy:"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:fontFamily="@font/poppins_regular"
+            android:layout_marginEnd="8dp"/>
+
+        <ToggleButton
+            android:id="@+id/togglePrivacy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textOn="Private"
+            android:textOff="Public"
+
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/poppins_regular"/>
+    </LinearLayout>
+
     <!-- Add Mood Button -->
     <Button
         android:id="@+id/btnAddMood"
-        android:layout_width="200dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/grey_violet"
         android:layout_marginStart="32dp"
@@ -423,9 +427,12 @@
         android:textSize="20dp"
         android:fontFamily="@font/poppins_bold"
         android:textAllCaps="false"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layoutPrivacy"
+        app:layout_constraintBottom_toTopOf="@+id/layoutBottomNav"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layoutOptions" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.5"
+        android:layout_marginHorizontal="32dp"/>
 
     <!-- Bottom Navigation -->
     <LinearLayout

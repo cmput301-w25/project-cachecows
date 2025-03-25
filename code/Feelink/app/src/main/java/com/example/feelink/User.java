@@ -1,5 +1,7 @@
 package com.example.feelink;
 
+import com.google.firebase.firestore.DocumentSnapshot;
+
 public class User {
     private String id;
     private String username;
@@ -76,15 +78,30 @@ public class User {
         return followers;
     }
 
-    public void setFollowers(long followers) {
-        this.followers = followers;
+    public void setFollowers(Long followers) {
+        this.followers = (followers != null) ? followers : 0L;
+    }
+
+    public void setFollowing(Long following) {
+        this.following = (following != null) ? following : 0L;
     }
 
     public long getFollowing() {
         return following;
     }
 
-    public void setFollowing(long following) {
-        this.following = following;
+
+
+    // Add to User class
+    public static User fromDocument(DocumentSnapshot doc) {
+        User user = new User();
+        user.setId(doc.getId());
+        user.setUsername(doc.getString("username"));
+        user.setBio(doc.getString("bio"));
+        user.setProfileImageUrl(doc.getString("profileImageUrl"));
+        // Safely handle followers/following fields
+        user.setFollowers(doc.contains("followers") ? doc.getLong("followers") : 0L);
+        user.setFollowing(doc.contains("following") ? doc.getLong("following") : 0L);
+        return user;
     }
 }

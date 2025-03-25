@@ -13,7 +13,6 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import android.util.Log;
 
-import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.intent.Intents;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -35,8 +34,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 @RunWith(AndroidJUnit4.class)
@@ -119,7 +116,7 @@ public class CreateAccountActivityTest {
 
         // Verify navigation to FeedManagerActivity
         intended(hasComponent(FeedManagerActivity.class.getName()));
-        onView(withId(R.id.btnTheirMood)).check(matches(isDisplayed()));
+        onView(withId(R.id.btnAllMoods)).check(matches(isDisplayed()));
     }
 
 

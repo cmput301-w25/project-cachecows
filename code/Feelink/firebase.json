@@ -6,7 +6,10 @@
     "ui": {
       "enabled": true
     },
-    "singleProjectMode": true
+    "singleProjectMode": true,
+    "storage": {
+      "port": 8081
+    }
   },
   "storage": {
     "rules": "storage.rules"

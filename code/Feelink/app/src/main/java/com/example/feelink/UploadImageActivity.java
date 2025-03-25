@@ -24,6 +24,8 @@ import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 
 
@@ -42,23 +44,31 @@ import java.io.InputStream;
  * @see AddMoodEventActivity
  */
 public class UploadImageActivity extends AppCompatActivity {
+    /** Log tag for debugging */
     private static final String TAG = "UploadImageActivity";
+
+    /** Request code for camera permission */
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
+
+    /** Request code for selecting an image from the gallery */
     private static final int SELECT_IMAGE = 100;
+
+    /** Request code for capturing an image from the camera */
     private static final int CAPTURE_IMAGE = 101;
 
-    private static final int MAX_FILE_SIZE = 65536; // 65 KB
+    /** Maximum allowed file size (65 KB) for uploaded images */
+    private static final int MAX_FILE_SIZE = 65536;
     private static final String[] ALLOWED_EXTENSIONS = {
             "image/jpeg", "image/png", "image/jpg"};
 
     private Button btnUseCamera, btnUploadImage, btnConfirm, btnCancel, btnBack;
     private ImageView ivPreview;
 
-    private Uri pendingUri = null;  // for gallery images
-    private Bitmap pendingBitmap = null; // for camera images
-    private String pendingExtensionType = null; // store the extension type for the gallery image
+    private Uri pendingUri = null;  // Uri reference for the selected image from the gallery
+    private Bitmap pendingBitmap = null; // Bitmap reference for the captured image from the camera
+    private String pendingExtensionType = null; // type extension for the selected image (gallery or camera)
 
-    private StorageReference storageRef;
+    private StorageReference storageRef;  // Firebase Storage reference for uploading images
 
     /**
      * Initializes image upload UI and Firebase Storage references
@@ -95,18 +105,31 @@ public class UploadImageActivity extends AppCompatActivity {
 
         // Confirm -> actually upload
         btnConfirm.setOnClickListener(v -> {
-            if (pendingUri != null) {
-                // We have a gallery Uri
-                uploadImageToFirebase(pendingUri, pendingExtensionType);
-            } else if (pendingBitmap != null) {
-                // We have a camera bitmap
-                uploadByteArrayToFirebase(pendingBitmap);
+            if (!ConnectivityReceiver.isNetworkAvailable(UploadImageActivity.this)){
+                String localPath = saveImageLocally();
+                if (localPath != null){
+                    Toast.makeText(this, "Image saved locally!", Toast.LENGTH_SHORT).show();
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("localImagePath", localPath);
+                    setResult(RESULT_OK, resultIntent);
+                    finish();
+                } else {
+                    Toast.makeText(this, "Failed to save image locally!", Toast.LENGTH_SHORT).show();
+                }
             } else {
-                Toast.makeText(this, "No image selected!", Toast.LENGTH_SHORT).show();
+                if (pendingUri != null) {
+                    // We have a gallery Uri
+                    uploadImageToFirebase(pendingUri, pendingExtensionType);
+                } else if (pendingBitmap != null) {
+                    // We have a camera bitmap
+                    uploadByteArrayToFirebase(pendingBitmap);
+                } else {
+                    Toast.makeText(this, "No image selected!", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
-
+        // Cancel -> reset everything so user can pick again
         btnCancel.setOnClickListener(v -> {
             pendingUri = null;
             pendingBitmap = null;
@@ -124,6 +147,10 @@ public class UploadImageActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Checks for camera permission and requests it if not granted;
+     * otherwise, launches the camera.
+     */
     private void openCamera() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -138,6 +165,11 @@ public class UploadImageActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Launches the device camera to capture an image.
+     * <p>
+     * If no camera is available, shows a Toast message.
+     */
     private void launchCamera() {
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
@@ -147,6 +179,9 @@ public class UploadImageActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Opens the gallery so the user can pick an image from local storage.
+     */
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
@@ -249,6 +284,11 @@ public class UploadImageActivity extends AppCompatActivity {
 
     //Adapted with the help of:
     //https://stackoverflow.com/questions/4989182/converting-java-bitmap-to-byte-array
+    /**
+     * Validates and if needed compresses a camera-captured bitmap if it exceeds the size limit.
+     *
+     * @param photo The captured bitmap from the camera
+     */
     private void validateCameraBitmap(Bitmap photo) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
@@ -274,7 +314,14 @@ public class UploadImageActivity extends AppCompatActivity {
         btnCancel.setVisibility(android.view.View.VISIBLE);
     }
 
-    // Method to upload uri photo from gallery to firestore
+    /**
+     * Uploads a gallery-selected image file to Firebase Storage.
+     * <p>
+     * Upon successful upload, returns the download URL to the calling activity.
+     *
+     * @param uri            The URI of the gallery image
+     * @param extensionType  The extension type of the image
+     */
     private void uploadImageToFirebase(Uri uri, String extensionType) {
         String extension = ".jpg";
         if ("image/png".equalsIgnoreCase(extensionType)) {
@@ -303,7 +350,14 @@ public class UploadImageActivity extends AppCompatActivity {
                 );
     }
 
-    // Method to upload camera bitmap to firestore
+    /**
+     * Uploads a camera-captured bitmap to Firebase Storage.
+     * <p>
+     * Converts the bitmap to a byte array and sends it to Firebase. Returns the
+     * download URL to the calling activity upon success.
+     *
+     * @param photoBitmap The camera-captured bitmap to upload
+     */
     private void uploadByteArrayToFirebase(Bitmap photoBitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         photoBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
@@ -331,6 +385,12 @@ public class UploadImageActivity extends AppCompatActivity {
                 );
     }
 
+    /**
+     * Checks whether the provided extension type is in the allowed extension types.
+     *
+     * @param extensionType The extension type of the file
+     * @return True if it's a permitted type; false otherwise
+     */
     private boolean allowedExtensionType(String extensionType) {
         if (extensionType == null) return false;
         for (String allowed : ALLOWED_EXTENSIONS) {
@@ -341,6 +401,19 @@ public class UploadImageActivity extends AppCompatActivity {
         return false;
     }
 
+    /**
+     * Compresses the given bitmap to ensure it does not exceed MAX_FILE_SIZE (65 KB).
+     * <p>
+     * Steps:
+     * <ol>
+     *   <li>Iteratively reduce JPEG quality until under size or until quality is &lt;= 10</li>
+     *   <li>If still too large, rescale the bitmap dimensions while preserving aspect ratio</li>
+     *   <li>Re-compress after rescaling if necessary</li>
+     * </ol>
+     *
+     * @param bitmap The original bitmap to compress
+     * @return A bitmap that should be under the size limit
+     */
     private Bitmap compressBitmap(Bitmap bitmap){
         int quality = 100;
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -380,16 +453,19 @@ public class UploadImageActivity extends AppCompatActivity {
 
         return scaledBitmap;
     }
-    //Adapted from answer by Jason Evans
-    //https://codereview.stackexchange.com/questions/70908/resizing-image-but-keeping-aspect-ratio
+
     /**
-     * Calculates new dimensions for the bitmap based on a target "box" width.
+     * Calculates new dimensions for the bitmap based on a target "box" width,
+     * preserving aspect ratio.
+     * <p>
+     * Adapted from answer by Jason Evans:
+     * https://codereview.stackexchange.com/questions/70908/resizing-image-but-keeping-aspect-ratio
      *
-     * @param original the original Bitmap
-     * @return an ImageDimensions object with new width and height values.
+     * @param original The original Bitmap
+     * @return An ImageDimensions object with new width and height values
      */
     private ImageDimensions calculateNewDimensionsForBitmap(Bitmap original) {
-        final int BOX_WIDTH = 100;
+        final int BOX_WIDTH = 200;
         int originalWidth = original.getWidth();
         int originalHeight = original.getHeight();
 
@@ -412,7 +488,13 @@ public class UploadImageActivity extends AppCompatActivity {
         return new ImageDimensions(newWidth, newHeight);
     }
 
-    // camera permission for personal device testing
+    /**
+     * Receives camera permission results and launches camera if granted.
+     *
+     * @param requestCode  The request code passed in requestPermissions
+     * @param permissions  The requested permissions
+     * @param grantResults The grant results for the corresponding permissions
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
@@ -426,6 +508,40 @@ public class UploadImageActivity extends AppCompatActivity {
             }
         }
     }
+
+    public String saveImageLocally() {
+        try {
+            // Determine which image we have: either from camera (bitmap) or from gallery (uri)
+            Bitmap bitmapToSave = null;
+            if (pendingBitmap != null) {
+                bitmapToSave = pendingBitmap;
+            } else if (pendingUri != null) {
+                InputStream inputStream = getContentResolver().openInputStream(pendingUri);
+                bitmapToSave = BitmapFactory.decodeStream(inputStream);
+                inputStream.close();
+            }
+
+            if (bitmapToSave == null) {
+                return null;
+            }
+
+            // Create a unique file name and file in the app's internal storage directory
+            String fileName = "offline_" + System.currentTimeMillis() + ".jpg";
+            File file = new File(getFilesDir(), fileName);
+            FileOutputStream fos = new FileOutputStream(file);
+
+            bitmapToSave.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            fos.flush();
+            fos.close();
+            // Return the absolute file path for later use
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
 
     /**
      * Simple class for image dimensions.

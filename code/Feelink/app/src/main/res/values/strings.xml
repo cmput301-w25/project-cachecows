@@ -12,5 +12,9 @@
     <string name="search_for_users">Search for users...</string>
     <string name="search_moods_users">Search moods, users...</string>
     <string name="search_users">Search users...</string>
+    <string name="back_online">Back Online!</string>
+    <string name="you_are_currently_offline">You are currently offline</string>
+    <string name="empty_followed_moods">No public moods from followed users</string>
+    <string name="empty_shared_moods">No shared moods available</string>
 
 </resources>

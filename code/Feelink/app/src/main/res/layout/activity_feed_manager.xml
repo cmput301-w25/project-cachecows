@@ -7,6 +7,21 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
+    <TextView
+        android:id="@+id/tvOfflineIndicator"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/offline_indicator_background"
+        android:text="You are currently offline"
+        android:textColor="@android:color/black"
+        android:fontFamily="@font/poppins_regular"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
     <!-- Tab Selection Layout -->
     <LinearLayout
         android:id="@+id/tabLayout"
@@ -17,58 +32,47 @@
         android:layout_marginEnd="8dp"
         android:background="#FFFFFF"
         android:orientation="horizontal"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvOfflineIndicator"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <Button
-            android:id="@+id/btnTheirMood"
+            android:id="@+id/btnAllMoods"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:backgroundTint="#9FE2DD"
-            android:text="Their Mood"
+            android:text="All Moods"
             android:layout_marginEnd="8dp"
             android:textColor="#FFFFFF" />
 
         <Button
-            android:id="@+id/btnMyMood"
+            android:id="@+id/btnFollowingMoods"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:backgroundTint="#9FE2DD"
-            android:text="My Mood"
+            android:text="Following Moods"
             android:layout_marginStart="8dp"
             android:textColor="#FFFFFF" />
     </LinearLayout>
 
-    <!-- Share information -->
-    <TextView
-        android:id="@+id/tvShareInfo"
-        android:layout_width="wrap_content"
+
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:text="Shared by 'soul inspirer'..."
-        android:textColor="#666666"
-        android:textSize="12sp"
+        android:layout_marginEnd="16dp"
+        android:visibility="gone"
+        app:queryHint="Search reasons..."
+        app:iconifiedByDefault="false"
+        app:layout_constraintEnd_toStartOf="@+id/btnFilter"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tabLayout" />
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout"/>
 
     <!-- Filter Button -->
-
-    <ImageButton
-        android:id="@+id/btnSort"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Filter"
-        android:src="@drawable/ic_sort"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerMoodEvents"
-        app:layout_constraintEnd_toStartOf="@+id/btnFilter"
-        app:layout_constraintTop_toBottomOf="@+id/tabLayout" />
-
-
     <ImageButton
         android:id="@+id/btnFilter"
         android:layout_width="48dp"
@@ -81,7 +85,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/recyclerMoodEvents" />
 
-    <!-- RecyclerView for mood events -->
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/headerBarrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="searchView,btnFilter"/>
+
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerMoodEvents"
         android:layout_width="0dp"
@@ -92,8 +103,8 @@
         app:layout_constraintBottom_toTopOf="@+id/layoutBottomNav"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvShareInfo"
-        tools:listitem="@layout/item_mood_event" />
+        app:layout_constraintTop_toBottomOf="@+id/headerBarrier"
+        tools:listitem="@layout/item_mood_event"/>
 
     <!-- Floating Action Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -109,7 +120,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:tint="#FFFFFF" />
 
-<!--     Bottom Navigation -->
+    <!-- Bottom Navigation -->
     <LinearLayout
         android:id="@+id/layoutBottomNav"
         android:layout_width="match_parent"
@@ -122,36 +133,44 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
-            android:id="@+id/navSearch"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_search"
-            android:contentDescription="Search tab" />
-
-        <ImageView
             android:id="@+id/navHome"
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"
-            android:src="@drawable/ic_nav_map"
-            android:contentDescription="Map tab" />
+            android:contentDescription="Home tab"
+            android:src="@drawable/ic_nav_home" />
+
+        <ImageView
+            android:id="@+id/navSearch"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:contentDescription="Search tab"
+            android:src="@drawable/ic_search" />
+
+        <ImageView
+            android:id="@+id/navMap"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:contentDescription="Map tab"
+            android:src="@drawable/ic_nav_map" />
 
         <ImageView
             android:id="@+id/navChats"
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"
-            android:src="@drawable/ic_nav_chats"
-            android:contentDescription="Chats tab" />
+            android:contentDescription="Chats tab"
+            android:src="@drawable/ic_nav_chats" />
 
         <ImageView
             android:id="@+id/navProfile"
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"
-            android:src="@drawable/ic_nav_profile"
-            android:contentDescription="Profile tab" />
+            android:contentDescription="Profile tab"
+            android:src="@drawable/ic_nav_profile" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

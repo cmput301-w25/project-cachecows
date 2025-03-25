@@ -34,6 +34,15 @@
         <activity android:name=".AddMoodEventActivity" />
         <activity android:name=".ForgotPasswordActivity"/>
         <activity android:name=".UploadImageActivity" />
+        <activity android:name=".NotificationsActivity" />
+        <activity android:name=".SettingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".CommentsActivity"
+            android:windowSoftInputMode="adjustResize|stateAlwaysVisible"
+            android:screenOrientation="portrait"/>
+
         <activity android:name=".UserProfileActivity"
         android:exported="false"/>
         <activity android:name=".SearchActivity" android:exported="false" />

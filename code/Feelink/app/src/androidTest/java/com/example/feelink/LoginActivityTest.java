@@ -54,6 +54,7 @@ public class LoginActivityTest {
         String androidLocalhost = "10.0.2.2";
         int portNumber = 8080;
         FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
+
     }
 
     @Before
@@ -79,6 +80,7 @@ public class LoginActivityTest {
                 });
         SystemClock.sleep(15000); // Ensure Firestore syncs before test runs
     }
+
 
     @Test
     public void testSuccessfulLogin() {
