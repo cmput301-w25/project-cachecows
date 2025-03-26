@@ -35,6 +35,7 @@
         <activity android:name=".ForgotPasswordActivity"/>
         <activity android:name=".UploadImageActivity" />
         <activity android:name=".NotificationsActivity" />
+        <activity android:name=".UploadProfilePictureActivity" />
         <activity android:name=".SettingsActivity"
             android:exported="false" />
 

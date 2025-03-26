@@ -1105,4 +1105,13 @@ public class FirestoreManager {
                 })
                 .addOnFailureListener(e -> listener.onImageUploadFailure(e.getMessage()));
     }
+
+    public void updateUserProfileImage(String userId, String imageUrl,
+                                       OnSuccessListener<Void> success,
+                                       OnFailureListener failure) {
+        db.collection("users").document(userId)
+                .update("profileImageUrl", imageUrl)
+                .addOnSuccessListener(success)
+                .addOnFailureListener(failure);
+    }
 }
