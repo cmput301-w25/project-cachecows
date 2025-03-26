@@ -34,6 +34,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -209,7 +210,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         });
 
         String imageUrl = moodEvent.getImageUrl();
-        if (imageUrl != null && !imageUrl.isEmpty()){
+        if (imageUrl != null && !imageUrl.isEmpty()) {
             holder.photoContainer.setVisibility(View.VISIBLE);
             holder.moodPostedImage.setVisibility(View.VISIBLE);
             holder.tvPhotoPlaceholder.setVisibility(View.GONE);
@@ -219,8 +220,20 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
                     .fitCenter()
                     .into(holder.moodPostedImage);
         } else {
-            //No image
-            holder.photoContainer.setVisibility(View.GONE);
+            String localPath = moodEvent.getTempLocalImagePath();
+            if (localPath != null && !localPath.isEmpty()) {
+                holder.photoContainer.setVisibility(View.VISIBLE);
+                holder.moodPostedImage.setVisibility(View.VISIBLE);
+                holder.tvPhotoPlaceholder.setVisibility(View.GONE);
+
+                Glide.with(context)
+                        .load(new File(localPath))
+                        .fitCenter()
+                        .into(holder.moodPostedImage);
+            } else {
+                //No image
+                holder.photoContainer.setVisibility(View.GONE);
+            }
         }
 
 
@@ -269,7 +282,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     private void deleteMoodEvent(MoodEvent moodEvent) {
         FirestoreManager firestoreManager = new FirestoreManager(moodEvent.getUserId());
 
-        if (!isNetworkAvailable()) {
+        if (!ConnectivityReceiver.isNetworkAvailable(context)) {
             // Offline: update UI immediately.
             moodEvents.remove(moodEvent);
             notifyDataSetChanged();
@@ -441,11 +454,14 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         this.moodEvents = moodEvents;
         notifyDataSetChanged();
     }
-
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnected();
+    public int findPositionById(String documentId) {
+        if (moodEvents == null) return -1;
+        for (int i = 0; i < moodEvents.size(); i++) {
+            if (moodEvents.get(i).getDocumentId().equals(documentId)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public boolean isPublicFeed() {

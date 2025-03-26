@@ -24,6 +24,8 @@ import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 
 
@@ -103,14 +105,27 @@ public class UploadImageActivity extends AppCompatActivity {
 
         // Confirm -> actually upload
         btnConfirm.setOnClickListener(v -> {
-            if (pendingUri != null) {
-                // We have a gallery Uri
-                uploadImageToFirebase(pendingUri, pendingExtensionType);
-            } else if (pendingBitmap != null) {
-                // We have a camera bitmap
-                uploadByteArrayToFirebase(pendingBitmap);
+            if (!ConnectivityReceiver.isNetworkAvailable(UploadImageActivity.this)){
+                String localPath = saveImageLocally();
+                if (localPath != null){
+                    Toast.makeText(this, "Image saved locally!", Toast.LENGTH_SHORT).show();
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("localImagePath", localPath);
+                    setResult(RESULT_OK, resultIntent);
+                    finish();
+                } else {
+                    Toast.makeText(this, "Failed to save image locally!", Toast.LENGTH_SHORT).show();
+                }
             } else {
-                Toast.makeText(this, "No image selected!", Toast.LENGTH_SHORT).show();
+                if (pendingUri != null) {
+                    // We have a gallery Uri
+                    uploadImageToFirebase(pendingUri, pendingExtensionType);
+                } else if (pendingBitmap != null) {
+                    // We have a camera bitmap
+                    uploadByteArrayToFirebase(pendingBitmap);
+                } else {
+                    Toast.makeText(this, "No image selected!", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -493,6 +508,40 @@ public class UploadImageActivity extends AppCompatActivity {
             }
         }
     }
+
+    public String saveImageLocally() {
+        try {
+            // Determine which image we have: either from camera (bitmap) or from gallery (uri)
+            Bitmap bitmapToSave = null;
+            if (pendingBitmap != null) {
+                bitmapToSave = pendingBitmap;
+            } else if (pendingUri != null) {
+                InputStream inputStream = getContentResolver().openInputStream(pendingUri);
+                bitmapToSave = BitmapFactory.decodeStream(inputStream);
+                inputStream.close();
+            }
+
+            if (bitmapToSave == null) {
+                return null;
+            }
+
+            // Create a unique file name and file in the app's internal storage directory
+            String fileName = "offline_" + System.currentTimeMillis() + ".jpg";
+            File file = new File(getFilesDir(), fileName);
+            FileOutputStream fos = new FileOutputStream(file);
+
+            bitmapToSave.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            fos.flush();
+            fos.close();
+            // Return the absolute file path for later use
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
 
     /**
      * Simple class for image dimensions.
