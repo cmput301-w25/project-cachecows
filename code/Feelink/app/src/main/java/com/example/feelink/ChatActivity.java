@@ -22,8 +22,8 @@ public class ChatActivity extends AppCompatActivity {
     private FirestoreManager firestoreManager;
     private String conversationId, otherUserId;
 
-//    private TextView tvUserName;
-//    private ImageView ivProfilePicture;
+    private TextView tvUserName;
+    private ImageView ivProfilePicture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,14 +51,14 @@ public class ChatActivity extends AppCompatActivity {
     private void setupViews() {
         recyclerView = findViewById(R.id.recyclerMessages);
         etMessage = findViewById(R.id.etMessage);
-//        tvUserName = findViewById(R.id.tvUserName);
-//        ivProfilePicture = findViewById(R.id.ivProfilePicture);
+        tvUserName = findViewById(R.id.tvUserName);
+        ivProfilePicture = findViewById(R.id.ivProfilePicture);
         findViewById(R.id.btnSend).setOnClickListener(v -> sendMessage());
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(new MessageAdapter(new ArrayList<>(), firestoreManager.getUserId()));
 
-//        loadUserName();
+        loadUserName();
     }
 
     private void sendMessage() {
@@ -82,18 +82,19 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-//    private void loadUserName() {
-//        firestoreManager.getUsernameById(otherUserId, new FirestoreManager.OnUsernameListener() {
-//            @Override
-//            public void onSuccess(String username) {
-//                tvUserName.setText(username);
-//            }
-//
-//            @Override
-//            public void onFailure(String fallback) {
-//                tvUserName.setText(fallback);
-//            }
-//        });
-//    }
+    private void loadUserName() {
+        firestoreManager.getUsernameById(otherUserId, new FirestoreManager.OnUsernameListener() {
+            @Override
+            public void onSuccess(String username) {
+                tvUserName.setText(username);
+
+            }
+
+            @Override
+            public void onFailure(String fallback) {
+                tvUserName.setText(fallback);
+            }
+        });
+    }
 
 }

@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import java.util.List;
 
 public class ConversationsAdapter extends RecyclerView.Adapter<ConversationsAdapter.ViewHolder> {
@@ -32,7 +34,28 @@ public class ConversationsAdapter extends RecyclerView.Adapter<ConversationsAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Conversation conversation = conversations.get(position);
         holder.bind(conversation);
+        String otherUserId = getOtherUserId(conversation.getParticipants());
+
+        // Fetch username from Firestore
+        FirestoreManager firestoreManager = new FirestoreManager(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        firestoreManager.getUsernameById(otherUserId, new FirestoreManager.OnUsernameListener() {
+            @Override
+            public void onSuccess(String username) {
+                holder.tvUsername.setText(username);
+            }
+
+            @Override
+            public void onFailure(String fallback) {
+                holder.tvUsername.setText("Unknown User");
+            }
+        });
         holder.itemView.setOnClickListener(v -> listener.onConversationClick(conversation));
+    }
+
+    private String getOtherUserId(List<String> participantIds) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        return participantIds.get(0).equals(currentUserId) ?
+                participantIds.get(1) : participantIds.get(0);
     }
 
     @Override
