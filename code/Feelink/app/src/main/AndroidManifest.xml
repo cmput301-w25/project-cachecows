@@ -33,7 +33,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".FollowListActivity"/>
-        <activity android:name=".ChatActivity"/>
         <activity android:name=".ConversationsListActivity"/>
 
         <activity android:name=".Login" />
@@ -55,6 +54,11 @@
         <activity
             android:name=".OtherUserProfileActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".ChatActivity"
+            android:windowSoftInputMode="adjustResize|stateHidden" />
+
 
     </application>
 

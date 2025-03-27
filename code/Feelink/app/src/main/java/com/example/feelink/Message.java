@@ -7,6 +7,13 @@ public class Message {
     private String text, senderId;
     private Date timestamp;
 
+    public Message(String text, String senderId, Date timestamp) {
+        this.text = text;
+        this.senderId = senderId;
+        this.timestamp = timestamp != null ? timestamp : new Date();
+    }
+
+
     public String getText() {
         return text;
     }
@@ -31,11 +38,6 @@ public class Message {
         this.timestamp = timestamp;
     }
 
-    public Message(String text, String senderId, Date timestamp) {
-        this.text = text;
-        this.senderId = senderId;
-        this.timestamp = timestamp;
-    }
 
     // Getters
     public boolean isSent(String currentUserId) {

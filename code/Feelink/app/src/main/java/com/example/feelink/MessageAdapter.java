@@ -8,7 +8,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 // MessageAdapter.java
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
@@ -30,6 +32,14 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Message message = messages.get(position);
         holder.tvMessage.setText(message.getText());
+
+        if (message.getTimestamp() != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+            String formattedTime = sdf.format(message.getTimestamp());
+            holder.tvTime.setText(formattedTime);
+        } else {
+            holder.tvTime.setText("--:--"); // Fallback text
+        }
     }
 
     @Override
@@ -39,9 +49,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
     class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvMessage;
+        TextView tvTime;
         public ViewHolder(View view) {
             super(view);
             tvMessage = view.findViewById(R.id.tvMessage);
+            tvTime = view.findViewById(R.id.tvTime);
         }
     }
 
