@@ -237,6 +237,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
         fabAddMood = findViewById(R.id.fabAddMood);
         tvOfflineIndicator = findViewById(R.id.tvOfflineIndicator);
+        findViewById(R.id.btnChat).setOnClickListener(v -> navigateToConversationsList());
     }
 
     /**
@@ -273,6 +274,10 @@ public class FeedManagerActivity extends AppCompatActivity {
                 handleUnauthorizedAccess();
             }
         });
+    }
+
+    private void navigateToConversationsList() {
+        startActivity(new Intent(FeedManagerActivity.this, ConversationsListActivity.class));
     }
 
     /**
