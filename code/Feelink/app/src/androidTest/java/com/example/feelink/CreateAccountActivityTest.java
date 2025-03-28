@@ -6,10 +6,14 @@ import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.intent.Intents.intended;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.equalTo;
+
+import android.widget.DatePicker;
+
 
 import android.util.Log;
 
@@ -88,33 +92,33 @@ public class CreateAccountActivityTest {
         Intents.init();
     }
 
+
     @Test
     public void testCreateAccountWithValidInput() throws InterruptedException {
-        // Generate unique values to prevent conflicts
         String uniqueId = String.valueOf(System.currentTimeMillis());
         String username = "testuser" + uniqueId;
         String email = "test" + uniqueId + "@example.com";
 
-        // Input valid user details with keyboard closing
+        // Input valid details
         onView(withId(R.id.create_name_text)).perform(typeText("Test User"), ViewActions.closeSoftKeyboard());
         onView(withId(R.id.create_username_text)).perform(typeText(username), ViewActions.closeSoftKeyboard());
-        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"), ViewActions.closeSoftKeyboard());
+
+        // Handle DatePicker interaction
+        onView(withId(R.id.create_date_of_birth_text)).perform(click());
+
+        // Manually set year, month, and day (replace with your DatePicker's UI structure)
+        onView(withId(android.R.id.button1)).perform(click()); // Click "OK" (use default date)
+
+        // Fill other fields
         onView(withId(R.id.create_email_text)).perform(typeText(email), ViewActions.closeSoftKeyboard());
         onView(withId(R.id.create_user_password_text)).perform(typeText("TestPass123"), ViewActions.closeSoftKeyboard());
         onView(withId(R.id.repeat_user_password_text)).perform(typeText("TestPass123"), ViewActions.closeSoftKeyboard());
 
-        // Wait for username validation to complete
-        Thread.sleep(2000);
-
-        // Click create account button
+        Thread.sleep(2000); // Wait for validation
         onView(withId(R.id.create_button)).perform(click());
+        Thread.sleep(5000); // Wait for navigation
 
-        // After clicking create button
-        Log.d("TEST", "Clicked create button, waiting for navigation...");
-
-        Thread.sleep(10000);
-
-        // Verify navigation to FeedManagerActivity
+        // Verify navigation
         intended(hasComponent(FeedManagerActivity.class.getName()));
         onView(withId(R.id.btnAllMoods)).check(matches(isDisplayed()));
     }
@@ -133,27 +137,25 @@ public class CreateAccountActivityTest {
     public void testCreateAccountWithMismatchedPasswords() throws InterruptedException {
         onView(withId(R.id.create_name_text)).perform(typeText("John Doe"), ViewActions.closeSoftKeyboard());
         onView(withId(R.id.create_username_text)).perform(typeText("johndoes" + System.currentTimeMillis()), ViewActions.closeSoftKeyboard());
-        onView(withId(R.id.create_date_of_birth_text)).perform(typeText("01/01/1990"), ViewActions.closeSoftKeyboard());
+
+        // Handle DatePicker for DOB (simplified)
+        onView(withId(R.id.create_date_of_birth_text)).perform(click());
+        onView(withId(android.R.id.button1)).perform(click()); // Click "OK" with default date
+
         onView(withId(R.id.create_email_text)).perform(typeText("johndoes" + System.currentTimeMillis() + "@example.com"), ViewActions.closeSoftKeyboard());
 
         // Input mismatched passwords
         onView(withId(R.id.create_user_password_text)).perform(typeText("P@ssword123"), ViewActions.closeSoftKeyboard());
         onView(withId(R.id.repeat_user_password_text)).perform(typeText("P@ssword456"), ViewActions.closeSoftKeyboard());
 
-        // Wait for any validation to complete
         Thread.sleep(1000);
-
-        // Click on the create account button
         onView(withId(R.id.create_button)).perform(click());
-
-        // Need a small delay for Snackbar to appear
         Thread.sleep(1000);
 
-        // Check if error message is displayed
+        // Check error message
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText(R.string.password_no_match)));
     }
-
 
     @After
     public void cleanup() {
