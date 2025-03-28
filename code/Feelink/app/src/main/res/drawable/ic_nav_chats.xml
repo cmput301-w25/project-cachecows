@@ -19,7 +19,7 @@
   <path
       android:pathData="M60.51,60.544c0.215,0.181 0.543,0.028 0.543,-0.253l-0.002,-4.271h0.001V44.077c0,-2.209 -1.791,-4 -4,-4H24.103c-2.209,0 -4,1.791 -4,4v7.944c0,2.209 1.791,4 4,4h30.858c0.236,0 0.464,0.083 0.644,0.235L60.51,60.544z"
       android:strokeWidth="2"
-      android:fillColor="#00000000"
+      android:fillColor="@color/cerulean"
       android:strokeColor="#000000"/>
   <path
       android:pathData="M31.997,48.059m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"

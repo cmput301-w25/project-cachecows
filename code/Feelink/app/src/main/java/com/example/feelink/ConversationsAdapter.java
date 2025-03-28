@@ -9,9 +9,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ConversationsAdapter extends RecyclerView.Adapter<ConversationsAdapter.ViewHolder> {
     private List<Conversation> conversations;
@@ -38,15 +41,26 @@ public class ConversationsAdapter extends RecyclerView.Adapter<ConversationsAdap
 
         // Fetch username from Firestore
         FirestoreManager firestoreManager = new FirestoreManager(FirebaseAuth.getInstance().getCurrentUser().getUid());
-        firestoreManager.getUsernameById(otherUserId, new FirestoreManager.OnUsernameListener() {
+        firestoreManager.getUserInfo(otherUserId, new FirestoreManager.OnUserInfoListener() {
             @Override
-            public void onSuccess(String username) {
-                holder.tvUsername.setText(username);
+            public void onSuccess(User user) {
+                holder.tvUsername.setText(user.getUsername());
+
+                String imageUrl = user.getProfileImageUrl();
+                if (imageUrl != null && !imageUrl.isEmpty()) {
+                    Glide.with(holder.itemView.getContext())
+                            .load(imageUrl)
+                            .placeholder(R.drawable.ic_nav_profile)
+                            .into(holder.profileImage);
+                } else {
+                    holder.profileImage.setImageResource(R.drawable.ic_nav_profile);
+                }
             }
 
             @Override
-            public void onFailure(String fallback) {
+            public void onFailure(String error) {
                 holder.tvUsername.setText("Unknown User");
+                holder.profileImage.setImageResource(R.drawable.ic_nav_profile);
             }
         });
         holder.itemView.setOnClickListener(v -> listener.onConversationClick(conversation));
@@ -65,12 +79,15 @@ public class ConversationsAdapter extends RecyclerView.Adapter<ConversationsAdap
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvUsername, tvLastMessage, tvTimestamp;
+        CircleImageView profileImage;
+
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvUsername = itemView.findViewById(R.id.username);
             tvLastMessage = itemView.findViewById(R.id.lastMessage);
             tvTimestamp = itemView.findViewById(R.id.timestamp);
+            profileImage = itemView.findViewById(R.id.profileImage);
         }
 
         public void bind(Conversation conversation) {

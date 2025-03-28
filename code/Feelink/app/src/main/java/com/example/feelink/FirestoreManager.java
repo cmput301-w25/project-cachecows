@@ -32,7 +32,6 @@ import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Arrays;
 
 /**
  * Central Firestore operations handler managing all CRUD operations for mood events and user data
@@ -140,11 +138,6 @@ public class FirestoreManager {
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
 
-        // Debug logging for location data
-        Log.d(TAG, "Adding mood event with location data:");
-        Log.d(TAG, "Latitude: " + moodEvent.getLatitude());
-        Log.d(TAG, "Longitude: " + moodEvent.getLongitude());
-        Log.d(TAG, "Location Name: " + moodEvent.getLocationName());
 
         // Only add optional fields if they're not null or empty
         if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
@@ -158,6 +151,10 @@ public class FirestoreManager {
 
         if (moodEvent.getImageUrl() != null && !moodEvent.getImageUrl().isEmpty()) {
             moodData.put("imageUrl", moodEvent.getImageUrl());
+        }
+
+        if (moodEvent.getTempLocalImagePath() != null && !moodEvent.getTempLocalImagePath().isEmpty()) {
+            moodData.put("tempLocalImagePath", moodEvent.getTempLocalImagePath());
         }
 
         if (moodEvent.getLocationName() != null && !moodEvent.getLocationName().isEmpty()) {
@@ -597,13 +594,11 @@ public class FirestoreManager {
                 .document(documentId)
                 .update(moodData)
                 .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "Mood event updated successfully");
                     if (listener != null) {
                         listener.onSuccess(moodEvent);
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error updating mood event", e);
                     if (listener != null) {
                         listener.onFailure(e.getMessage());
                     }
@@ -1064,6 +1059,10 @@ public class FirestoreManager {
         void onFailure(String errorMessage);
     }
 
+    public interface OnUserInfoListener {
+        void onSuccess(User user);
+        void onFailure(String error);
+    }
     private List<List<String>> partitionList(List<String> list, int chunkSize) {
         List<List<String>> chunks = new ArrayList<>();
         for (int i = 0; i < list.size(); i += chunkSize) {
@@ -1230,6 +1229,29 @@ public class FirestoreManager {
                     }).addOnFailureListener(e -> listener.onImageUploadFailure(e.getMessage()));
                 })
                 .addOnFailureListener(e -> listener.onImageUploadFailure(e.getMessage()));
+    }
+
+    public void updateUserProfileImage(String userId, String imageUrl,
+                                       OnSuccessListener<Void> success,
+                                       OnFailureListener failure) {
+        db.collection("users").document(userId)
+                .update("profileImageUrl", imageUrl)
+                .addOnSuccessListener(success)
+                .addOnFailureListener(failure);
+    }
+
+    public void getUserInfo(String userId, OnUserInfoListener listener) {
+        db.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()){
+                        User user = User.fromDocument(documentSnapshot);
+                        listener.onSuccess(user);
+                    } else {
+                        listener.onFailure("User not found");
+                    }
+                })
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 
     // FirestoreManager.java

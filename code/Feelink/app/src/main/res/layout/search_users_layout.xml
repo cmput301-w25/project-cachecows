@@ -12,9 +12,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
-        app:cardBackgroundColor="#FFDFDF"
+        app:cardBackgroundColor="#FBDCE8"
         app:cardCornerRadius="24dp"
         app:cardElevation="0dp"
         tools:ignore="MissingConstraints">
@@ -36,7 +36,7 @@
                 android:layout_marginEnd="8dp"
                 android:src="@drawable/ic_search"
                 android:contentDescription="@string/search"
-                app:tint="#FF7F7F" />
+                app:tint="#C77FA3" />
 
             <EditText
                 android:id="@+id/searchEditText"
@@ -44,8 +44,9 @@
                 android:layout_height="wrap_content"
                 android:background="@null"
                 android:hint="@string/search_hint"
-                android:textColorHint="#FF7F7F"
+                android:textColorHint="#C77FA3"
                 android:textSize="16sp"
+                android:fontFamily="@font/poppins_regular"
                 android:inputType="text"
                 android:imeOptions="actionSearch" />
         </LinearLayout>
@@ -94,6 +95,14 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:contentDescription="Home tab"
+            android:src="@drawable/ic_nav_home" />
+
+        <ImageView
             android:id="@+id/navSearch"
             android:layout_width="0dp"
             android:layout_height="24dp"
@@ -102,7 +111,7 @@
             android:contentDescription="Search tab" />
 
         <ImageView
-            android:id="@+id/navHome"
+            android:id="@+id/navMap"
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"

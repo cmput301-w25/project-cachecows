@@ -60,6 +60,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
 
     private List<MoodEvent> moodEvents;
     private Context context;
+    private Map<String, User> userCache = new HashMap<>();
 
     private boolean isMyMoodSection = false;
     private boolean isPublicFeed = false;
@@ -118,8 +119,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     public MoodEventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_mood_event, parent, false);
-
-
         return new MoodEventViewHolder(view);
     }
 
@@ -239,6 +238,50 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             }
         }
 
+
+        String postUserId = moodEvent.getUserId();
+        if (moodEvent.getUsername() != null && !moodEvent.getUsername().isEmpty()
+                && moodEvent.getUserProfileImageUrl() != null) {
+            holder.userUsername.setText(moodEvent.getUsername());
+            Glide.with(context)
+                    .load(moodEvent.getUserProfileImageUrl())
+                    .placeholder(R.drawable.ic_profile_placeholder)
+                    .into(holder.userProfileImage);
+        } else {
+            // Check cache first
+            if (userCache.containsKey(postUserId)) {
+                User user = userCache.get(postUserId);
+                moodEvent.setUsername(user.getUsername());
+                moodEvent.setUserProfileImageUrl(user.getProfileImageUrl());
+                holder.userUsername.setText(user.getUsername());
+                Glide.with(context)
+                        .load(user.getProfileImageUrl())
+                        .placeholder(R.drawable.ic_profile_placeholder)
+                        .into(holder.userProfileImage);
+            } else {
+                // Fetch user info from Firestore
+                new FirestoreManager(postUserId).getUserInfo(postUserId, new FirestoreManager.OnUserInfoListener() {
+                    @Override
+                    public void onSuccess(User user) {
+                        // Cache the result
+                        userCache.put(postUserId, user);
+                        moodEvent.setUsername(user.getUsername());
+                        moodEvent.setUserProfileImageUrl(user.getProfileImageUrl());
+                        holder.userUsername.setText(user.getUsername());
+                        Glide.with(context)
+                                .load(user.getProfileImageUrl())
+                                .placeholder(R.drawable.ic_profile_placeholder)
+                                .into(holder.userProfileImage);
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        holder.userUsername.setText("Unknown");
+                        holder.userProfileImage.setImageResource(R.drawable.ic_profile_placeholder);
+                    }
+                });
+            }
+        }
 
         PendingSyncManager pendingSyncManager = new PendingSyncManager(context);
         if (pendingSyncManager.getPendingIds().contains(moodEvent.getDocumentId())) {
@@ -495,12 +538,13 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
      */
     static class MoodEventViewHolder extends RecyclerView.ViewHolder {
         ConstraintLayout photoContainer;
-        TextView tvMoodDescription, tvPhotoPlaceholder;
+        TextView tvMoodDescription, tvPhotoPlaceholder, userUsername;
         ImageView moodImage, moodPostedImage;
         View btnLike;
         View btnComment;
         CardView cardView;
 
+        de.hdodenhof.circleimageview.CircleImageView userProfileImage;
         ImageButton btnEdit, btnDelete;
 
         LottieAnimationView lottieSync; // UI element for offline behavior
@@ -525,6 +569,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             moodPostedImage = itemView.findViewById(R.id.moodImage);
             tvPhotoPlaceholder = itemView.findViewById(R.id.tvPhotoPlaceholder);
             lottieSync = itemView.findViewById(R.id.lottieSync);
+            userProfileImage = itemView.findViewById(R.id.userProfileImage);
+            userUsername = itemView.findViewById(R.id.userUsername);
         }
     }
 

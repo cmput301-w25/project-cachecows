@@ -134,7 +134,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
             moodEventId = intent.getLongExtra("MOOD_EVENT_ID", -1);
             String emotionalState = intent.getStringExtra("EMOTIONAL_STATE");
             String reason = intent.getStringExtra("REASON");
-            String trigger = intent.getStringExtra("TRIGGER");
             String socialSituation = intent.getStringExtra("SOCIAL_SITUATION");
             String imageUrl = intent.getStringExtra("IMAGE_URL");
             String locationName = intent.getStringExtra("LOCATION_NAME");
@@ -142,7 +141,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
             selectedLongitude = intent.getDoubleExtra("LONGITUDE", 0.0);
             boolean isPublic = intent.getBooleanExtra("IS_PUBLIC", true);
 
-            preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl, locationName, isPublic);
+            preFillFields(emotionalState, reason, socialSituation, imageUrl, locationName, isPublic);
         }
 
         setupAddButton();
@@ -170,7 +169,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
      * @param imageUrl Stored image reference
      * @param locationName Stored location name
      */
-    private void preFillFields(String emotionalState, String reason, String trigger, String socialSituation, String imageUrl, String locationName, boolean isPublic) {
+    private void preFillFields(String emotionalState, String reason, String socialSituation, String imageUrl, String locationName, boolean isPublic) {
         // Set the selected mood
         selectedMood = emotionalState;
         highlightSelectedMood(emotionalState);
@@ -542,13 +541,13 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 finish();
             }
 
-                        @Override
-                        public void onFailure(String errorMessage) {
-                            Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).setDuration(5000).show();
-                            btnAddMood.setEnabled(true);
-                        }
-                    });
-                }
+            @Override
+            public void onFailure(String errorMessage) {
+                Snackbar.make(v, "Error: " + errorMessage, Snackbar.LENGTH_SHORT).show();
+                btnAddMood.setEnabled(true);
+            }
+        });
+    }
 
     private void updateMoodEventOffline(View v, MoodEvent moodEvent, String documentId) {
         moodEvent.setPendingSync(true);

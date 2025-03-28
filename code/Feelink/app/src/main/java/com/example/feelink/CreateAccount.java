@@ -14,7 +14,10 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,7 +42,7 @@ import java.util.Map;
 public class CreateAccount extends AppCompatActivity {
     private EditText nameEditText, usernameEditText, dobEditText,
             emailEditText, passwordEditText, repeatedPasswordEditText;
-    private TextView usernameFeedbackText;
+    private TextView usernameFeedbackText, tvAddPhoto;
     private Button createButton;
     private ImageView backButton;
     private static final String TAG = "CreateAccountActivity";
@@ -54,6 +57,7 @@ public class CreateAccount extends AppCompatActivity {
     private static final String VALID_USERNAME = "^(?=.*[a-zA-Z])[a-zA-Z0-9_]{3,25}$";
     private static final String VALID_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_+\\-=]{6,}$";
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
+    private ActivityResultLauncher<Intent> editProfileImageLauncher; // Launcher for editing the profile image
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +75,29 @@ public class CreateAccount extends AppCompatActivity {
         setupUIForMode();
         setupDatePicker();
         setupUsernameValidation();
+
+        if (isEditMode) {
+            editProfileImageLauncher = registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == RESULT_OK) {
+                            Intent data = result.getData();
+                            if (data != null && data.hasExtra("imageUrl")) {
+                                String imageUrl = data.getStringExtra("imageUrl");
+                                if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                                    // Update Firestore with the new profile picture
+                                    String userId = mAuth.getCurrentUser().getUid();
+                                    new FirestoreManager(userId).updateUserProfileImage(userId, imageUrl,
+                                            aVoid -> Toast.makeText(CreateAccount.this, "Profile picture updated", Toast.LENGTH_SHORT).show(),
+                                            e -> Toast.makeText(CreateAccount.this, "Failed to update profile picture", Toast.LENGTH_SHORT).show());
+                                } else {
+                                    Toast.makeText(CreateAccount.this, "No valid image selected", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }
+                    }
+            );
+        }
 
         createButton.setOnClickListener(v -> {
             if (isEditMode) {
@@ -93,6 +120,7 @@ public class CreateAccount extends AppCompatActivity {
         usernameFeedbackText = findViewById(R.id.create_username_feedback);
         createButton = findViewById(R.id.create_button);
         backButton = findViewById(R.id.back_button);
+        tvAddPhoto = findViewById(R.id.tvAddPhoto);
     }
 
     private void setupUIForMode() {
@@ -100,6 +128,11 @@ public class CreateAccount extends AppCompatActivity {
             TextView title = findViewById(R.id.create_profile_text);
             title.setText("Edit Profile");
             createButton.setText("Save Changes");
+            tvAddPhoto.setVisibility(View.VISIBLE);
+            tvAddPhoto.setOnClickListener(v -> {
+                Intent intent = new Intent(CreateAccount.this, UploadImageActivity.class);
+                editProfileImageLauncher.launch(intent);
+            });
 
             // Hide email and password fields
             emailEditText.setVisibility(View.GONE);
@@ -219,6 +252,9 @@ public class CreateAccount extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         addUserToFirestore(user, name, username, dob, email);
+                        Intent intent = new Intent(CreateAccount.this, UploadProfilePictureActivity.class);
+                        startActivity(intent);
+                        finish();
                     } else {
                         showSnackbar("Registration failed: " + task.getException().getMessage());
                     }
@@ -341,18 +377,11 @@ public class CreateAccount extends AppCompatActivity {
         batch.set(usernameRef, usernameData);
 
         batch.commit()
-                .addOnSuccessListener(unused -> navigateToFeed())
+                .addOnSuccessListener(unused -> {})
                 .addOnFailureListener(e -> {
                     user.delete();
                     showSnackbar("Registration failed: " + e.getMessage());
                 });
-    }
-
-    private void navigateToFeed() {
-        Intent intent = new Intent(CreateAccount.this, FeedManagerActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
-        finish();
     }
 
     private void handleBackNavigation() {

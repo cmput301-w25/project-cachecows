@@ -487,7 +487,7 @@
             android:contentDescription="Search tab" />
 
         <ImageView
-            android:id="@+id/navHome"
+            android:id="@+id/navMap"
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"
