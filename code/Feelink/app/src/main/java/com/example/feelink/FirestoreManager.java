@@ -71,10 +71,10 @@ public class FirestoreManager {
         this.userId = userId;
     }
 
-    public FirestoreManager(String userId, FirebaseFirestore firestore) {
-        this.db = firestore;
-        this.userId = userId;
-    }
+//    public FirestoreManager(String userId, FirebaseFirestore firestore) {
+//        this.db = firestore;
+//        this.userId = userId;
+//    }
 
     public void updateAllUsersWithLowercaseUsername() {
         Log.d(TAG, "Starting update of all users with lowercase usernames");
@@ -198,7 +198,7 @@ public class FirestoreManager {
                 });
     }
 
-    // Add this method to FirestoreManager.java
+
     public void updateUserEmail(String username, String newEmail, OnSuccessListener<Void> success, OnFailureListener failure) {
         db.collection("usernames").document(username)
                 .update("email", newEmail)

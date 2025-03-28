@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Background gradient - light mint green -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:background="@drawable/logo_feelink"
+                android:rotation="45" />
+        </LinearLayout>
+
+    </FrameLayout>
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+
+            <!-- Header -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Settings"
+                android:textColor="#5A4A7E"
+                android:textSize="28sp"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingBottom="24dp"/>
+
+            <!-- Account Section Header (OUTSIDE the card) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Account"
+                android:textColor="#5A4A7E"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium"
+                android:paddingStart="8dp"
+                android:paddingBottom="8dp"/>
+
+            <!-- Account Section Card with purple tint -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="1dp"
+                app:cardBackgroundColor="#F0F1FF">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Edit profile button -->
+                    <Button
+                        android:id="@+id/editProfile"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="start|center_vertical"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp"
+                        android:drawableStart="@drawable/ic_nav_profile"
+                        android:drawablePadding="24dp"
+                        android:drawableTint="#5A4A7E"
+                        android:text="Edit profile"
+                        android:textColor="#5A4A7E"
+                        android:textSize="16sp"
+                        android:textAlignment="viewStart"
+                        android:fontFamily="sans-serif"
+                        style="@style/Widget.AppCompat.Button.Borderless"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:background="#E6E6E6"/>
+
+                    <!-- Security button -->
+                    <Button
+                        android:id="@+id/security"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="start|center_vertical"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp"
+                        android:drawableStart="@drawable/ic_nav_profile"
+                        android:drawablePadding="24dp"
+                        android:drawableTint="#5A4A7E"
+                        android:text="Security"
+                        android:textColor="#5A4A7E"
+                        android:textSize="16sp"
+                        android:textAlignment="viewStart"
+                        android:fontFamily="sans-serif"
+                        style="@style/Widget.AppCompat.Button.Borderless"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:background="#E6E6E6"/>
+
+                    <!-- Notifications button -->
+                    <Button
+                        android:id="@+id/notifications"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="start|center_vertical"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp"
+                        android:drawableStart="@drawable/ic_nav_profile"
+                        android:drawablePadding="24dp"
+                        android:drawableTint="#5A4A7E"
+                        android:text="Notifications"
+                        android:textColor="#5A4A7E"
+                        android:textSize="16sp"
+                        android:textAlignment="viewStart"
+                        android:fontFamily="sans-serif"
+                        style="@style/Widget.AppCompat.Button.Borderless"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:background="#E6E6E6"/>
+
+                    <!-- Privacy button -->
+                    <Button
+                        android:id="@+id/privacy"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="start|center_vertical"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp"
+                        android:drawableStart="@drawable/ic_nav_profile"
+                        android:drawablePadding="24dp"
+                        android:drawableTint="#5A4A7E"
+                        android:text="Privacy"
+                        android:textColor="#5A4A7E"
+                        android:textSize="16sp"
+                        android:textAlignment="viewStart"
+                        android:fontFamily="sans-serif"
+                        style="@style/Widget.AppCompat.Button.Borderless"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Support Section Header (OUTSIDE the card) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Support &amp; About"
+                android:textColor="#5A4A7E"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium"
+                android:paddingStart="8dp"
+                android:paddingBottom="8dp"/>
+
+            <!-- Support & About Section Card with purple tint -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="1dp"
+                app:cardBackgroundColor="#F0F1FF">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- My Subscription button -->
+                    <Button
+                        android:id="@+id/subscription"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="start|center_vertical"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp"
+                        android:drawableStart="@drawable/ic_nav_profile"
+                        android:drawablePadding="24dp"
+                        android:drawableTint="#5A4A7E"
+                        android:text="My Subscription"
+                        android:textColor="#5A4A7E"
+                        android:textSize="16sp"
+                        android:textAlignment="viewStart"
+                        android:fontFamily="sans-serif"
+                        style="@style/Widget.AppCompat.Button.Borderless"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:background="#E6E6E6"/>
+
+                    <!-- Help & Support button -->
+                    <Button
+                        android:id="@+id/support"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="start|center_vertical"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp"
+                        android:drawableStart="@drawable/ic_nav_profile"
+                        android:drawablePadding="24dp"
+                        android:drawableTint="#5A4A7E"
+                        android:text="Help &amp; Support"
+                        android:textColor="#5A4A7E"
+                        android:textSize="16sp"
+                        android:textAlignment="viewStart"
+                        android:fontFamily="sans-serif"
+                        style="@style/Widget.AppCompat.Button.Borderless"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:background="#E6E6E6"/>
+
+                    <!-- Terms and Policies button -->
+                    <Button
+                        android:id="@+id/terms"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="start|center_vertical"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp"
+                        android:drawableStart="@drawable/ic_nav_profile"
+                        android:drawablePadding="24dp"
+                        android:drawableTint="#5A4A7E"
+                        android:text="Terms and Policies"
+                        android:textColor="#5A4A7E"
+                        android:textSize="16sp"
+                        android:textAlignment="viewStart"
+                        android:fontFamily="sans-serif"
+                        style="@style/Widget.AppCompat.Button.Borderless"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </ScrollView>
+</RelativeLayout>

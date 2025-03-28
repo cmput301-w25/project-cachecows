@@ -1,5 +1,6 @@
 package com.example.feelink;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Patterns;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -25,7 +27,10 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -125,7 +130,41 @@ public class CreateAccount extends AppCompatActivity {
             startActivity(new Intent(CreateAccount.this, MainActivity.class));
         });
 
+        // Set up date picker dialog for DOB field
+        final Calendar calendar = Calendar.getInstance();
+        final DatePickerDialog.OnDateSetListener dateSetListener = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                calendar.set(Calendar.YEAR, year);
+                calendar.set(Calendar.MONTH, month);
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                updateDateLabel(calendar);
+            }
+        };
+
+        dobEditText.setOnClickListener(v -> {
+            // Create date picker with current date as default
+            DatePickerDialog datePickerDialog = new DatePickerDialog(
+                    CreateAccount.this,
+                    dateSetListener,
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
+            );
+
+            // Set max date to today (no future dates allowed)
+            datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+
+            datePickerDialog.show();
+        });
+
     }
+    private void updateDateLabel(Calendar calendar) {
+        String dateFormat = "dd/MM/yyyy"; // Format matching your validation pattern
+        SimpleDateFormat sdf = new SimpleDateFormat(dateFormat, Locale.getDefault());
+        dobEditText.setText(sdf.format(calendar.getTime()));
+    }
+
 
     /**
      * Validates username format and checks availability in Firestore
@@ -216,7 +255,7 @@ public class CreateAccount extends AppCompatActivity {
               }
           }
 
-        //Email validation
+          //Email validation
         //Based on a StackOverflow answer by gaurav jain:
         //https://stackoverflow.com/questions/77226668/how-allow-email-using-email-validation-regex-in-android
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -326,7 +365,6 @@ public class CreateAccount extends AppCompatActivity {
                     finish();
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error writing user data to Firestore", e);
                     // Rollback auth user if Firestore fails
                     user.delete();
                     Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show();

@@ -23,8 +23,6 @@ import com.google.firebase.auth.FirebaseAuth;
  *   <li>User feedback mechanisms</li>
  * </ul>
  *
- * @author Your Name
- * @version 1.0
  * @see FirebaseAuth
  * @see Login
  */

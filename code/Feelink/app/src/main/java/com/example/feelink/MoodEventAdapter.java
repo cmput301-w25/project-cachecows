@@ -226,13 +226,13 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
      */
     private void showDeleteConfirmationDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Delete Mood Event");
-        builder.setMessage("Are you sure you want to delete this mood event?");
-        builder.setPositiveButton("Delete", (dialog, which) -> {
+        builder.setTitle("Delete Mood?");
+        builder.setMessage("By Deleting this post, you won’t be able to access it.?");
+        builder.setPositiveButton("Yes, Delete", (dialog, which) -> {
             // User confirmed, delete the mood event
             deleteMoodEvent(moodEvent);
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> {
+        builder.setNegativeButton("No, Cancel", (dialog, which) -> {
             // User cancelled, do nothing
             dialog.dismiss();
         });

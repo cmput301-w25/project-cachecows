@@ -1,8 +1,10 @@
 package com.example.feelink;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,10 +27,11 @@ public class UserProfileActivity extends AppCompatActivity {
     private ImageView profileImageView;
     private TextView usernameTextView, bioTextView;
     private String currentUserId;
-
     private RecyclerView recyclerMoodEvents;
     private MoodEventAdapter moodEventAdapter;
     private List<MoodEvent> moodEventsList;
+    private TextView moodPostsTextView;
+    private FirestoreManager firestoreManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,21 +42,84 @@ public class UserProfileActivity extends AppCompatActivity {
         profileImageView = findViewById(R.id.profileImage);
         usernameTextView = findViewById(R.id.username);
         bioTextView = findViewById(R.id.bio);
-//        recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
-//        // Set up RecyclerView (as in FeedManagerActivity)
-//        moodEventsList = new ArrayList<>();
-//        moodEventAdapter = new MoodEventAdapter(moodEventsList, this);
-//        recyclerMoodEvents.setLayoutManager(new LinearLayoutManager(this));
-//        recyclerMoodEvents.setAdapter(moodEventAdapter);
+        moodPostsTextView = findViewById(R.id.moodPosts);
 
-//        fetchUserMoodEvents(currentUserId);
+        recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
 
-        // Get current user ID
+        // Set up RecyclerView
+        moodEventsList = new ArrayList<>();
+        moodEventAdapter = new MoodEventAdapter(moodEventsList, this);
+        moodEventAdapter.setMyMoodSection(true);
+        recyclerMoodEvents.setLayoutManager(new LinearLayoutManager(this));
+        recyclerMoodEvents.setAdapter(moodEventAdapter);
+
+        // Initialize FirestoreManager
+        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        firestoreManager = new FirestoreManager(currentUserId);
+
+        ImageButton settingsButton = findViewById(R.id.settingsButton);
+        if (settingsButton != null) {
+            settingsButton.setOnClickListener(v -> {
+                Intent intent = new Intent(UserProfileActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "Settings button not found in layout");
+        }
+//         Get current user ID
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         // Fetch user data from Firestore
         fetchUserData(currentUserId);
+        fetchTotalMoodEvents(currentUserId);
+        fetchUserMoodEvents(currentUserId);
     }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchUserMoodEvents(currentUserId); // Refresh mood events
+
+    }
+    private void fetchTotalMoodEvents(String userId) {
+        FirestoreManager firestoreManager = new FirestoreManager(userId);
+        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+            @Override
+            public void onSuccess(List<MoodEvent> moodEvents) {
+                // Update UI with dynamic count
+                moodPostsTextView.setText(String.valueOf(moodEvents.size()));
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Error fetching moods: " + errorMessage);
+            }
+        });
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void fetchUserMoodEvents(String userId) {
+        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+            @Override
+            public void onSuccess(List<MoodEvent> moodEvents) {
+                moodEventsList.clear();
+                moodEventsList.addAll(moodEvents);
+                moodEventAdapter.notifyDataSetChanged();
+
+                if (moodEvents.isEmpty()) {
+                    Toast.makeText(UserProfileActivity.this, "No moods found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Error fetching moods: " + errorMessage);
+                Toast.makeText(UserProfileActivity.this, "Failed to load moods", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 
     private void fetchUserData(String userId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -92,31 +158,5 @@ public class UserProfileActivity extends AppCompatActivity {
         }
     }
 
-//    @SuppressLint("NotifyDataSetChanged")
-//    private void fetchUserMoodEvents(String userId) {
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//
-//        db.collection("mood_events")
-//                .whereEqualTo("userId", userId)
-//                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
-//                .get()
-//                .addOnSuccessListener(queryDocumentSnapshots -> {
-//                    moodEventsList.clear();
-//                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-//                        MoodEvent moodEvent = doc.toObject(MoodEvent.class);
-//                        moodEvent.setId(Long.parseLong(doc.getId()));
-//                        moodEventsList.add(moodEvent);
-//                    }
-//                    moodEventAdapter.notifyDataSetChanged();
-//
-//                    if (moodEventsList.isEmpty()) {
-//                        Toast.makeText(this, "No moods found", Toast.LENGTH_SHORT).show();
-//                    }
-//                })
-//                .addOnFailureListener(e -> {
-//                    Log.e(TAG, "Error fetching moods", e);
-//                    Toast.makeText(this, "Failed to load moods", Toast.LENGTH_SHORT).show();
-//                });
-//    } tried to implement
 
 }

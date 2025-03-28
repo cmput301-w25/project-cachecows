@@ -1,5 +1,6 @@
 package com.example.feelink;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -7,12 +8,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class OtherUserProfileActivity extends AppCompatActivity {
@@ -21,6 +28,12 @@ public class OtherUserProfileActivity extends AppCompatActivity {
     private TextView usernameTextView, bioTextView, followerCountTextView, followingCountTextView;
     private Button followButton;
     private String currentUserId, profileUserId;
+    private TextView moodPostsTextView;
+
+    private RecyclerView recyclerMoodEvents;
+    private MoodEventAdapter moodEventAdapter;
+    private List<MoodEvent> moodEventsList;
+    private FirestoreManager firestoreManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +46,8 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         bioTextView = findViewById(R.id.bio);
         followerCountTextView = findViewById(R.id.followerCount);
         followingCountTextView = findViewById(R.id.followingCount);
+        moodPostsTextView = findViewById(R.id.moodPosts);
+
         followButton = findViewById(R.id.followButton);
 
         // Get current user ID
@@ -45,15 +60,70 @@ public class OtherUserProfileActivity extends AppCompatActivity {
             finish();
             return;
         }
+        // Initialize FirestoreManager with profile user's ID
+        firestoreManager = new FirestoreManager(profileUserId);
+
+        // Initialize RecyclerView
+        recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents); // Add this ID to your layout
+        moodEventsList = new ArrayList<>();
+        moodEventAdapter = new MoodEventAdapter(moodEventsList, this);
+        recyclerMoodEvents.setLayoutManager(new LinearLayoutManager(this));
+        recyclerMoodEvents.setAdapter(moodEventAdapter);
+
+        // Load mood events
+        fetchUserMoodEvents(profileUserId);
 
         // Fetch user data from Firestore
         fetchUserData(profileUserId);
+        // Fetch total mood events from Firestore
+        fetchTotalMoodEvents(profileUserId);
+
 
         // Check if the current user is already following the profile user
         checkIfFollowing();
 
         // Set follow button click listener
         followButton.setOnClickListener(v -> toggleFollow());
+    }
+    private void fetchTotalMoodEvents(String userId) {
+        FirestoreManager firestoreManager = new FirestoreManager(userId);
+        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+            @Override
+            public void onSuccess(List<MoodEvent> moodEvents) {
+                // Update UI with dynamic count
+                moodPostsTextView.setText(String.valueOf(moodEvents.size()));
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Error fetching moods: " + errorMessage);
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchUserMoodEvents(profileUserId);
+    }
+
+    // Add this method to load mood events
+    @SuppressLint("NotifyDataSetChanged")
+    private void fetchUserMoodEvents(String userId) {
+        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+            @Override
+            public void onSuccess(List<MoodEvent> moodEvents) {
+                moodEventsList.clear();
+                moodEventsList.addAll(moodEvents);
+                moodEventAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Error loading moods: " + errorMessage);
+                Toast.makeText(OtherUserProfileActivity.this, "Failed to load moods", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void fetchUserData(String userId) {

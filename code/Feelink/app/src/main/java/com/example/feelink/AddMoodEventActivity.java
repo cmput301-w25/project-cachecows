@@ -117,11 +117,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
             selectedLatitude = intent.getDoubleExtra("LATITUDE", 0.0);
             selectedLongitude = intent.getDoubleExtra("LONGITUDE", 0.0);
 
-            // Add debug logging
-            Log.d("AddMoodEventActivity", "Edit Mode - Location Name: " + locationName);
-            Log.d("AddMoodEventActivity", "Edit Mode - Latitude: " + selectedLatitude);
-            Log.d("AddMoodEventActivity", "Edit Mode - Longitude: " + selectedLongitude);
-
             preFillFields(emotionalState, reason, trigger, socialSituation, imageUrl, locationName);
         }
 
@@ -129,6 +124,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         String username = "User"; // Replace with actual username later
         tvGreeting.setText("Hey " + username + "!");
         currentDateTime = new Date();
+
     }
 
     /**
@@ -157,6 +153,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         // Set reason and trigger
         etReason.setText(reason);
         etTrigger.setText(trigger);
+
 
         // Set social situation in spinner
         if (socialSituation != null && !socialSituation.isEmpty()) {
