@@ -11,22 +11,27 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentId;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Central Firestore operations handler managing all CRUD operations for mood events and user data
@@ -60,6 +65,10 @@ public class FirestoreManager {
     private String userId; // Add this
 
     private FirebaseFirestore db;
+
+    public String getUserId() {
+        return userId;
+    }
 
     /**
      * Constructs FirestoreManager with user context
@@ -931,6 +940,49 @@ public class FirestoreManager {
     }
 
 
+    public interface OnFollowListListener {
+        void onSuccess(List<User> users);
+        void onFailure(String errorMessage);
+    }
+
+    public interface OnConversationsListener {
+        void onSuccess(List<Conversation> conversations);
+        void onFailure(String error);
+    }
+
+    public interface OnMessagesListener {
+        void onMessagesReceived(List<Message> messages);
+    }
+
+
+
+    public void getFollowRelations(String type, OnFollowListListener listener) {
+        CollectionReference ref = db.collection("users")
+                .document(userId)
+                .collection(type); // "followers" or "following"
+
+        ref.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                List<User> users = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : task.getResult()) {
+                    String targetUserId = doc.getString("uid");
+                    db.collection("users").document(targetUserId).get()
+                            .addOnSuccessListener(userDoc -> {
+                                User user = User.fromDocument(userDoc);
+                                users.add(user);
+                                if(users.size() == task.getResult().size()) {
+                                    listener.onSuccess(users);
+                                }
+                            });
+                }
+                if(task.getResult().isEmpty()) listener.onSuccess(users);
+            } else {
+                listener.onFailure(task.getException().getMessage());
+            }
+        });
+    }
+
+
     /**
      * Adds a mood event to Firestore with a specific document ID.
      * This method is used to ensure that the document ID remains consistent between offline and online states.
@@ -1054,4 +1106,69 @@ public class FirestoreManager {
                 })
                 .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
+
+    // FirestoreManager.java
+    public void sendMessage(String conversationId, String text, String receiverId) {
+        // Create message in subcollection
+        Map<String, Object> message = new HashMap<>();
+        message.put("text", text);
+        message.put("senderId", userId);
+        message.put("timestamp", FieldValue.serverTimestamp());
+
+        // Update conversation document
+        Map<String, Object> conversationUpdate = new HashMap<>();
+        conversationUpdate.put("lastMessage", text);
+        conversationUpdate.put("timestamp", FieldValue.serverTimestamp());
+        conversationUpdate.put("participants", Arrays.asList(userId, receiverId));
+
+        db.collection("conversations").document(conversationId)
+                .set(conversationUpdate, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> {
+                    db.collection("conversations").document(conversationId)
+                            .collection("messages")
+                            .add(message);
+                });
+    }
+
+    public void getMessages(String conversationId, OnMessagesListener listener) {
+        db.collection("conversations")
+                .document(conversationId)
+                .collection("messages")
+                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) return;
+
+                    List<Message> messages = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : value) {
+                        messages.add(new Message(
+                                doc.getString("text"),
+                                doc.getString("senderId"),
+                                doc.getDate("timestamp")
+                        ));
+                    }
+                    listener.onMessagesReceived(messages);
+                });
+    }
+
+    // FirestoreManager.java
+    public void getConversations(OnConversationsListener listener) {
+        db.collection("conversations")
+                .whereArrayContains("participants", userId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Conversation> conversations = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        Conversation conv = new Conversation();
+                        conv.setId(doc.getId());
+                        conv.setParticipants((List<String>) doc.get("participants"));
+                        conv.setLastMessage(doc.getString("lastMessage"));
+                        conv.setTimestamp(doc.getDate("timestamp"));
+                        conversations.add(conv);
+                    }
+                    listener.onSuccess(conversations);
+                })
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+    }
+
+
 }

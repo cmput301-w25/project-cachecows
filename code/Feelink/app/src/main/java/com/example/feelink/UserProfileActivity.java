@@ -114,6 +114,9 @@ public class UserProfileActivity extends AppCompatActivity {
 
         navChats.setOnClickListener(v -> startActivity(new Intent(this, NotificationsActivity.class)));
 
+        findViewById(R.id.followersLayout).setOnClickListener(v -> openFollowList("followers"));
+        findViewById(R.id.followingLayout).setOnClickListener(v -> openFollowList("following"));
+
 
         // Set up RecyclerView
         moodEventsList = new ArrayList<>();
@@ -129,6 +132,8 @@ public class UserProfileActivity extends AppCompatActivity {
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         firestoreManager = new FirestoreManager(currentUserId);
         mAuth = FirebaseAuth.getInstance();
+
+
 
         ImageButton settingsButton = findViewById(R.id.settingsButton);
         if (settingsButton != null) {
@@ -169,6 +174,13 @@ public class UserProfileActivity extends AppCompatActivity {
         fetchUserData(currentUserId);
         fetchTotalMoodEvents(currentUserId);
         fetchUserMoodEvents(currentUserId);
+    }
+
+    private void openFollowList(String type) {
+        Intent intent = new Intent(this, FollowListActivity.class);
+        intent.putExtra("userId", currentUserId);
+        intent.putExtra("type", type);
+        startActivity(intent);
     }
 
 

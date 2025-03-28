@@ -1,6 +1,7 @@
 package com.example.feelink;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -27,7 +28,7 @@ public class OtherUserProfileActivity extends AppCompatActivity {
     private static final String TAG = "OtherUserProfileActivity";
     private ImageView profileImageView;
     private TextView usernameTextView, bioTextView, followerCountTextView, followingCountTextView;
-    private Button followButton;
+    private Button followButton, messageButton;
     private String currentUserId, profileUserId;
     private TextView moodPostsTextView;
 
@@ -86,6 +87,12 @@ public class OtherUserProfileActivity extends AppCompatActivity {
 
         // Set follow button click listener
         followButton.setOnClickListener(v -> toggleFollow());
+        messageButton = findViewById(R.id.btnMessage);
+        messageButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("OTHER_USER_ID", profileUserId);
+            startActivity(intent);
+        });
     }
     private void fetchTotalMoodEvents(String userId) {
         FirestoreManager firestoreManager = new FirestoreManager(userId);

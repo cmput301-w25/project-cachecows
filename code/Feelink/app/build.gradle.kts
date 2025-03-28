@@ -50,6 +50,8 @@ dependencies {
     implementation(libs.recyclerview)
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation(libs.work.runtime)
+    implementation ("com.google.firebase:firebase-messaging:23.1.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.3")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     testImplementation(libs.junit)
