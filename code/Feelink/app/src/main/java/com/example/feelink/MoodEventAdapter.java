@@ -266,7 +266,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     private void showDeleteConfirmationDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Delete Mood?");
-        builder.setMessage("By Deleting this post, you won’t be able to access it.?");
+        builder.setMessage("By Deleting this post, you won't be able to access it.?");
         builder.setPositiveButton("Yes, Delete", (dialog, which) -> {
             // User confirmed, delete the mood event
             deleteMoodEvent(moodEvent);
@@ -406,7 +406,15 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             tvLocation.setText("None");
         }
 
-
+        // Add location name display
+        String locationName = moodEvent.getLocationName();
+        if (locationName != null && !locationName.isEmpty()) {
+            TextView tvLocationName = dialogView.findViewById(R.id.tvLocationName);
+            if (tvLocationName != null) {
+                tvLocationName.setText(locationName);
+                tvLocationName.setVisibility(View.VISIBLE);
+            }
+        }
 
         // Set the content/reason
         tvContent.setText(moodEvent.getReason());

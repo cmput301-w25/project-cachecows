@@ -61,12 +61,13 @@
             android:exported="false" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="ADD_KEY_HERE"/>
+            android:value="AIzaSyDJTEdK53CkAlOXLDt1nmJEmZeJcX5zvW4"/>
 
         <activity
             android:name=".ChatActivity"
             android:windowSoftInputMode="adjustResize|stateHidden" />
 
+        <activity android:name=".MoodMapActivity" />
 
     </application>
 
