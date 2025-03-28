@@ -316,9 +316,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
      * @param text Input to validate
      */
     private void validateReasonField(String text) {
-        // Show error if either limit is exceeded
         if (ValidationUtils.isReasonNotValid(text)) {
-            etReason.setError("Reason must be limited to 20 characters or 3 words");
+            etReason.setError("Reason must be limited to 200 characters");
             btnAddMood.setEnabled(false);
         } else {
             etReason.setError(null);
@@ -443,6 +442,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         });
     }
 
+    // In validateInputs method
     private boolean validateInputs(View v) {
         if (selectedMood == null) {
             Snackbar.make(v, "Please select a mood", Snackbar.LENGTH_SHORT).show();
@@ -450,8 +450,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
         }
 
         String reason = etReason.getText().toString().trim();
-        if (reason.length() > 20 || (!reason.isEmpty() && reason.split("\\s+").length > 3)) {
-            etReason.setError("Reason must be limited to 20 characters or 3 words");
+        if (reason.length() > 200) {
+            etReason.setError("Reason must be limited to 200 characters");
             btnAddMood.setEnabled(true);
             return false;
         }
