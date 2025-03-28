@@ -101,7 +101,7 @@
         android:padding="8dp"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/searchHeader"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintBottom_toTopOf="@id/layoutBottomNav"/>
 
     <!-- No Results Message -->
     <TextView

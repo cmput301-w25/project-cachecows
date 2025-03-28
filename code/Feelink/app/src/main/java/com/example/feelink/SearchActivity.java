@@ -50,7 +50,7 @@ public class SearchActivity extends AppCompatActivity {
         adapter = new UserAdapter(searchResults, this);
         searchResultsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         searchResultsRecyclerView.setAdapter(adapter);
-        ImageView navHome = findViewById(R.id.navMap);
+        ImageView navHome = findViewById(R.id.navHome);
         ImageView navChats = findViewById(R.id.navChats);
         ImageView navProfile = findViewById(R.id.navProfile);
 

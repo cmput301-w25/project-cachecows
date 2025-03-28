@@ -83,7 +83,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
         // Inside UserProfileActivity's onCreate() after initializing views
         ImageView navSearch = findViewById(R.id.navSearch);
-        ImageView navHome = findViewById(R.id.navMap);
+        ImageView navHome = findViewById(R.id.navHome);
         ImageView navChats = findViewById(R.id.navChats);
         ImageView navMap = findViewById(R.id.navMap);
         TextView tvOfflineIndicator = findViewById(R.id.tvOfflineIndicator);

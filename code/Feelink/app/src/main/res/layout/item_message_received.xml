@@ -13,17 +13,21 @@
         android:background="@drawable/message_bg_received"
         android:padding="12dp"
         android:textColor="@android:color/black"
+        android:fontFamily="@font/poppins_regular"
+        android:textSize="15sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginRight="80dp"
         tools:text="Sample received message"/>
 
     <TextView
         android:id="@+id/tvTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:layout_goneMarginTop="2dp"
         android:textSize="10sp"
         android:layout_marginTop="4dp"
-        android:textColor="@color/black"
+        android:textColor="@android:color/darker_gray"
         app:layout_constraintStart_toStartOf="@id/tvMessage"
         app:layout_constraintTop_toBottomOf="@id/tvMessage"
         tools:text="10:30 AM"/>
