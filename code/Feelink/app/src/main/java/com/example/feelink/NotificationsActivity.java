@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.feelink.NotificationAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -47,7 +46,7 @@ public class NotificationsActivity extends AppCompatActivity {
 
         // Inside NotificationsActivity's onCreate() after initializing views
         ImageView navSearch = findViewById(R.id.navSearch);
-        ImageView navHome = findViewById(R.id.navHome);
+        ImageView navHome = findViewById(R.id.navMap);
         ImageView navProfile = findViewById(R.id.navProfile);
 
         navSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
