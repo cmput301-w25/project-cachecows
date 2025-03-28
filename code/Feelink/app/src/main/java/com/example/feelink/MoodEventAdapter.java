@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -26,11 +28,13 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -58,6 +62,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     private Context context;
 
     private boolean isMyMoodSection = false;
+    private boolean isPublicFeed = false;
+
 
     // Map mood types to emoji icons
     // Map mood types to drawable resources (matching add_mood_event.xml)
@@ -112,6 +118,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     public MoodEventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_mood_event, parent, false);
+
+
         return new MoodEventViewHolder(view);
     }
 
@@ -120,7 +128,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
      * <p>Handles:
      * <ul>
      *   <li>Color theming based on emotional state</li>
-     *   <li>Reason/trigger text display</li>
      *   <li>Image loading with Glide</li>
      *   <li>Edit/delete button visibility</li>
      * </ul>
@@ -161,16 +168,23 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             // Handle like action
         });
 
+        // Modify the comment button click listener in onBindViewHolder
         holder.btnComment.setOnClickListener(v -> {
-            // Handle comment action
+            Intent intent = new Intent(context, CommentsActivity.class);
+            intent.putExtra("MOOD_EVENT_ID", moodEvent.getDocumentId());
+            intent.putExtra("MOOD_EVENT_OWNER_ID", moodEvent.getUserId()); // Add this line
+            context.startActivity(intent);
         });
-        holder.btnExpand.setOnClickListener(v -> {
-            showDetailsDialog(moodEvent);
-        });
+        holder.cardView.setOnClickListener(v -> showDetailsDialog(moodEvent));
+
         // Handle delete button click
         holder.btnDelete.setOnClickListener(v -> {
             showDeleteConfirmationDialog(moodEvent);
         });
+
+        int socialVisibility = isPublicFeed ? View.GONE : View.VISIBLE;
+        holder.btnLike.setVisibility(socialVisibility);
+        holder.btnComment.setVisibility(socialVisibility);
 
         if (isMyMoodSection) {
             holder.btnEdit.setVisibility(View.VISIBLE);
@@ -189,9 +203,9 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             intent.putExtra("DOCUMENT_ID", moodEvent.getDocumentId());
             intent.putExtra("EMOTIONAL_STATE", moodEvent.getEmotionalState());
             intent.putExtra("REASON", moodEvent.getReason());
-            intent.putExtra("TRIGGER", moodEvent.getTrigger());
             intent.putExtra("SOCIAL_SITUATION", moodEvent.getSocialSituation());
             intent.putExtra("IMAGE_URL", moodEvent.getImageUrl());
+            intent.putExtra("IS_PUBLIC", moodEvent.isPublic());
             intent.putExtra("LOCATION_NAME", moodEvent.getLocationName());
             intent.putExtra("LATITUDE", moodEvent.getLatitude());
             intent.putExtra("LONGITUDE", moodEvent.getLongitude());
@@ -199,7 +213,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         });
 
         String imageUrl = moodEvent.getImageUrl();
-        if (imageUrl != null && !imageUrl.isEmpty()){
+        if (imageUrl != null && !imageUrl.isEmpty()) {
             holder.photoContainer.setVisibility(View.VISIBLE);
             holder.moodPostedImage.setVisibility(View.VISIBLE);
             holder.tvPhotoPlaceholder.setVisibility(View.GONE);
@@ -209,8 +223,33 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
                     .fitCenter()
                     .into(holder.moodPostedImage);
         } else {
-            //No image
-            holder.photoContainer.setVisibility(View.GONE);
+            String localPath = moodEvent.getTempLocalImagePath();
+            if (localPath != null && !localPath.isEmpty()) {
+                holder.photoContainer.setVisibility(View.VISIBLE);
+                holder.moodPostedImage.setVisibility(View.VISIBLE);
+                holder.tvPhotoPlaceholder.setVisibility(View.GONE);
+
+                Glide.with(context)
+                        .load(new File(localPath))
+                        .fitCenter()
+                        .into(holder.moodPostedImage);
+            } else {
+                //No image
+                holder.photoContainer.setVisibility(View.GONE);
+            }
+        }
+
+
+        PendingSyncManager pendingSyncManager = new PendingSyncManager(context);
+        if (pendingSyncManager.getPendingIds().contains(moodEvent.getDocumentId())) {
+            holder.lottieSync.setVisibility(View.VISIBLE);
+            holder.lottieSync.setAnimation("loading2.json");
+            if (!holder.lottieSync.isAnimating()) {
+                holder.lottieSync.playAnimation();
+            }
+        } else {
+            holder.lottieSync.cancelAnimation();
+            holder.lottieSync.setVisibility(View.GONE);
         }
     }
 
@@ -245,21 +284,35 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
      */
     private void deleteMoodEvent(MoodEvent moodEvent) {
         FirestoreManager firestoreManager = new FirestoreManager(moodEvent.getUserId());
-        firestoreManager.deleteMoodEvent(moodEvent.getId(), new FirestoreManager.OnDeleteListener() {
-            @Override
-            public void onSuccess() {
-                // Remove the mood event from the list and notify the adapter
-                moodEvents.remove(moodEvent);
-                notifyDataSetChanged();
-                Toast.makeText(context, "Mood event deleted successfully", Toast.LENGTH_SHORT).show();
-            }
 
-            @Override
-            public void onFailure(String errorMessage) {
-                Toast.makeText(context, "Failed to delete mood event: " + errorMessage, Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (!ConnectivityReceiver.isNetworkAvailable(context)) {
+            // Offline: update UI immediately.
+            moodEvents.remove(moodEvent);
+            notifyDataSetChanged();
+            Toast.makeText(context, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
 
+            // Still call delete so Firestore queues it for when connectivity returns.
+            firestoreManager.deleteMoodEvent(moodEvent.getId(), new FirestoreManager.OnDeleteListener() {
+                @Override
+                public void onSuccess() {}
+                @Override
+                public void onFailure(String errorMessage) {}
+            });
+        } else {
+            // Online
+            firestoreManager.deleteMoodEvent(moodEvent.getId(), new FirestoreManager.OnDeleteListener() {
+                @Override
+                public void onSuccess() {
+                    moodEvents.remove(moodEvent);
+                    notifyDataSetChanged();
+                    Toast.makeText(context, "Mood event deleted successfully", Toast.LENGTH_SHORT).show();
+                }
+                @Override
+                public void onFailure(String errorMessage) {
+                    Toast.makeText(context, "Failed to delete mood event: " + errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     /**
@@ -278,7 +331,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         TextView tvTimestamp = dialogView.findViewById(R.id.tvTimestamp);
         TextView tvUsername = dialogView.findViewById(R.id.tvUsername); // New username TextView
         TextView tvLocation = dialogView.findViewById(R.id.tvLocation);
-        TextView tvTrigger = dialogView.findViewById(R.id.tvTrigger);
         TextView tvContent = dialogView.findViewById(R.id.tvContent);
         ImageView ivMoodIcon = dialogView.findViewById(R.id.ivMoodIcon);
         ImageView ivProfilePic = dialogView.findViewById(R.id.ivProfilePic);
@@ -354,12 +406,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             tvLocation.setText("None");
         }
 
-        // Set trigger (if available)
-        if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
-            tvTrigger.setText(moodEvent.getTrigger());
-        } else {
-            tvTrigger.setText("None");
-        }
+
 
         // Set the content/reason
         tvContent.setText(moodEvent.getReason());
@@ -410,6 +457,23 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         this.moodEvents = moodEvents;
         notifyDataSetChanged();
     }
+    public int findPositionById(String documentId) {
+        if (moodEvents == null) return -1;
+        for (int i = 0; i < moodEvents.size(); i++) {
+            if (moodEvents.get(i).getDocumentId().equals(documentId)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public boolean isPublicFeed() {
+        return isPublicFeed;
+    }
+
+    public void setPublicFeed(boolean isPublicFeed) {
+        this.isPublicFeed = isPublicFeed;
+    }
 
     /**
      * ViewHolder implementation for mood event items
@@ -428,9 +492,10 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         View btnLike;
         View btnComment;
         CardView cardView;
-        View btnExpand;
 
         ImageButton btnEdit, btnDelete;
+
+        LottieAnimationView lottieSync; // UI element for offline behavior
 
         /**
          * Initializes view references and click handlers
@@ -445,14 +510,14 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             btnLike = itemView.findViewById(R.id.btnLike);
             btnComment = itemView.findViewById(R.id.btnComment);
             cardView = itemView.findViewById(R.id.cardView);
-            btnExpand = itemView.findViewById(R.id.btnExpand);
+
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
             photoContainer = itemView.findViewById(R.id.photoContainer);
             moodPostedImage = itemView.findViewById(R.id.moodImage);
             tvPhotoPlaceholder = itemView.findViewById(R.id.tvPhotoPlaceholder);
+            lottieSync = itemView.findViewById(R.id.lottieSync);
         }
     }
-
 
 }

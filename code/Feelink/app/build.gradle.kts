@@ -49,6 +49,9 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.recyclerview)
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation(libs.work.runtime)
+    implementation ("com.google.firebase:firebase-messaging:23.1.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.3")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     testImplementation(libs.junit)
@@ -69,4 +72,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.1.0")
     implementation("com.google.maps.android:android-maps-utils:2.3.0")
+    implementation ("com.google.code.gson:gson:2.12.1")
+    implementation("com.google.guava:guava:32.1.3-android")
+    implementation("com.airbnb.android:lottie:6.6.3")
 }

@@ -1,17 +1,23 @@
 package com.example.feelink;
 
-import static android.content.ContentValues.TAG;
 
+
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.ColorStateList;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
+import androidx.appcompat.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +33,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 
 /**
@@ -54,7 +61,7 @@ import java.util.List;
 public class FeedManagerActivity extends AppCompatActivity {
     private Button btnTheirMood, btnMyMood;
     private ImageButton btnFilter;
-    private TextView tvShareInfo, tvEmptyState;
+    private TextView tvShareInfo, tvEmptyState, tvOfflineIndicator;
     private RecyclerView recyclerMoodEvents;
     private FloatingActionButton fabAddMood;
     private FirebaseAuth mAuth;
@@ -64,6 +71,13 @@ public class FeedManagerActivity extends AppCompatActivity {
 
     static boolean SKIP_AUTH_FOR_TESTING = false;
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
+    private ConnectivityReceiver connectivityReceiver;
+    private boolean showThreeMostRecent = false;
+    private boolean filterByWeek = false;
+    private String selectedEmotion = null;
+    private String searchReasonQuery = null;
+    private SearchView searchView;
+
 
     /**
      * Initializes feed UI and authentication checks
@@ -106,6 +120,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         initializeViews();
         setupListeners();
         setupRecyclerView();
+        updateTabSelection(false);
 
         // Default to "Their Mood" tab
         loadTheirMoodEvents();
@@ -113,12 +128,61 @@ public class FeedManagerActivity extends AppCompatActivity {
         // Initialize navigation buttons
         ImageView navSearch = findViewById(R.id.navSearch);
         ImageView navProfile = findViewById(R.id.navProfile);
+        ImageView navChats = findViewById(R.id.navChats);
+        navChats.setOnClickListener(v -> navigateToNotifications());
+
+        // Find navChats view
+
 
         // Set click listener for Search navigation
         navSearch.setOnClickListener(v -> navigateToSearch());
 
         // Set click listener for Profile navigation (existing code)
         navProfile.setOnClickListener(v -> navigateToProfile());
+
+        // Check initial network state
+        boolean isConnected = ConnectivityReceiver.isNetworkAvailable(this);
+        if (!isConnected) {
+            tvOfflineIndicator.setVisibility(View.VISIBLE);
+        } else {
+            tvOfflineIndicator.setVisibility(View.GONE);
+        }
+
+        // Register ConnectivityReceiver
+        IntentFilter intentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        connectivityReceiver = new ConnectivityReceiver(new ConnectivityReceiver.ConnectivityReceiverListener() {
+            @Override
+            public void onNetworkConnectionChanged(boolean isConnected) {
+                if (isConnected) {
+                    //Hide the offline indicator, "Back Online" will not show up until the first occurrence of offline indicator
+                    //since we require network to authenticate in the first place
+                    tvOfflineIndicator.setText(R.string.back_online);
+                    tvOfflineIndicator.setBackgroundColor(getResources().getColor(R.color.online_indicator_background));
+                    new android.os.Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // reset text/background for next offline stater
+                            tvOfflineIndicator.setText(R.string.you_are_currently_offline);
+                            tvOfflineIndicator.setBackgroundColor(getResources().getColor(R.color.offline_indicator_background));
+                            tvOfflineIndicator.setVisibility(View.GONE);
+                        }
+                    }, 3000); // 3 sec
+
+                    // Refresh the adapter to update the UI
+                    if (isShowingMyMood) {
+                        loadMyMoodEvents();
+                    } else {
+                        loadTheirMoodEvents();
+                    }
+                } else {
+                    //Show the offline indicator
+                    tvOfflineIndicator.setText(R.string.you_are_currently_offline);
+                    tvOfflineIndicator.setBackgroundColor(getResources().getColor(R.color.offline_indicator_background)); // Use the original background color
+                    tvOfflineIndicator.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+        registerReceiver(connectivityReceiver, intentFilter);
 
     }
 
@@ -144,6 +208,17 @@ public class FeedManagerActivity extends AppCompatActivity {
     }
 
     /**
+     * Unregisters ConnectivityReceiver on activity destroy
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (connectivityReceiver != null) {
+            unregisterReceiver(connectivityReceiver);
+        }
+    }
+
+    /**
      * Binds view references from layout XML
      *
      * <p>Initializes:
@@ -155,12 +230,14 @@ public class FeedManagerActivity extends AppCompatActivity {
      * </ul>
      */
     private void initializeViews() {
-        btnTheirMood = findViewById(R.id.btnTheirMood);
-        btnMyMood = findViewById(R.id.btnMyMood);
+        btnTheirMood = findViewById(R.id.btnAllMoods);
+        btnMyMood = findViewById(R.id.btnFollowingMoods);
         btnFilter = findViewById(R.id.btnFilter);
-        tvShareInfo = findViewById(R.id.tvShareInfo);
+        searchView = findViewById(R.id.searchView);;
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
         fabAddMood = findViewById(R.id.fabAddMood);
+        tvOfflineIndicator = findViewById(R.id.tvOfflineIndicator);
+        findViewById(R.id.btnChat).setOnClickListener(v -> navigateToConversationsList());
     }
 
     /**
@@ -187,7 +264,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         btnFilter.setOnClickListener(v -> {
             // Implement filter functionality
             // This could show a dialog with filter options
-            showFilterOptions();
+            showFilterMenu();
         });
 
         fabAddMood.setOnClickListener(v -> {
@@ -197,6 +274,10 @@ public class FeedManagerActivity extends AppCompatActivity {
                 handleUnauthorizedAccess();
             }
         });
+    }
+
+    private void navigateToConversationsList() {
+        startActivity(new Intent(FeedManagerActivity.this, ConversationsListActivity.class));
     }
 
     /**
@@ -231,6 +312,15 @@ public class FeedManagerActivity extends AppCompatActivity {
         isShowingMyMood = showMyMood;
         adapter.setMyMoodSection(showMyMood);
         // Get color state lists for selected and unselected states
+
+        // Add search view visibility control
+        if (!showMyMood) { // When switching to "All Moods"
+            searchView.setVisibility(View.GONE);
+            searchView.setQuery("", false); // Clear search text
+            searchReasonQuery = null; // Reset filter
+        }
+
+        btnFilter.setVisibility(showMyMood ? View.VISIBLE : View.GONE);
         ColorStateList selectedColor = ColorStateList.valueOf(getResources().getColor(R.color.selected_tab_color)); // Replace with your selected color
         ColorStateList unselectedColor = ColorStateList.valueOf(getResources().getColor(R.color.unselected_tab_color)); // Replace with your unselected color
 
@@ -268,28 +358,107 @@ public class FeedManagerActivity extends AppCompatActivity {
      * </ol>
      */
     private void loadMyMoodEvents() {
-        firestoreManager.getMoodEvents(new FirestoreManager.OnMoodEventsListener() {
+        adapter.setMyMoodSection(false);
+        adapter.setPublicFeed(false);
+        firestoreManager.getFollowedUserIds(new FirestoreManager.OnFollowedUserIdsListener() {
             @Override
-            public void onSuccess(List<MoodEvent> moodEvents) {
-                Log.d("FeedManagerActivity", "Fetched mood events: " + moodEvents.size());
-                adapter.updateMoodEvents(moodEvents);
-                checkEmptyState(moodEvents);
+            public void onSuccess(List<String> followedUserIds) {
+                Log.d("FeedManager", "Retrieved followed user IDs: " + followedUserIds.size());
+                adapter.setMyMoodSection(false);
+
+                firestoreManager.getFollowedUsersMoodEvents(followedUserIds, filterByWeek, selectedEmotion,
+                        new FirestoreManager.OnMoodEventsListener() {
+                            @Override
+                            public void onSuccess(List<MoodEvent> moodEvents) {
+                                Log.d("FeedManager", "Initial followed moods count: " + moodEvents.size());
+
+                                // Apply client-side filters
+                                if (searchReasonQuery != null && !searchReasonQuery.isEmpty()) {
+                                    Log.d("FeedManager", "Applying reason filter: " + searchReasonQuery);
+                                    moodEvents = filterByReason(moodEvents, searchReasonQuery);
+                                    Log.d("FeedManager", "Post-reason filter count: " + moodEvents.size());
+                                }
+
+                                // Apply 3 most recent if needed
+                                if (showThreeMostRecent) {
+                                    int originalSize = moodEvents.size();
+                                    moodEvents = moodEvents.size() > 3 ?
+                                            moodEvents.subList(0, 3) : moodEvents;
+                                    Log.d("FeedManager", "Showing " + moodEvents.size() +
+                                            "/" + originalSize + " recent moods");
+                                }
+
+                                adapter.updateMoodEvents(moodEvents);
+                                checkEmptyState(moodEvents);
+                                Log.d("FeedManager", "Final displayed moods: " + moodEvents.size());
+                            }
+
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                Log.e("FeedManager", "Error getting followed moods: " + errorMessage);
+                                adapter.updateMoodEvents(new ArrayList<>());
+                                checkEmptyState(new ArrayList<>());
+                                Toast.makeText(FeedManagerActivity.this,
+                                        "Failed to load moods",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
             }
 
             @Override
             public void onFailure(String errorMessage) {
-                // Handle error
-                Log.e("FeedManagerActivity", "Failed to fetch mood events: " + errorMessage);
+                Log.e("FeedManager", "Error getting followed user IDs: " + errorMessage);
                 adapter.updateMoodEvents(new ArrayList<>());
                 checkEmptyState(new ArrayList<>());
+                Toast.makeText(FeedManagerActivity.this,
+                        "Failed to load followed users",
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void loadTheirMoodEvents() {
-        // This would need to be implemented in FirestoreManager to get other users' moods
-        // For now, we'll use a placeholder method that could be added to FirestoreManager
+        adapter.setMyMoodSection(false);
+        adapter.setPublicFeed(true);
         loadSharedMoodEvents();
+    }
+
+
+    // Add this method to map menu IDs to emotion strings
+    private String getEmotionFromId(int id) {
+        if (id == R.id.filter_happy) return "Happy";
+        if (id == R.id.filter_fear) return "Fear";
+        if (id == R.id.filter_shame) return "Shame";
+        if (id == R.id.filter_sad) return "Sad";
+        if (id == R.id.filter_angry) return "Angry";
+        if (id == R.id.filter_surprised) return "Surprised";
+        if (id == R.id.filter_confused) return "Confused";
+        if (id == R.id.filter_disgusted) return "Disgusted";
+        return null;
+    }
+
+    // Add this method to filter by reason text
+    private List<MoodEvent> filterByReason(List<MoodEvent> events, String query) {
+        List<MoodEvent> filtered = new ArrayList<>();
+        String lowerQuery = query.toLowerCase();
+
+        String[] searchTerms = lowerQuery.split("\\s+");
+
+        for (MoodEvent event : events) {
+            if (event.getReason() != null) {
+                String reason = event.getReason().toLowerCase();
+
+                // Check if any search term appears as whole word
+                for (String term : searchTerms) {
+                    if (!term.isEmpty() &&
+                            reason.matches(".*\\b" + Pattern.quote(term) + "\\b.*")) {
+                        filtered.add(event);
+                        break; // Add once if any term matches
+                    }
+                }
+            }
+        }
+        return filtered;
     }
 
     /**
@@ -322,13 +491,109 @@ public class FeedManagerActivity extends AppCompatActivity {
     }
 
     private void checkEmptyState(List<MoodEvent> moodEvents) {
-        // Todo: Implement empty state handling
+        if (tvEmptyState == null) return;
+
+        if (moodEvents.isEmpty()) {
+            tvEmptyState.setVisibility(View.VISIBLE);
+            tvEmptyState.setText(isShowingMyMood ?
+                    "No public moods from people you follow" :
+                    "No shared moods available");
+        } else {
+            tvEmptyState.setVisibility(View.GONE);
+        }
     }
 
-    private void showFilterOptions() {
-        // Todo: Implement filter options dialog
+    // Modified showFilterMenu
+    private void showFilterMenu() {
+        PopupMenu popup = new PopupMenu(this, findViewById(R.id.btnFilter));
+        popup.getMenuInflater().inflate(R.menu.feed_filter_menu, popup.getMenu());
+
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+
+            // Handle all filters
+            if (id == R.id.filter_three_recent) {
+                showThreeMostRecent = true;
+                filterByWeek = false;
+                selectedEmotion = null;
+                searchReasonQuery = null;
+                searchView.setVisibility(View.GONE);
+            } else if (id == R.id.filter_week) {
+                showThreeMostRecent = false;
+                filterByWeek = true;
+                selectedEmotion = null;
+                searchReasonQuery = null;
+                searchView.setVisibility(View.GONE);
+            } else if (id == R.id.filter_all) {
+                showThreeMostRecent = false;
+                filterByWeek = false;
+                selectedEmotion = null;
+                searchReasonQuery = null;
+                searchView.setVisibility(View.GONE);
+            } else if (id == R.id.filter_search_reason) {
+                showThreeMostRecent = false;
+                filterByWeek = false;
+                selectedEmotion = null;
+                searchView.setVisibility(View.VISIBLE);
+                searchView.setQuery("", false);
+                searchView.requestFocus();
+
+                // Set up search listener
+                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        searchReasonQuery = newText.trim();
+                        loadCurrentFeed();
+                        return false;
+                    }
+                });
+            } else {
+                // Emotion filters
+                showThreeMostRecent = false;
+                filterByWeek = false;
+                selectedEmotion = getEmotionFromId(id);
+                searchReasonQuery = null;
+                searchView.setVisibility(View.GONE);
+            }
+
+            loadCurrentFeed();
+            return true;
+        });
+        popup.show();
+    }
+    private void loadCurrentFeed() {
+        if (isShowingMyMood) {
+            loadMyMoodEvents();
+        } else {
+            loadSharedMoodEvents();
+        }
     }
 
+//    private void handleSearchReason() {
+//        SearchView searchView = new SearchView(this);
+//        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+//                .setTitle("Search by Exact Words")
+//                .setView(searchView)
+//                .setPositiveButton("Search", (dialog, which) -> {
+//                    // Clear other filters when searching
+//                    searchReasonQuery = searchView.getQuery().toString().trim();
+//                    showThreeMostRecent = false;
+//                    filterByWeek = false;
+//                    selectedEmotion = null;
+//                    loadMyMoodEvents();
+//                })
+//                .setNegativeButton("Cancel", (dialog, which) -> {
+//                    searchReasonQuery = null;
+//                    loadMyMoodEvents();
+//                });
+//
+//        builder.show();
+//    }
     /**
      * Navigates to AddMoodEventActivity
      *
@@ -365,5 +630,9 @@ public class FeedManagerActivity extends AppCompatActivity {
         Intent intent = new Intent(FeedManagerActivity.this, SearchActivity.class);
         startActivity(intent);
     }
+    private void navigateToNotifications(){
+        startActivity(new Intent(FeedManagerActivity.this, NotificationsActivity.class));
+    }
+
 
 }

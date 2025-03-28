@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Time Filters -->
+    <item
+        android:id="@+id/filter_week"
+        android:title="Last 7 Days" />
+
+    <item
+        android:id="@+id/filter_search_reason"
+        android:title="Search by Reason" />
+
+    <!-- Emotional State Filters -->
+    <item android:title="Emotional States">
+        <menu>
+            <item
+                android:id="@+id/filter_happy"
+                android:title="Happy" />
+            <item
+                android:id="@+id/filter_fear"
+                android:title="Fear" />
+            <item
+                android:id="@+id/filter_shame"
+                android:title="Shame" />
+            <item
+                android:id="@+id/filter_sad"
+                android:title="Sad" />
+            <item
+                android:id="@+id/filter_angry"
+                android:title="Angry" />
+            <item
+                android:id="@+id/filter_surprised"
+                android:title="Surprised" />
+            <item
+                android:id="@+id/filter_confused"
+                android:title="Confused" />
+            <item
+                android:id="@+id/filter_disgusted"
+                android:title="Disgusted" />
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/filter_all"
+        android:title="Show All Time" />
+</menu>

@@ -20,15 +20,17 @@ public class MoodEvent {
     private long id;
     private Date timestamp;
     private String emotionalState;
-    private String trigger;
     private String socialSituation;
     private String documentId;
     private String reason;
     private String userId;  // Added to support authentication later
     private String imageUrl;
+    private boolean isPublic = true; // Default to public
     private Double latitude;  // Location latitude
     private Double longitude; // Location longitude
     private String locationName; // Optional location name/address
+    private String tempLocalImagePath;
+    private boolean isPendingSync;
 
     /**
      * Default constructor initializes required temporal fields
@@ -53,41 +55,27 @@ public class MoodEvent {
         this.emotionalState = emotionalState;
     }
 
-    /**
-     * Extended constructor for basic mood tracking
-     * @param emotionalState Validated emotional state
-     * @param trigger User-provided trigger context
-     */
-    public MoodEvent(String emotionalState, String trigger) {
-        this();
-        this.emotionalState = emotionalState;
-        this.trigger = trigger;
-    }
 
     /**
      * Full social context constructor
      * @param emotionalState Selected emotional state
-     * @param trigger Trigger description
      * @param socialSituation Social situation category
      */
-    public MoodEvent(String emotionalState, String trigger, String socialSituation) {
+    public MoodEvent(String emotionalState, String socialSituation) {
         this();
         this.emotionalState = emotionalState;
-        this.trigger = trigger;
         this.socialSituation = socialSituation;
     }
 
     /**
      * Complete event constructor with all user-facing fields
      * @param emotionalState Validated emotional state
-     * @param trigger Trigger context (max 100 chars)
      * @param socialSituation Selected social situation
      * @param reason Mood reason (max 20 chars/3 words)
      */
-    public MoodEvent(String emotionalState, String trigger, String socialSituation, String reason) {
+    public MoodEvent(String emotionalState, String socialSituation, String reason) {
         this();
         this.emotionalState = emotionalState;
-        this.trigger = trigger;
         this.socialSituation = socialSituation;
         this.reason = reason;
     }
@@ -148,19 +136,7 @@ public class MoodEvent {
         this.emotionalState = emotionalState;
     }
 
-    /**
-     * @return User-provided trigger context (max 100 chars)
-     */
-    public String getTrigger() {
-        return trigger;
-    }
 
-    /**
-     * @param trigger Trigger description text
-     */
-    public void setTrigger(String trigger) {
-        this.trigger = trigger;
-    }
 
     /**
      * @return Social situation category from predefined options
@@ -258,5 +234,29 @@ public class MoodEvent {
      */
     public void setDocumentId(String documentId) {
         this.documentId = documentId;
+    }
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+
+    public void setTempLocalImagePath(String path) {
+        this.tempLocalImagePath = path;
+    }
+    public String getTempLocalImagePath() {
+        return tempLocalImagePath;
+    }
+
+    public boolean isPendingSync() {
+        return isPendingSync;
+    }
+
+    public void setPendingSync(boolean pendingSync) {
+        isPendingSync = pendingSync;
     }
 }

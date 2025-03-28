@@ -50,6 +50,24 @@ public class SearchActivity extends AppCompatActivity {
         adapter = new UserAdapter(searchResults, this);
         searchResultsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         searchResultsRecyclerView.setAdapter(adapter);
+        ImageView navHome = findViewById(R.id.navHome);
+        ImageView navChats = findViewById(R.id.navChats);
+        ImageView navProfile = findViewById(R.id.navProfile);
+
+        navHome.setOnClickListener(v -> {
+            startActivity(new Intent(this, FeedManagerActivity.class));
+            finish();
+        });
+
+        navChats.setOnClickListener(v -> {
+            startActivity(new Intent(this, NotificationsActivity.class));
+            finish();
+        });
+
+        navProfile.setOnClickListener(v -> {
+            startActivity(new Intent(this, UserProfileActivity.class));
+            finish();
+        });
 
         // Set up back button
         backButton.setOnClickListener(v -> finish());

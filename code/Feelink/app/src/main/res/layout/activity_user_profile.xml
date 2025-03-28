@@ -7,18 +7,34 @@
     android:layout_height="match_parent"
     android:background="#E0F0F0">
 
+    <TextView
+        android:id="@+id/tvOfflineIndicator"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="You are currently offline"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:background="@color/offline_indicator_background"
+        android:textColor="@android:color/black"
+        android:fontFamily="@font/poppins_regular"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="?attr/actionBarSize"/>
+    />
+
     <!-- Nested Scroll Container -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvOfflineIndicator"
         app:layout_constraintBottom_toTopOf="@+id/layoutBottomNav">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
 
             <!-- Profile Section -->
             <LinearLayout
@@ -30,6 +46,7 @@
 
                 <!-- Decorative Elements -->
                 <FrameLayout
+                    android:id="@+id/setting_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp">
@@ -47,19 +64,36 @@
                             android:rotation="45" />
                     </LinearLayout>
 
-                    <ImageButton
-                        android:id="@+id/settingsButton"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:layout_gravity="end"
-                        android:src="@drawable/ic_settings_button"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="Settings"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:layout_margin="10dp"/>
+                        android:orientation="horizontal"
+                        android:padding="4dp"
+                        android:layout_marginTop="16dp">
+
+                        <!-- Filter Button -->
+                        <ImageButton
+                            android:id="@+id/filterButton"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_filter"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Filter"
+                            android:elevation="2dp"
+                            app:tint="#5A4A7E" />
+
+                        <!-- Settings Button -->
+                        <ImageButton
+                            android:id="@+id/settingsButton"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="8dp"
+                            android:src="@drawable/ic_settings_button"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Settings"
+                            app:tint="#5A4A7E" />
+                    </LinearLayout>
                 </FrameLayout>
 
                 <!-- Profile Picture and Username -->
@@ -125,6 +159,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/followersLayout"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -135,7 +170,7 @@
                             android:id="@id/followerCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="12"
+                            android:text="0"
                             android:textColor="#5A4A7E"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -149,6 +184,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/followingLayout"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -159,7 +195,7 @@
                             android:id="@id/followingCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="200"
+                            android:text="0"
                             android:textColor="#5A4A7E"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -184,22 +220,54 @@
                     android:textColor="#808080"
                     android:textStyle="italic" />
 
-                <!-- Edit Profile Button -->
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/editProfileButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center"
+                <!-- Search View Section -->
+                <androidx.appcompat.widget.SearchView
+                    android:id="@+id/searchView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:background="@drawable/selected_tab_background"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:text="Edit Profile"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF" />
+                    android:visibility="gone"
+                    app:queryHint="Search reasons..."
+                    app:iconifiedByDefault="false"/>
+
+                <!-- Action Buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/editProfileButton"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/selected_tab_background"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:text="Edit Profile"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFF" />
+
+                    <Space
+                        android:layout_width="16dp"
+                        android:layout_height="0dp" />
+
+                    <ToggleButton
+                        android:id="@+id/togglePrivacy"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:textOff="Public"
+                        android:textOn="Private"
+                        android:background="@drawable/selected_tab_background"
+                        android:textColor="#FFFFFF"
+                        android:textAllCaps="false" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- RecyclerView Inside Scroll View -->
+            <!-- RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerMoodEvents"
                 android:layout_width="match_parent"
@@ -238,6 +306,14 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:contentDescription="Home tab"
+            android:src="@drawable/ic_nav_home" />
+
+        <ImageView
             android:id="@+id/navSearch"
             android:layout_width="0dp"
             android:layout_height="24dp"
@@ -246,7 +322,7 @@
             android:src="@drawable/ic_search" />
 
         <ImageView
-            android:id="@+id/navHome"
+            android:id="@+id/navMap"
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"
