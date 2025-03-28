@@ -8,9 +8,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
 
@@ -35,23 +39,36 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
         String formattedDate = sdf.format(comment.getTimestamp());
         holder.tvTimestamp.setText(formattedDate);
-
+        holder.tvComment.setText(comment.getText());
 
         // Add username resolution
         FirestoreManager firestoreManager = new FirestoreManager(comment.getUserId());
-        firestoreManager.getUsernameById(comment.getUserId(), new FirestoreManager.OnUsernameListener() {
+        firestoreManager.getUserInfo(comment.getUserId(), new FirestoreManager.OnUserInfoListener() {
             @Override
-            public void onSuccess(String username) {
-                holder.tvUsername.setText(username);
-            }
+            public void onSuccess(User user) {
+                // Set username
+                holder.tvUsername.setText(user.getUsername());
 
+                // Load profile image if it exists
+                String profileUrl = user.getProfileImageUrl();
+                if (profileUrl != null && !profileUrl.isEmpty()) {
+                    // If using Glide
+                    Glide.with(holder.itemView.getContext())
+                            .load(profileUrl)
+                            .placeholder(R.drawable.ic_profile_placeholder)
+                            .into(holder.ivCommentProfile);
+                } else {
+                    holder.ivCommentProfile.setImageResource(R.drawable.ic_profile_placeholder);
+                }
+            }
             @Override
             public void onFailure(String fallbackName) {
                 holder.tvUsername.setText(fallbackName);
+                holder.ivCommentProfile.setImageResource(R.drawable.ic_profile_placeholder);
             }
         });
 
-        holder.tvComment.setText(comment.getText());
+
     }
 
     @Override
@@ -61,12 +78,14 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
 
     static class CommentViewHolder extends RecyclerView.ViewHolder {
         TextView tvUsername, tvComment, tvTimestamp;
+        CircleImageView ivCommentProfile;
 
         public CommentViewHolder(@NonNull View itemView) {
             super(itemView);
             tvUsername = itemView.findViewById(R.id.tvUsername);
             tvComment = itemView.findViewById(R.id.tvComment);
             tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
+            ivCommentProfile = itemView.findViewById(R.id.ivCommentProfile);
         }
     }
 }

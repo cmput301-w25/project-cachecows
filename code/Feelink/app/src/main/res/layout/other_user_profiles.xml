@@ -50,7 +50,7 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_gravity="end"
-                        android:src="@drawable/settings_svgrepo_com" />
+                        android:src="@drawable/ic_settings_button" />
                 </FrameLayout>
 
                 <!-- Profile Picture and Username -->
@@ -69,7 +69,7 @@
                             android:id="@+id/profileImage"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:src="@drawable/add_profile"
+                            android:src="@drawable/ic_profile_placeholder"
                             app:civ_border_color="#FFFFFF"
                             app:civ_border_width="2dp" />
                     </FrameLayout>
@@ -84,88 +84,105 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- Stats Section -->
-                <LinearLayout
+                <!-- Stats in a CardView -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardStats"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:orientation="horizontal">
+                    android:backgroundTint="#AAC1EEF0"
+                    app:cardBackgroundColor="@color/grey_violet"
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="8dp">
 
-                    <!-- Mood Posts -->
+                    <!-- Inner linear layout for stats row -->
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="12dp">
 
-                        <TextView
-                            android:id="@id/moodPosts"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="146"
-                            android:textColor="#5A4A7E"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:id="@+id/moodPosts"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="146"
+                                android:textColor="#5A4A7E"
+                                android:fontFamily="@font/poppins_regular"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Mood Posts"
+                                android:fontFamily="@font/poppins_regular"
+                                android:textColor="#5A4A7E"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/followersLayout"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="Mood Posts"
-                            android:textColor="#5A4A7E"
-                            android:textSize="12sp" />
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/followerCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="#5A4A7E"
+                                android:fontFamily="@font/poppins_regular"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Followers"
+                                android:fontFamily="@font/poppins_regular"
+                                android:textColor="#5A4A7E"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/followingLayout"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/followingCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="#5A4A7E"
+                                android:fontFamily="@font/poppins_regular"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Following"
+                                android:fontFamily="@font/poppins_regular"
+                                android:textColor="#5A4A7E"
+                                android:textSize="12sp" />
+                        </LinearLayout>
                     </LinearLayout>
-
-                    <!-- Followers -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@id/followerCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="12"
-                            android:textColor="#5A4A7E"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Followers"
-                            android:textColor="#5A4A7E"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <!-- Following -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@id/followingCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="200"
-                            android:textColor="#5A4A7E"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Following"
-                            android:textColor="#5A4A7E"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
                 <!-- Bio -->
                 <TextView
@@ -226,6 +243,14 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:contentDescription="Home tab"
+            android:src="@drawable/ic_nav_home" />
+
+        <ImageView
             android:id="@+id/navSearch"
             android:layout_width="0dp"
             android:layout_height="24dp"
@@ -234,7 +259,7 @@
             android:src="@drawable/ic_search" />
 
         <ImageView
-            android:id="@+id/navHome"
+            android:id="@+id/navMap"
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"
