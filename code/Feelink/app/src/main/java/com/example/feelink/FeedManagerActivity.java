@@ -132,13 +132,19 @@ public class FeedManagerActivity extends AppCompatActivity {
         navChats.setOnClickListener(v -> navigateToNotifications());
 
         // Find navChats view
-
+        ImageView navMap = findViewById(R.id.navMap);
 
         // Set click listener for Search navigation
         navSearch.setOnClickListener(v -> navigateToSearch());
 
         // Set click listener for Profile navigation (existing code)
         navProfile.setOnClickListener(v -> navigateToProfile());
+
+        // Set up map button click listener
+        navMap.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MoodMapActivity.class);
+            startActivity(intent);
+        });
 
         // Check initial network state
         boolean isConnected = ConnectivityReceiver.isNetworkAvailable(this);

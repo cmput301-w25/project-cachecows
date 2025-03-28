@@ -26,12 +26,14 @@ public class MoodEvent {
     private String userId;  // Added to support authentication later
     private String imageUrl;
     private boolean isPublic = true; // Default to public
-
+    private Double latitude;  // Location latitude
+    private Double longitude; // Location longitude
+    private String locationName; // Optional location name/address
     private String tempLocalImagePath;
     private boolean isPendingSync;
-
     private String username;
     private String userProfileImageUrl;
+
 
     /**
      * Default constructor initializes required temporal fields
@@ -82,7 +84,7 @@ public class MoodEvent {
     }
 
     /**
-    * @return Mood reason text (max 20 chars/3 words)
+     * @return Mood reason text (max 20 chars/3 words)
      */
     public String getReason() {
         return reason;
@@ -178,6 +180,48 @@ public class MoodEvent {
      */
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    /**
+     * @return Location latitude coordinate
+     */
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    /**
+     * @param latitude Location latitude coordinate
+     */
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    /**
+     * @return Location longitude coordinate
+     */
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    /**
+     * @param longitude Location longitude coordinate
+     */
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    /**
+     * @return Location name/address
+     */
+    public String getLocationName() {
+        return locationName;
+    }
+
+    /**
+     * @param locationName Location name/address
+     */
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
     }
 
     /**
