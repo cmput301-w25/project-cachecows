@@ -68,4 +68,14 @@ dependencies {
     implementation ("com.google.code.gson:gson:2.12.1")
     implementation("com.google.guava:guava:32.1.3-android")
     implementation("com.airbnb.android:lottie:6.6.3")
+    implementation ("com.google.android.libraries.places:places:3.3.0")
+    implementation ("com.google.android.gms:play-services-maps:18.0.2")
+    implementation ("com.google.android.libraries.places:places:2.5.0")
+    // Google Maps dependencies
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.1.0")
+    implementation("com.google.maps.android:android-maps-utils:2.3.0")
+    implementation ("com.google.code.gson:gson:2.12.1")
+    implementation("com.google.guava:guava:32.1.3-android")
+    implementation("com.airbnb.android:lottie:6.6.3")
 }

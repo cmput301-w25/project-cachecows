@@ -205,6 +205,9 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             intent.putExtra("SOCIAL_SITUATION", moodEvent.getSocialSituation());
             intent.putExtra("IMAGE_URL", moodEvent.getImageUrl());
             intent.putExtra("IS_PUBLIC", moodEvent.isPublic());
+            intent.putExtra("LOCATION_NAME", moodEvent.getLocationName());
+            intent.putExtra("LATITUDE", moodEvent.getLatitude());
+            intent.putExtra("LONGITUDE", moodEvent.getLongitude());
             context.startActivity(intent);
         });
 
@@ -234,6 +237,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
                 holder.photoContainer.setVisibility(View.GONE);
             }
         }
+
 
         String postUserId = moodEvent.getUserId();
         if (moodEvent.getUsername() != null && !moodEvent.getUsername().isEmpty()
@@ -305,7 +309,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     private void showDeleteConfirmationDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Delete Mood?");
-        builder.setMessage("By Deleting this post, you won’t be able to access it.?");
+        builder.setMessage("By Deleting this post, you won't be able to access it.?");
         builder.setPositiveButton("Yes, Delete", (dialog, which) -> {
             // User confirmed, delete the mood event
             deleteMoodEvent(moodEvent);
@@ -445,7 +449,15 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             tvLocation.setText("None");
         }
 
-
+        // Add location name display
+        String locationName = moodEvent.getLocationName();
+        if (locationName != null && !locationName.isEmpty()) {
+            TextView tvLocationName = dialogView.findViewById(R.id.tvLocationName);
+            if (tvLocationName != null) {
+                tvLocationName.setText(locationName);
+                tvLocationName.setVisibility(View.VISIBLE);
+            }
+        }
 
         // Set the content/reason
         tvContent.setText(moodEvent.getReason());
@@ -531,6 +543,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         View btnLike;
         View btnComment;
         CardView cardView;
+
         de.hdodenhof.circleimageview.CircleImageView userProfileImage;
         ImageButton btnEdit, btnDelete;
 
