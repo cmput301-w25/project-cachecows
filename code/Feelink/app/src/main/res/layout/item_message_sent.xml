@@ -12,10 +12,13 @@
         android:layout_height="wrap_content"
         android:background="@drawable/message_bg_sent"
         android:padding="12dp"
+        android:textSize="15sp"
         android:textColor="@android:color/white"
+        android:fontFamily="@font/poppins_regular"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Sample sent message"/>
+        tools:text="Sample sent message"
+        android:layout_marginLeft="80dp"/>
 
 
     <TextView
@@ -23,8 +26,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="10sp"
-        android:layout_marginTop="4dp"
-        android:textColor="@color/black"
+        android:layout_marginTop="2dp"
+        android:textColor="@android:color/darker_gray"
         app:layout_constraintEnd_toEndOf="@id/tvMessage"
         app:layout_constraintTop_toBottomOf="@id/tvMessage"
         tools:text="10:30 AM"/>

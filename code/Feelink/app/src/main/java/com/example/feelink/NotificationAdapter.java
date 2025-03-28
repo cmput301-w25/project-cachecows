@@ -1,5 +1,6 @@
 package com.example.feelink;
 
+import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
@@ -20,13 +20,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
     private List<Notification> notifications;
+    private Context context;
     private FirebaseFirestore db;
+    private Map<String, User> userCache = new HashMap<>();
 
     public NotificationAdapter(List<Notification> notifications) {
         this.notifications = notifications;
+        this.context = context;
         this.db = FirebaseFirestore.getInstance();
     }
 
@@ -46,17 +50,40 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Notification notification = notifications.get(position);
-
-        // Load sender's profile picture using Glide
-//        Glide.with(holder.itemView.getContext())
-//                .load(notification.getSenderProfileUrl())
-//                .into(holder.profileImage);
-
-        // Set common elements
         holder.message.setText(notification.getMessage());
         holder.profileImage.setImageResource(R.drawable.ic_nav_profile); // Use your default profile icon
 
 
+        final String senderId = notification.getSenderId();
+        holder.itemView.setTag(senderId);
+
+        if (userCache.containsKey(senderId)) {
+            User user = userCache.get(senderId);
+            if (user != null && user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
+                Glide.with(context)
+                        .load(user.getProfileImageUrl())
+                        .placeholder(R.drawable.ic_nav_profile)
+                        .into(holder.profileImage);
+            }
+        } else {
+            new FirestoreManager(senderId).getUserInfo(senderId, new FirestoreManager.OnUserInfoListener() {
+                @Override
+                public void onSuccess(User user) {
+                    userCache.put(senderId, user);
+                    // Check if the view is still attached to the window.
+                    if (holder.itemView.isAttachedToWindow()) {
+                        if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
+                            Glide.with(holder.itemView.getContext())
+                                    .load(user.getProfileImageUrl())
+                                    .placeholder(R.drawable.ic_nav_profile)
+                                    .into(holder.profileImage);
+                        }
+                    }
+                }
+                @Override
+                public void onFailure(String error) {}
+            });
+        }
 
         // Handle different notification types
         if (notification.getType() == Notification.Type.FOLLOW_REQUEST) {

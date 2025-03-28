@@ -96,10 +96,6 @@ public class ValidationUtils {
     }
 
     public static boolean isReasonNotValid(String text) {
-        boolean exceedsCharLimit = text.length() > 20;
-        // Check word limit
-        String[] words = text.trim().split("\\s+");
-        boolean exceedsWordLimit = text.trim().length() > 0 && words.length > 3;
-        return (exceedsCharLimit || exceedsWordLimit);
+        return text.length() > 200;
     }
 }

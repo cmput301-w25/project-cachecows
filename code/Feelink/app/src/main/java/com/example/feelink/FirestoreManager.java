@@ -271,64 +271,6 @@ public class FirestoreManager {
                     }
                 });
     }
-//    public void getMoodEvents(Boolean showPublic, boolean filterByWeek, final OnMoodEventsListener listener) {
-//        long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
-//        Date oneWeekAgo = new Date(oneWeekAgoMillis);
-//
-//        db.collection(COLLECTION_MOOD_EVENTS)
-//                .whereEqualTo("userId", this.userId)
-//                .orderBy("timestamp", Query.Direction.DESCENDING)
-//                .get()
-//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                        if (task.isSuccessful()) {
-//                            List<MoodEvent> moodEvents = new ArrayList<>();
-//                            for (QueryDocumentSnapshot document : task.getResult()) {
-//                                String id = document.getId();
-//                                Date timestamp = document.getDate("timestamp");
-//                                String emotionalState = document.getString("emotionalState");
-//                                String socialSituation = document.getString("socialSituation");
-//                                String reason = document.getString("reason");
-//                                String userId = document.getString("userId");
-//                                String imageUrl = document.getString("imageUrl");
-//
-//                                // Handle legacy moods (missing isPublic field)
-//                                Boolean isPublic = document.getBoolean("isPublic");
-//                                if (isPublic == null) {
-//                                    isPublic = true; // Treat old moods as public
-//                                }
-//
-//                                // Apply filtering based on toggle state
-//                                boolean shouldInclude = (showPublic == null) || // For total count
-//                                        (showPublic && isPublic) || // Public mode
-//                                        (!showPublic && !isPublic); // Private mode
-//
-//                                if (shouldInclude) {
-//                                    MoodEvent moodEvent = new MoodEvent(emotionalState, socialSituation, reason);
-//                                    moodEvent.setUserId(userId);
-//                                    moodEvent.setId(id.hashCode());
-//                                    moodEvent.setTimestamp(timestamp);
-//                                    moodEvent.setDocumentId(id);
-//                                    moodEvent.setImageUrl(imageUrl);
-//                                    moodEvent.setPublic(isPublic);
-//
-//                                    moodEvents.add(moodEvent);
-//                                }
-//                            }
-//
-//                            if (listener != null) {
-//                                listener.onSuccess(moodEvents);
-//                            }
-//                        } else {
-//                            Log.w(TAG, "Error getting mood events", task.getException());
-//                            if (listener != null) {
-//                                listener.onFailure(task.getException().getMessage());
-//                            }
-//                        }
-//                    }
-//                });
-//    }
 
     /**
      * Fetches public mood events from other users
@@ -839,23 +781,6 @@ public class FirestoreManager {
                 });
     }
 
-
-
-//    public Query getPublicMoodEvents(String userId) {
-//        return db.collection("mood_events")
-//                .whereEqualTo("userId", userId)
-//                .whereEqualTo("isPublic", true); // Only fetch public events
-//    }
-
-    /**
-     * Fetches all mood events for the current authenticated user (private and public).
-     */
-//    public Query getAllMoodEvents(String userId) {
-//        return db.collection("mood_events")
-//                .whereEqualTo("userId", userId); // Fetch all events regardless of visibility
-//    }
-
-
     public void createCommentNotification(String receiverId, String moodEventId, String commentText, OnNotificationListener listener) {
         Map<String, Object> notification = new HashMap<>();
         notification.put("type", "COMMENT");
@@ -987,6 +912,10 @@ public class FirestoreManager {
         void onFailure(String errorMessage);
     }
 
+    public interface OnUserInfoListener {
+        void onSuccess(User user);
+        void onFailure(String error);
+    }
     private List<List<String>> partitionList(List<String> list, int chunkSize) {
         List<List<String>> chunks = new ArrayList<>();
         for (int i = 0; i < list.size(); i += chunkSize) {
@@ -1153,6 +1082,29 @@ public class FirestoreManager {
                     }).addOnFailureListener(e -> listener.onImageUploadFailure(e.getMessage()));
                 })
                 .addOnFailureListener(e -> listener.onImageUploadFailure(e.getMessage()));
+    }
+
+    public void updateUserProfileImage(String userId, String imageUrl,
+                                       OnSuccessListener<Void> success,
+                                       OnFailureListener failure) {
+        db.collection("users").document(userId)
+                .update("profileImageUrl", imageUrl)
+                .addOnSuccessListener(success)
+                .addOnFailureListener(failure);
+    }
+
+    public void getUserInfo(String userId, OnUserInfoListener listener) {
+        db.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()){
+                        User user = User.fromDocument(documentSnapshot);
+                        listener.onSuccess(user);
+                    } else {
+                        listener.onFailure("User not found");
+                    }
+                })
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 
     // FirestoreManager.java

@@ -3,79 +3,103 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#E0F0F0">
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg_chat_gradient" />
 
     <!-- Header and Messages Container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="16dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="16dp"
+        android:paddingBottom="72dp"
+        android:clipToPadding="false">
 
-        <!-- Header -->
-        <RelativeLayout
-            android:id="@+id/header"
+        <!-- Header container -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/headerCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:background="@android:color/white"
-            android:elevation="4dp">
+            android:layout_margin="8dp"
+            app:cardCornerRadius="10dp"
+            app:cardElevation="4dp"
+            android:clipToOutline="true"
+            android:backgroundTint="@android:color/white">
 
-            <ImageView
-                android:id="@+id/ivProfilePicture"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_nav_profile"
-                android:contentDescription="Profile picture"
-                android:layout_centerVertical="true"/>
-
-            <TextView
-                android:id="@+id/tvUserName"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_toEndOf="@id/ivProfilePicture"
-                android:layout_centerVertical="true"
-                android:layout_marginStart="16dp"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:padding="12dp">
 
-        </RelativeLayout>
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/ivProfilePicture"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_nav_profile"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="8dp" />
 
-        <!-- Messages RecyclerView -->
+                <TextView
+                    android:id="@+id/tvUserName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="#6D616F"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:paddingStart="4dp"
+                    />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- RecyclerView for messages -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerMessages"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:paddingBottom="72dp"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
-
+            android:layout_height="match_parent"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:padding="8dp"
+            android:clipToPadding="false" />
     </LinearLayout>
 
+    <!-- Bottom bar for typing messages -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@android:color/white"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:background="@drawable/bg_bottom_bar_chat"
+        android:padding="8dp"
+        android:elevation="4dp">
 
-        <EditText
-            android:id="@+id/etMessage"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Type a message"
-            android:inputType="textMultiLine"
-            android:maxLines="3"/>
+    <EditText
+        android:id="@+id/etMessage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:hint="Type a message..."
+        android:maxLines="3"
+        android:fontFamily="@font/poppins_regular"
+        android:inputType="textCapSentences|textMultiLine"
+        />
 
-        <ImageButton
-            android:id="@+id/btnSend"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_send"
-            android:tint="#2196F3"/>
+    <ImageButton
+        android:id="@+id/btnSend"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_send"
+
+        android:background="?attr/selectableItemBackgroundBorderless"
+        />
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

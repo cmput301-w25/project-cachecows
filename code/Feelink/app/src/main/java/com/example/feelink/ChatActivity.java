@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class ChatActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(new MessageAdapter(new ArrayList<>(), firestoreManager.getUserId()));
 
-        loadUserName();
+        loadUserNameAndImage();
     }
 
     private void sendMessage() {
@@ -90,19 +91,27 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-    private void loadUserName() {
-        firestoreManager.getUsernameById(otherUserId, new FirestoreManager.OnUsernameListener() {
+    private void loadUserNameAndImage() {
+        firestoreManager.getUserInfo(otherUserId, new FirestoreManager.OnUserInfoListener() {
             @Override
-            public void onSuccess(String username) {
-                tvUserName.setText(username);
-
+            public void onSuccess(User user) {
+                tvUserName.setText(user.getUsername());
+                String imageUrl = user.getProfileImageUrl();
+                if (imageUrl != null && !imageUrl.isEmpty()) {
+                    Glide.with(ChatActivity.this)
+                            .load(imageUrl)
+                            .placeholder(R.drawable.ic_nav_profile)
+                            .into(ivProfilePicture);
+                } else {
+                    ivProfilePicture.setImageResource(R.drawable.ic_nav_profile);
+                }
             }
 
             @Override
-            public void onFailure(String fallback) {
-                tvUserName.setText(fallback);
+            public void onFailure(String fallbackName) {
+                tvUserName.setText(fallbackName);
+                ivProfilePicture.setImageResource(R.drawable.ic_nav_profile);
             }
         });
     }
-
 }
