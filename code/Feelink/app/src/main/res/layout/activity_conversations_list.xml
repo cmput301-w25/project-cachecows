@@ -4,30 +4,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:background="@drawable/gradient_background_2"
-    android:layout_height="match_parent">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="16dp"
-        android:orientation="vertical">
-
+    android:layout_height="match_parent"
+    android:padding="8dp">
 
         <TextView
+            android:id="@+id/tvHeading"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Your messages"
-            android:textColor="@color/black"
+            android:fontFamily="@font/poppins_bold"
+            android:textColor="@color/grey_violet_font"
+            android:shadowColor="@color/white"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="5"
             android:textSize="24sp"
             android:textStyle="bold"
             android:padding="16dp"
-            android:layout_marginTop="8dp"/>
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerConversations"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
-    </LinearLayout>
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:paddingBottom="8dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintTop_toBottomOf="@id/tvHeading"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
