@@ -4,6 +4,8 @@ import java.util.Date;
 
 // Message.java
 public class Message {
+
+    private String id;
     private String text, senderId;
     private Date timestamp;
 
@@ -21,6 +23,15 @@ public class Message {
     public void setText(String text) {
         this.text = text;
     }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
 
     public String getSenderId() {
         return senderId;

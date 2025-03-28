@@ -1188,11 +1188,13 @@ public class FirestoreManager {
 
                     List<Message> messages = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : value) {
-                        messages.add(new Message(
+                        Message message = new Message(
                                 doc.getString("text"),
                                 doc.getString("senderId"),
                                 doc.getDate("timestamp")
-                        ));
+                        );
+                        message.setId(doc.getId()); // Set the Firestore document ID
+                        messages.add(message);
                     }
                     listener.onMessagesReceived(messages);
                 });
