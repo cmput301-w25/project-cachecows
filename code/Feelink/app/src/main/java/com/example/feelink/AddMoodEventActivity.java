@@ -74,6 +74,15 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private ImageView btnDeletePhoto;
     private static boolean SKIP_AUTH_FOR_TESTING = false;
 
+    private String getCurrentUserId() {
+        if (SKIP_AUTH_FOR_TESTING) {
+            return "test_user_id";
+        } else {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            return user != null ? user.getUid() : "default_user_id";
+        }
+    }
+
 
 
     /**
@@ -98,7 +107,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null || SKIP_AUTH_FOR_TESTING) {
             // Use test user ID if needed for testing
-            String uid = user != null ? user.getUid() : "test_user_id";
+            String uid = getCurrentUserId();
             firestoreManager = new FirestoreManager(uid);
             pendingSyncManager = new PendingSyncManager(this);
 
