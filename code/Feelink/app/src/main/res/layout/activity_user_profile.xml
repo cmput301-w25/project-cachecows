@@ -173,6 +173,7 @@
                         </LinearLayout>
 
                         <LinearLayout
+                            android:id="@+id/followersLayout"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -199,6 +200,7 @@
                         </LinearLayout>
 
                         <LinearLayout
+                            android:id="@+id/followingLayout"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -330,7 +332,9 @@
             android:layout_height="24dp"
             android:layout_weight="1"
             android:contentDescription="Home tab"
-            android:src="@drawable/ic_nav_home" />
+            android:src="@drawable/ic_nav_home"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <ImageView
             android:id="@+id/navSearch"
@@ -338,7 +342,9 @@
             android:layout_height="24dp"
             android:layout_weight="1"
             android:contentDescription="Search tab"
-            android:src="@drawable/ic_search" />
+            android:src="@drawable/ic_search"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <ImageView
             android:id="@+id/navMap"
@@ -346,7 +352,9 @@
             android:layout_height="24dp"
             android:layout_weight="1"
             android:contentDescription="Map tab"
-            android:src="@drawable/ic_nav_map" />
+            android:src="@drawable/ic_nav_map"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <ImageView
             android:id="@+id/navChats"
@@ -354,7 +362,9 @@
             android:layout_height="24dp"
             android:layout_weight="1"
             android:contentDescription="Chats tab"
-            android:src="@drawable/ic_nav_chats" />
+            android:src="@drawable/ic_nav_chats"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <ImageView
             android:id="@+id/navProfile"
@@ -362,7 +372,9 @@
             android:layout_height="24dp"
             android:layout_weight="1"
             android:contentDescription="Profile tab"
-            android:src="@drawable/ic_nav_profile" />
+            android:src="@drawable/ic_nav_profile"
+            android:clickable="true"
+            android:focusable="true"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

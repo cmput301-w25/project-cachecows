@@ -33,7 +33,16 @@
         app:layout_constraintTop_toBottomOf="@+id/tvOfflineIndicator"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-
+    <!-- Filter Button -->
+    <ImageButton
+        android:id="@+id/btnFilter"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Filter"
+        android:src="@drawable/ic_filter"
+        app:layout_constraintEnd_toStartOf="@+id/btnChat"
+        app:layout_constraintBottom_toTopOf="@+id/tabLayout" />
 
     <!-- Tab Selection Layout -->
     <LinearLayout
@@ -54,6 +63,7 @@
             android:layout_weight="1"
             android:backgroundTint="#9FE2DD"
             android:text="All Moods"
+            android:fontFamily="@font/poppins_regular"
             android:layout_marginEnd="8dp"
             android:textColor="#FFFFFF" />
 
@@ -64,6 +74,7 @@
             android:layout_weight="1"
             android:backgroundTint="#9FE2DD"
             android:text="Following Moods"
+            android:fontFamily="@font/poppins_regular"
             android:layout_marginStart="8dp"
             android:textColor="#FFFFFF" />
 
@@ -84,18 +95,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tabLayout"/>
 
-    <!-- Filter Button -->
-    <ImageButton
-        android:id="@+id/btnFilter"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginEnd="16dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Filter"
-        android:src="@drawable/ic_filter"
-        app:layout_constraintTop_toBottomOf="@+id/tabLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerMoodEvents" />
+
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/headerBarrier"
