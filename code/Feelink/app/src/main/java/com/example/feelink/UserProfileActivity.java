@@ -55,6 +55,12 @@ public class UserProfileActivity extends AppCompatActivity {
     private boolean filterByWeek = false;
     private String selectedEmotion = null;
     private androidx.appcompat.widget.SearchView searchView;
+
+    private static boolean SKIP_AUTH_FOR_TESTING = true;
+
+    public static void enableTestMode(boolean enabled) {
+        SKIP_AUTH_FOR_TESTING = enabled;
+    }
     private ConnectivityReceiver connectivityReceiver;
     private final BroadcastReceiver syncReceiver = new BroadcastReceiver() {
         @Override
@@ -67,6 +73,7 @@ public class UserProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+
         setContentView(R.layout.activity_user_profile);
 
         // Initialize views
@@ -129,9 +136,18 @@ public class UserProfileActivity extends AppCompatActivity {
         recyclerMoodEvents.setAdapter(moodEventAdapter);
 
         // Initialize FirestoreManager
-        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        firestoreManager = new FirestoreManager(currentUserId);
-        mAuth = FirebaseAuth.getInstance();
+        Log.d("SKIP AUTH FOR TESTING", String.valueOf(SKIP_AUTH_FOR_TESTING));
+        if(!SKIP_AUTH_FOR_TESTING){
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            firestoreManager = new FirestoreManager(currentUserId);
+            mAuth = FirebaseAuth.getInstance();
+        }
+        else{
+            currentUserId = "test_user_id";
+            firestoreManager = new FirestoreManager(currentUserId);
+        }
+
+
 
 
 
@@ -154,7 +170,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
 
         fabAddMood.setOnClickListener(v -> {
-            if (mAuth.getCurrentUser() != null) {
+            if (SKIP_AUTH_FOR_TESTING || mAuth.getCurrentUser() != null) {
                 navigateToAddMood();
             } else {
                 handleUnauthorizedAccess();
@@ -168,7 +184,13 @@ public class UserProfileActivity extends AppCompatActivity {
             startActivity(intent);
         });
 //         Get current user ID
-        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if(!SKIP_AUTH_FOR_TESTING){
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        }
+        else{
+            currentUserId = "test_user_id";
+        }
+
 
         // Fetch user data from Firestore
         fetchUserData(currentUserId);

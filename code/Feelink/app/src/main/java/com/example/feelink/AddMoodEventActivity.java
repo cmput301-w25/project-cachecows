@@ -79,6 +79,10 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
     private ImageView btnDeleteLocation;
 
+    public static void enableTestMode(boolean enabled) {
+        SKIP_AUTH_FOR_TESTING = enabled;
+    }
+
     /**
      * Initializes activity components and state
      *
