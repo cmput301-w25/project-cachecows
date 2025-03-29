@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -23,7 +24,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     }
 
     public void updateMessages(List<Message> newMessages) {
-        messages = newMessages;
+        messages = newMessages != null ? newMessages : new ArrayList<>();
         notifyDataSetChanged();
     }
 

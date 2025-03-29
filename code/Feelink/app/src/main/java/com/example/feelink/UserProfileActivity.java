@@ -55,13 +55,9 @@ public class UserProfileActivity extends AppCompatActivity {
     private boolean filterByWeek = false;
     private String selectedEmotion = null;
     private androidx.appcompat.widget.SearchView searchView;
-
-    private static boolean SKIP_AUTH_FOR_TESTING = true;
-
-    public static void enableTestMode(boolean enabled) {
-        SKIP_AUTH_FOR_TESTING = enabled;
-    }
     private ConnectivityReceiver connectivityReceiver;
+    static boolean SKIP_AUTH_FOR_TESTING = false;
+    static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private final BroadcastReceiver syncReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -73,7 +69,6 @@ public class UserProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-
         setContentView(R.layout.activity_user_profile);
 
         // Initialize views
@@ -136,18 +131,16 @@ public class UserProfileActivity extends AppCompatActivity {
         recyclerMoodEvents.setAdapter(moodEventAdapter);
 
         // Initialize FirestoreManager
-        Log.d("SKIP AUTH FOR TESTING", String.valueOf(SKIP_AUTH_FOR_TESTING));
-        if(!SKIP_AUTH_FOR_TESTING){
-            currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null || SKIP_AUTH_FOR_TESTING) {
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null ?
+                    FirebaseAuth.getInstance().getCurrentUser().getUid() : "test_user_id";
             firestoreManager = new FirestoreManager(currentUserId);
-            mAuth = FirebaseAuth.getInstance();
+        } else {
+            handleUnauthorizedAccess();
+            return;
         }
-        else{
-            currentUserId = "test_user_id";
-            firestoreManager = new FirestoreManager(currentUserId);
-        }
-
-
+        firestoreManager = new FirestoreManager(currentUserId);
+        mAuth = FirebaseAuth.getInstance();
 
 
 
@@ -170,12 +163,12 @@ public class UserProfileActivity extends AppCompatActivity {
 
 
         fabAddMood.setOnClickListener(v -> {
-            if (SKIP_AUTH_FOR_TESTING || mAuth.getCurrentUser() != null) {
-                navigateToAddMood();
-            } else {
-                handleUnauthorizedAccess();
-            }
-        }
+                    if (mAuth.getCurrentUser() != null) {
+                        navigateToAddMood();
+                    } else {
+                        handleUnauthorizedAccess();
+                    }
+                }
         );
         Button editProfileButton = findViewById(R.id.editProfileButton);
         editProfileButton.setOnClickListener(v -> {
@@ -184,13 +177,6 @@ public class UserProfileActivity extends AppCompatActivity {
             startActivity(intent);
         });
 //         Get current user ID
-        if(!SKIP_AUTH_FOR_TESTING){
-            currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        }
-        else{
-            currentUserId = "test_user_id";
-        }
-
 
         // Fetch user data from Firestore
         fetchUserData(currentUserId);
@@ -337,6 +323,17 @@ public class UserProfileActivity extends AppCompatActivity {
         firestoreManager.getMoodEvents(isPublicMode, filterByWeek, selectedEmotion, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
+                // Filter for test user if in testing mode
+                if (getIntent().getBooleanExtra("TEST_MODE", false)) {
+                    List<MoodEvent> filteredEvents = new ArrayList<>();
+                    for (MoodEvent event : moodEvents) {
+                        if (event.getUserId().equals("test_user_id")) {
+                            filteredEvents.add(event);
+                        }
+                    }
+                    moodEvents = filteredEvents;
+                }
+
                 moodEventsList.clear();
                 moodEventsList.addAll(moodEvents);
 

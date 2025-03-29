@@ -1090,6 +1090,8 @@ public class FirestoreManager {
 
     public interface OnMessagesListener {
         void onMessagesReceived(List<Message> messages);
+
+        void onFailure(String error);
     }
 
 
@@ -1245,7 +1247,6 @@ public class FirestoreManager {
                 .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 
-    // FirestoreManager.java
     public void sendMessage(String conversationId, String text, String receiverId) {
         // Create message in subcollection
         Map<String, Object> message = new HashMap<>();
@@ -1269,12 +1270,16 @@ public class FirestoreManager {
     }
 
     public void getMessages(String conversationId, OnMessagesListener listener) {
-        db.collection("conversations")
+        CollectionReference messagesRef = db.collection("conversations")
                 .document(conversationId)
-                .collection("messages")
-                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .collection("messages");
+
+        messagesRef.orderBy("timestamp", Query.Direction.ASCENDING)
                 .addSnapshotListener((value, error) -> {
-                    if (error != null) return;
+                    if (error != null) {
+                        listener.onFailure(error.getMessage());
+                        return;
+                    }
 
                     List<Message> messages = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : value) {
@@ -1283,14 +1288,13 @@ public class FirestoreManager {
                                 doc.getString("senderId"),
                                 doc.getDate("timestamp")
                         );
-                        message.setId(doc.getId()); // Set the Firestore document ID
+                        message.setId(doc.getId());
                         messages.add(message);
                     }
                     listener.onMessagesReceived(messages);
                 });
     }
 
-    // FirestoreManager.java
     public void getConversations(OnConversationsListener listener) {
         db.collection("conversations")
                 .whereArrayContains("participants", userId)

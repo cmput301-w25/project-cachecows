@@ -83,10 +83,19 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void loadMessages() {
-        firestoreManager.getMessages(conversationId, messages -> {
-            ((MessageAdapter) recyclerView.getAdapter()).updateMessages(messages);
-            if (messages != null && !messages.isEmpty()) {
-                recyclerView.smoothScrollToPosition(messages.size() - 1);
+        firestoreManager.getMessages(conversationId, new FirestoreManager.OnMessagesListener() {
+            @Override
+            public void onMessagesReceived(List<Message> messages) {
+                // Always update the adapter even if empty
+                ((MessageAdapter) recyclerView.getAdapter()).updateMessages(messages);
+                if (!messages.isEmpty()) {
+                    recyclerView.smoothScrollToPosition(messages.size() - 1);
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e("ChatActivity", "Error loading messages: " + errorMessage);
             }
         });
     }
