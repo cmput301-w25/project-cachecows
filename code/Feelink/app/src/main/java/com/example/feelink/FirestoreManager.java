@@ -19,15 +19,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.api.net.PlacesClient;
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
-import com.google.android.libraries.places.api.model.Place;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.common.api.Status;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
@@ -137,6 +128,7 @@ public class FirestoreManager {
         moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
+        moodData.put("isPublic", moodEvent.isPublic());
 
 
         // Only add optional fields if they're not null or empty
@@ -1099,6 +1091,8 @@ public class FirestoreManager {
 
     public interface OnMessagesListener {
         void onMessagesReceived(List<Message> messages);
+
+        void onFailure(String error);
     }
 
 
@@ -1254,7 +1248,6 @@ public class FirestoreManager {
                 .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 
-    // FirestoreManager.java
     public void sendMessage(String conversationId, String text, String receiverId) {
         // Create message in subcollection
         Map<String, Object> message = new HashMap<>();
@@ -1278,26 +1271,31 @@ public class FirestoreManager {
     }
 
     public void getMessages(String conversationId, OnMessagesListener listener) {
-        db.collection("conversations")
+        CollectionReference messagesRef = db.collection("conversations")
                 .document(conversationId)
-                .collection("messages")
-                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .collection("messages");
+
+        messagesRef.orderBy("timestamp", Query.Direction.ASCENDING)
                 .addSnapshotListener((value, error) -> {
-                    if (error != null) return;
+                    if (error != null) {
+                        listener.onFailure(error.getMessage());
+                        return;
+                    }
 
                     List<Message> messages = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : value) {
-                        messages.add(new Message(
+                        Message message = new Message(
                                 doc.getString("text"),
                                 doc.getString("senderId"),
                                 doc.getDate("timestamp")
-                        ));
+                        );
+                        message.setId(doc.getId());
+                        messages.add(message);
                     }
                     listener.onMessagesReceived(messages);
                 });
     }
 
-    // FirestoreManager.java
     public void getConversations(OnConversationsListener listener) {
         db.collection("conversations")
                 .whereArrayContains("participants", userId)

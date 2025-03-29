@@ -72,17 +72,21 @@ public class AddMoodEventActivityTest {
 
     @BeforeClass
     public static void setupForTesting() {
-        // Use reflection to set the testing flag for both activities
         try {
-            // Set flag for FeedManagerActivity
+            // Add UserProfileActivity to testing flags
+            Field userProfileField = UserProfileActivity.class.getDeclaredField("SKIP_AUTH_FOR_TESTING");
+            userProfileField.setAccessible(true);
+            userProfileField.set(null, true);
+
+            // Existing FeedManager and AddMoodEventActivity flags
             Field feedField = FeedManagerActivity.class.getDeclaredField("SKIP_AUTH_FOR_TESTING");
             feedField.setAccessible(true);
             feedField.set(null, true);
 
-            // Set flag for AddMoodEventActivity
             Field addMoodField = AddMoodEventActivity.class.getDeclaredField("SKIP_AUTH_FOR_TESTING");
             addMoodField.setAccessible(true);
             addMoodField.set(null, true);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -99,20 +103,31 @@ public class AddMoodEventActivityTest {
         // Select a mood
         onView(withId(R.id.moodHappy)).perform(click());
 
-        // Enter an invalid reason (too long)
-        onView(withId(R.id.etReason)).perform(typeText("This reason is way too long and should trigger an error"),
-                closeSoftKeyboard());
+        // Create a 201-character string
+        String invalidReason = new String(new char[201]).replace('\0', 'a');
 
-        // Check that there's an error message on the reason field
-        onView(withId(R.id.etReason)).check(matches(hasErrorText("Reason must be limited to 20 characters or 3 words")));
+        // Enter an invalid reason (exceeds 200 characters)
+        onView(withId(R.id.etReason)).perform(
+                typeText(invalidReason),
+                closeSoftKeyboard()
+        );
 
-        // Check that the button is disabled
+        // Check for new error message
+        onView(withId(R.id.etReason)).check(matches(
+                hasErrorText("Reason must be limited to 200 characters")
+        ));
+
+        // Verify button is disabled
         onView(withId(R.id.btnAddMood)).check(matches(not(isEnabled())));
 
-        // Clear the invalid reason and enter a valid one
-        onView(withId(R.id.etReason)).perform(replaceText("Valid"), closeSoftKeyboard());
+        // Replace with valid 200-character reason
+        String validReason = new String(new char[200]).replace('\0', 'a');
+        onView(withId(R.id.etReason)).perform(
+                replaceText(validReason),
+                closeSoftKeyboard()
+        );
 
-        // Ensure the button is now enabled
+        // Verify button becomes enabled
         onView(withId(R.id.btnAddMood)).check(matches(isEnabled()));
     }
 
@@ -120,47 +135,41 @@ public class AddMoodEventActivityTest {
 
     @Test(timeout = 10000)
     public void testMoodEventAppearsInFeed() {
-        // Add a mood in AddMoodEventActivity
+        // Add a PUBLIC mood
         onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.etReason)).perform(typeText("Test mood"), closeSoftKeyboard());
+        onView(withId(R.id.etReason)).perform(typeText("Test public mood"), closeSoftKeyboard());
+        onView(withId(R.id.togglePrivacy)).perform(click()); // Set to public (toggle starts as public)
         onView(withId(R.id.btnAddMood)).perform(click());
 
-        // Wait for the UI thread to be idle after clicking the button
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        // Add PRIVATE mood
+        onView(withId(R.id.moodHappy)).perform(click());
+        onView(withId(R.id.etReason)).perform(typeText("Test private mood"), closeSoftKeyboard());
+        onView(withId(R.id.togglePrivacy)).perform(click()); // Toggle to private
+        onView(withId(R.id.btnAddMood)).perform(click());
 
-        // Add a delay to allow Firestore operation to complete
-        // This is a compromise since we can't modify FirestoreManager to expose its async state
-        try {
-            Thread.sleep(2000); // 2 seconds should be enough for the operation to complete
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        // Verify public mood appears in public feed
+        verifyMoodVisibility(true, "Test public mood");
+
+        // Verify private mood doesn't appear in public feed
+        verifyMoodVisibility(false, "Test private mood");
+    }
+
+
+    private void verifyMoodVisibility(boolean shouldBeVisible, String moodText) {
+        // Launch profile with test user context
+        Intent profileIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+                UserProfileActivity.class);
+        profileIntent.putExtra("TEST_MODE", true);
+        ActivityScenario<UserProfileActivity> profileScenario = ActivityScenario.launch(profileIntent);
+
+        // Check visibility based on privacy setting
+        if (shouldBeVisible) {
+            onView(withId(R.id.recyclerMoodEvents))
+                    .check(matches(hasDescendant(withText(moodText))));
+        } else {
+            onView(withId(R.id.recyclerMoodEvents))
+                    .check(matches(not(hasDescendant(withText(moodText)))));
         }
-
-        // Launch FeedManagerActivity with clear task flags
-        Intent feedIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-                FeedManagerActivity.class);
-        feedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(feedIntent);
-
-        // Wait for the feed activity to load
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-
-        // Switch to "My Mood" tab and ensure it's fully visible
-        onView(withId(R.id.btnFollowingMoods)).perform(click());
-
-        // Wait for UI thread to be idle after tab switch
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-
-        // Small delay to ensure RecyclerView has loaded data from Firestore
-        try {
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // Verify the mood appears in the RecyclerView
-        onView(withId(R.id.recyclerMoodEvents))
-                .check(matches(hasDescendant(withText("Test mood"))));
     }
 
     @After

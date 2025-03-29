@@ -15,8 +15,9 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
-// ChatActivity.java
 public class ChatActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private EditText etMessage;
@@ -65,20 +66,36 @@ public class ChatActivity extends AppCompatActivity {
     private void sendMessage() {
         String text = etMessage.getText().toString().trim();
         if (!text.isEmpty()) {
+            // Create a temporary message with local timestamp
+            Message tempMessage = new Message(text, firestoreManager.getUserId(), new Date());
+
+            // Add the temporary message to the adapter
+            MessageAdapter adapter = (MessageAdapter) recyclerView.getAdapter();
+            List<Message> currentMessages = new ArrayList<>(adapter.messages);
+            currentMessages.add(tempMessage);
+            adapter.updateMessages(currentMessages);
+            recyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
+
+            // Send the message via Firestore
             firestoreManager.sendMessage(conversationId, text, otherUserId);
             etMessage.setText("");
         }
     }
 
     private void loadMessages() {
-        firestoreManager.getMessages(conversationId, messages -> {
-            ((MessageAdapter) recyclerView.getAdapter()).updateMessages(messages);
-            if (messages != null && !messages.isEmpty()) {
-                recyclerView.smoothScrollToPosition(messages.size() - 1);
-                Log.d("Messages not appearing","whattt");
+        firestoreManager.getMessages(conversationId, new FirestoreManager.OnMessagesListener() {
+            @Override
+            public void onMessagesReceived(List<Message> messages) {
+                // Always update the adapter even if empty
+                ((MessageAdapter) recyclerView.getAdapter()).updateMessages(messages);
+                if (!messages.isEmpty()) {
+                    recyclerView.smoothScrollToPosition(messages.size() - 1);
+                }
             }
-            else{
-                Log.d("Messages not appearing","whatttttt");
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e("ChatActivity", "Error loading messages: " + errorMessage);
             }
         });
     }

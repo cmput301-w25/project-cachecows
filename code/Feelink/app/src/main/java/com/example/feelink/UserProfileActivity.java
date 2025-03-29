@@ -56,6 +56,8 @@ public class UserProfileActivity extends AppCompatActivity {
     private String selectedEmotion = null;
     private androidx.appcompat.widget.SearchView searchView;
     private ConnectivityReceiver connectivityReceiver;
+    static boolean SKIP_AUTH_FOR_TESTING = false;
+    static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private final BroadcastReceiver syncReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -129,7 +131,14 @@ public class UserProfileActivity extends AppCompatActivity {
         recyclerMoodEvents.setAdapter(moodEventAdapter);
 
         // Initialize FirestoreManager
-        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null || SKIP_AUTH_FOR_TESTING) {
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null ?
+                    FirebaseAuth.getInstance().getCurrentUser().getUid() : "test_user_id";
+            firestoreManager = new FirestoreManager(currentUserId);
+        } else {
+            handleUnauthorizedAccess();
+            return;
+        }
         firestoreManager = new FirestoreManager(currentUserId);
         mAuth = FirebaseAuth.getInstance();
 
@@ -154,12 +163,12 @@ public class UserProfileActivity extends AppCompatActivity {
 
 
         fabAddMood.setOnClickListener(v -> {
-            if (mAuth.getCurrentUser() != null) {
-                navigateToAddMood();
-            } else {
-                handleUnauthorizedAccess();
-            }
-        }
+                    if (mAuth.getCurrentUser() != null) {
+                        navigateToAddMood();
+                    } else {
+                        handleUnauthorizedAccess();
+                    }
+                }
         );
         Button editProfileButton = findViewById(R.id.editProfileButton);
         editProfileButton.setOnClickListener(v -> {
@@ -168,7 +177,6 @@ public class UserProfileActivity extends AppCompatActivity {
             startActivity(intent);
         });
 //         Get current user ID
-        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         // Fetch user data from Firestore
         fetchUserData(currentUserId);
@@ -315,6 +323,17 @@ public class UserProfileActivity extends AppCompatActivity {
         firestoreManager.getMoodEvents(isPublicMode, filterByWeek, selectedEmotion, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
+                // Filter for test user if in testing mode
+                if (getIntent().getBooleanExtra("TEST_MODE", false)) {
+                    List<MoodEvent> filteredEvents = new ArrayList<>();
+                    for (MoodEvent event : moodEvents) {
+                        if (event.getUserId().equals("test_user_id")) {
+                            filteredEvents.add(event);
+                        }
+                    }
+                    moodEvents = filteredEvents;
+                }
+
                 moodEventsList.clear();
                 moodEventsList.addAll(moodEvents);
 

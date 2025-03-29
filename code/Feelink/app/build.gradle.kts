@@ -31,6 +31,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
 }
 
 dependencies {
@@ -52,6 +53,7 @@ dependencies {
     implementation(libs.work.runtime)
     implementation ("com.google.firebase:firebase-messaging:23.1.0")
     implementation ("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation ("androidx.test.espresso:espresso-idling-resource:3.5.1")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     testImplementation(libs.junit)
@@ -63,6 +65,8 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation ("com.google.android.gms:play-services-tasks:18.2.0")
+    androidTestImplementation ("androidx.test.espresso:espresso-intents:3.5.1")
 //    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
