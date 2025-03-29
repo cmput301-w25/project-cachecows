@@ -53,7 +53,7 @@ public class UploadImageActivity extends AppCompatActivity {
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
 
     /** Request code for selecting an image from the gallery */
-    public static final int SELECT_IMAGE = 100;
+    private static final int SELECT_IMAGE = 100;
 
     /** Request code for capturing an image from the camera */
     private static final int CAPTURE_IMAGE = 101;
