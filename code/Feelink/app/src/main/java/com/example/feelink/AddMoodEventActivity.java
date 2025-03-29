@@ -76,7 +76,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
     private String getCurrentUserId() {
         if (SKIP_AUTH_FOR_TESTING) {
-            return "test_user_id";
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            return user != null ? user.getUid() : "test_user_id";
         } else {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             return user != null ? user.getUid() : "default_user_id";
