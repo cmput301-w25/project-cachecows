@@ -128,6 +128,7 @@ public class FirestoreManager {
         moodData.put("userId", this.userId);
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("emotionalState", moodEvent.getEmotionalState());
+        moodData.put("isPublic", moodEvent.isPublic());
 
 
         // Only add optional fields if they're not null or empty
