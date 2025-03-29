@@ -43,7 +43,7 @@
         <activity android:name=".CreateAccount" />
         <activity android:name=".AddMoodEventActivity" />
         <activity android:name=".ForgotPasswordActivity"/>
-        <activity android:name=".UploadImageActivity" />
+        <activity android:name=".UploadImageActivity" android:theme="@style/Theme.AppCompat"/>
         <activity android:name=".NotificationsActivity" />
         <activity android:name=".UploadProfilePictureActivity" />
         <activity android:name=".SettingsActivity"
