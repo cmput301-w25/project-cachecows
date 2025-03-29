@@ -46,6 +46,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertNotNull;
 
+//Also has tests for Comments
+
 @RunWith(AndroidJUnit4.class)
 public class FeedManagerFollowingTest {
     private static final String TAG = "FeedManagerFollowingTest";
