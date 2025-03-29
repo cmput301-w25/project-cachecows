@@ -43,7 +43,7 @@ public class ChatActivity extends AppCompatActivity {
 
     }
 
-    private String generateConversationId(String userId1, String userId2) {
+     static String generateConversationId(String userId1, String userId2) {
         String[] ids = {userId1, userId2};
         Arrays.sort(ids);
         return ids[0] + "_" + ids[1];

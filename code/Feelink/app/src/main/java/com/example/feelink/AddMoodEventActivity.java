@@ -56,7 +56,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private TextView tvGreeting, tvAddPhoto, tvAddLocation;
     private LinearLayout moodHappy, moodSad, moodAngry, moodSurprised,
             moodConfused, moodDisgusted, moodShame, moodFear;
-    private EditText etReason;
+    EditText etReason;
     private Spinner socialSituationSpinner;
     private Button btnAddMood;
     private ToggleButton togglePrivacy;

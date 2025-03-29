@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -65,6 +67,10 @@ public class UploadImageActivity extends AppCompatActivity {
 
     private StorageReference storageRef;  // Firebase Storage reference for uploading images
 
+    private ActivityResultLauncher<Intent> galleryLauncher;
+    private ActivityResultLauncher<Intent> cameraLauncher;
+
+
     /**
      * Initializes image upload UI and Firebase Storage references
      *
@@ -92,6 +98,37 @@ public class UploadImageActivity extends AppCompatActivity {
         btnCancel = findViewById(R.id.btnCancelUpload);
         btnBack = findViewById(R.id.btnUploadImageBack);
         ivPreview = findViewById(R.id.ivPreview);
+
+        //  ActivityResultLauncher for the gallery
+        galleryLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri galleryUri = result.getData().getData();
+                        if (galleryUri != null) {
+                            validateGalleryImage(galleryUri);
+                        }
+                    } else {
+                        Toast.makeText(this, "Canceled.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        //  ActivityResultLauncher for the camera
+        cameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Bitmap photo = (Bitmap) (result.getData().getExtras() != null ?
+                                result.getData().getExtras().get("data") : null);
+                        if (photo != null) {
+                            validateCameraBitmap(photo);
+                        }
+                    } else {
+                        Toast.makeText(this, "Canceled.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
 
 
         btnUseCamera.setOnClickListener(v -> openCamera());
@@ -168,7 +205,7 @@ public class UploadImageActivity extends AppCompatActivity {
     private void launchCamera() {
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
-            startActivityForResult(cameraIntent, CAPTURE_IMAGE);
+            cameraLauncher.launch(cameraIntent);
         } else {
             Toast.makeText(this, "No camera detected on this device", Toast.LENGTH_SHORT).show();
         }
@@ -180,45 +217,9 @@ public class UploadImageActivity extends AppCompatActivity {
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        startActivityForResult(Intent.createChooser(intent, "Select Image"), SELECT_IMAGE);
+        galleryLauncher.launch(Intent.createChooser(intent, "Select Image"));
     }
 
-    /**
-     * Handles image selection results from camera/gallery intents
-     *
-     * <p>Routes processing based on source:
-     * <ul>
-     *   <li>Camera images: Directly processes bitmap data</li>
-     * </ul>
-     *
-     * @param requestCode Originating request identifier
-     * @param resultCode Operation result status
-     * @param data Image data payload
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != Activity.RESULT_OK || data == null) {
-            Toast.makeText(this, "No data or canceled. " + requestCode, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        switch (requestCode) {
-            case SELECT_IMAGE:
-                Uri galleryUri = data.getData();
-                if (galleryUri != null) {
-                    validateGalleryImage(galleryUri);
-                }
-                break;
-
-            case CAPTURE_IMAGE:
-                Bitmap photo = (Bitmap) (data.getExtras() != null ? data.getExtras().get("data") : null);
-                if (photo != null) {
-                    validateCameraBitmap(photo);
-                }
-                break;
-        }
-    }
 
     /**
      * Validates gallery images against size and format constraints
