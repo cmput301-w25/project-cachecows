@@ -230,17 +230,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Bio -->
-                <TextView
-                    android:id="@id/bio"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:text="I can draw my life by myself"
-                    android:fontFamily="@font/poppins_italic"
-                    android:textColor="#808080" />
-
                 <!-- Search View Section -->
                 <androidx.appcompat.widget.SearchView
                     android:id="@+id/searchView"

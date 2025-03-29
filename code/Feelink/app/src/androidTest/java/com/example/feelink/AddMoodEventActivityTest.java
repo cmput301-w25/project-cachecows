@@ -15,6 +15,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.not;
 
 import android.content.Intent;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.test.core.app.ActivityScenario;
@@ -25,10 +26,13 @@ import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -40,6 +44,10 @@ import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RunWith(AndroidJUnit4.class)
@@ -52,59 +60,96 @@ public class AddMoodEventActivityTest {
     @Before
     public void setup() {
         try {
-            // Connect to Firestore emulator
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             db.useEmulator("10.0.2.2", 8080);
+
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            auth.useEmulator("10.0.2.2", 9099);
+
             FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                     .setPersistenceEnabled(false)
                     .build();
             db.setFirestoreSettings(settings);
 
-            // Connect to Auth emulator if needed
-            FirebaseAuth.getInstance().useEmulator("10.0.2.2", 9099);
-
-            // Wait briefly to ensure connection is established
-            Thread.sleep(500);
+            Thread.sleep(500); // Ensure connection is established
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @BeforeClass
-    public static void setupForTesting() {
-        // Use reflection to set the testing flag for both activities
-        try {
-            // Set flag for FeedManagerActivity
-            Field feedField = FeedManagerActivity.class.getDeclaredField("SKIP_AUTH_FOR_TESTING");
-            feedField.setAccessible(true);
-            feedField.set(null, true);
+    public static void seedDatabase() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-            // Set flag for AddMoodEventActivity
-            Field addMoodField = AddMoodEventActivity.class.getDeclaredField("SKIP_AUTH_FOR_TESTING");
-            addMoodField.setAccessible(true);
-            addMoodField.set(null, true);
-        } catch (Exception e) {
+        // Use Firestore emulator for testing
+        db.useEmulator("10.0.2.2", 8080);
+
+        // Seed user profile data
+        String userId = "testUserId123";
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("username", "testuser");
+        userData.put("email", "testuser@example.com");
+        userData.put("profileImageUrl", "https://example.com/profile.jpg");
+
+        db.collection("users").document(userId).set(userData)
+                .addOnSuccessListener(aVoid -> Log.d("SeedDatabase", "User profile seeded successfully"))
+                .addOnFailureListener(e -> Log.e("SeedDatabase", "Error seeding user profile", e));
+
+        // Optionally seed mood events for the user (if needed for tests)
+        List<Map<String, Object>> moodEvents = Arrays.asList(
+                new HashMap<String, Object>() {{
+                    put("reason", "Feeling happy");
+                    put("emotion", "Happy");
+                    put("timestamp", FieldValue.serverTimestamp());
+                }},
+                new HashMap<String, Object>() {{
+                    put("reason", "Feeling sad");
+                    put("emotion", "Sad");
+                    put("timestamp", FieldValue.serverTimestamp());
+                }}
+        );
+
+        for (Map<String, Object> event : moodEvents) {
+            db.collection("users").document(userId).collection("moodEvents").add(event)
+                    .addOnSuccessListener(documentReference -> Log.d("SeedDatabase", "Mood event seeded successfully"))
+                    .addOnFailureListener(e -> Log.e("SeedDatabase", "Error seeding mood event", e));
+        }
+    }
+
+
+
+    @AfterClass
+    public static void tearDown() {
+        String projectId = "feelink-database-test";
+
+        try {
+            URL url = new URL("http://10.0.2.2:8080/emulator/v1/projects/" + projectId + "/databases/(default)/documents");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("DELETE");
+
+            int responseCode = connection.getResponseCode();
+            Log.i("TearDown", "Response Code: " + responseCode);
+
+            connection.disconnect();
+
+        } catch (IOException e) {
+            Log.e("TearDown Error", Objects.requireNonNull(e.getMessage()));
             e.printStackTrace();
         }
     }
 
 
-    @After
-    public void tearDown() {
-        Intents.release();
-    }
-
-    @Test(timeout = 20000)
+    @Test(timeout = 2000)
     public void testAddMoodEventWithInvalidReason() {
         // Select a mood
         onView(withId(R.id.moodHappy)).perform(click());
 
         // Enter an invalid reason (too long)
-        onView(withId(R.id.etReason)).perform(typeText("This reason is way too long and should trigger an error"),
+        onView(withId(R.id.etReason)).perform(typeText("This is an intentionally long string that exceeds 200 characters to test input validation. It contains multiple sentences and various punctuation marks to simulate realistic user input. The purpose is to verify that your application properly handles and validates lengthy text inputs, especially in fields like reason or description that might have character limits."),
                 closeSoftKeyboard());
 
         // Check that there's an error message on the reason field
-        onView(withId(R.id.etReason)).check(matches(hasErrorText("Reason must be limited to 20 characters or 3 words")));
+        onView(withId(R.id.etReason)).check(matches(hasErrorText("Reason must be limited to 200 characters")));
 
         // Check that the button is disabled
         onView(withId(R.id.btnAddMood)).check(matches(not(isEnabled())));
@@ -116,74 +161,61 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.btnAddMood)).check(matches(isEnabled()));
     }
 
+    @Test(timeout = 2000)
+    public void testMoodEventAppearsInProfile() {
+        // Launch UserProfileActivity with dummy user
+        Intent profileIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+                UserProfileActivity.class);
+        profileIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        ActivityScenario<UserProfileActivity> profileScenario = ActivityScenario.launch(profileIntent);
 
+        // Click on FAB to navigate to AddMoodEventActivity
+        onView(withId(R.id.fabAddMood)).perform(click());
 
-    @Test(timeout = 10000)
-    public void testMoodEventAppearsInFeed() {
-        // Add a mood in AddMoodEventActivity
+        // Select a mood icon and add reason
         onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.etReason)).perform(typeText("Test mood"), closeSoftKeyboard());
+        onView(withId(R.id.etReason)).perform(typeText("Test Mood"), closeSoftKeyboard());
         onView(withId(R.id.btnAddMood)).perform(click());
 
-        // Wait for the UI thread to be idle after clicking the button
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-
-        // Add a delay to allow Firestore operation to complete
-        // This is a compromise since we can't modify FirestoreManager to expose its async state
+        // Wait for Firestore operation to complete
         try {
-            Thread.sleep(2000); // 2 seconds should be enough for the operation to complete
+            Thread.sleep(2000); // Adjust delay if needed
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        // Launch FeedManagerActivity with clear task flags
-        Intent feedIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-                FeedManagerActivity.class);
-        feedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        ActivityScenario<FeedManagerActivity> feedScenario = ActivityScenario.launch(feedIntent);
+        // Return to UserProfileActivity and verify mood event appears in RecyclerView
+        profileScenario.close(); // Close AddMoodEventActivity scenario
 
-        // Wait for the feed activity to load
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        ActivityScenario<UserProfileActivity> updatedProfileScenario = ActivityScenario.launch(profileIntent);
 
-        // Switch to "My Mood" tab and ensure it's fully visible
-        onView(withId(R.id.btnFollowingMoods)).perform(click());
-
-        // Wait for UI thread to be idle after tab switch
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-
-        // Small delay to ensure RecyclerView has loaded data from Firestore
         try {
-            Thread.sleep(1500);
+            Thread.sleep(5000); // Ensure RecyclerView has loaded data from Firestore
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        // Verify the mood appears in the RecyclerView
         onView(withId(R.id.recyclerMoodEvents))
-                .check(matches(hasDescendant(withText("Test mood"))));
+                .check(matches(hasDescendant(withText("Test Mood"))));
     }
 
-    @After
-    public void ClearEmulators() {
+    @AfterClass
+    public static void ClearEmulator() {
         String projectId = "feelink-database-test";
-        URL url = null;
+
         try {
-            url = new URL("http://10.0.2.2:8080/emulator/v1/projects/" + projectId + "/databases/(default)/documents");
-        } catch (MalformedURLException exception) {
-            Log.e("URL Error", Objects.requireNonNull(exception.getMessage()));
-        }
-        HttpURLConnection urlConnection = null;
-        try {
-            urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("DELETE");
-            int response = urlConnection.getResponseCode();
-            Log.i("Response Code", "Response Code: " + response);
-        } catch (IOException exception) {
-            Log.e("IO Error", Objects.requireNonNull(exception.getMessage()));
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
+            URL url = new URL("http://10.0.2.2:8080/emulator/v1/projects/" + projectId + "/databases/(default)/documents");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("DELETE");
+
+            int responseCode = connection.getResponseCode();
+            Log.i("TearDown", "Response Code: " + responseCode);
+
+            connection.disconnect();
+
+        } catch (IOException e) {
+            Log.e("TearDown Error", Objects.requireNonNull(e.getMessage()));
+            e.printStackTrace();
         }
     }
 

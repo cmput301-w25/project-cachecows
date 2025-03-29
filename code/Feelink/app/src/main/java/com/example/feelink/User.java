@@ -6,7 +6,6 @@ public class User {
     private String id;
     private String username;
     private String username_lowercase;
-    private String bio;
     private String profileImageUrl;
     private long moodPosts;
     private long followers;
@@ -15,10 +14,9 @@ public class User {
     // Required empty constructor for Firestore
     public User() {}
 
-    public User(String username, String bio) {
+    public User(String username) {
         this.username = username;
         this.username_lowercase = username.toLowerCase();
-        this.bio = bio;
         this.moodPosts = 0;
         this.followers = 0;
         this.following = 0;
@@ -48,14 +46,6 @@ public class User {
 
     public void setUsername_lowercase(String username_lowercase) {
         this.username_lowercase = username_lowercase;
-    }
-
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
     }
 
     public String getProfileImageUrl() {
@@ -97,7 +87,6 @@ public class User {
         User user = new User();
         user.setId(doc.getId());
         user.setUsername(doc.getString("username"));
-        user.setBio(doc.getString("bio"));
         user.setProfileImageUrl(doc.getString("profileImageUrl"));
         // Safely handle followers/following fields
         user.setFollowers(doc.contains("followers") ? doc.getLong("followers") : 0L);

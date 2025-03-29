@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 public class UserProfileActivity extends AppCompatActivity {
     private static final String TAG = "PersonalProfileActivity";
     private ImageView profileImageView;
-    private TextView usernameTextView, bioTextView, followerCountTextView, followingCountTextView;
+    private TextView usernameTextView, followerCountTextView, followingCountTextView;
     private String currentUserId;
     private RecyclerView recyclerMoodEvents;
     private MoodEventAdapter moodEventAdapter;
@@ -52,6 +52,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private ToggleButton togglePrivacy;
     private boolean isPublicMode = true; // Default to public
 
+    static boolean SKIP_AUTH_FOR_TESTING = false;
     private boolean filterByWeek = false;
     private String selectedEmotion = null;
     private androidx.appcompat.widget.SearchView searchView;
@@ -72,7 +73,6 @@ public class UserProfileActivity extends AppCompatActivity {
         // Initialize views
         profileImageView = findViewById(R.id.profileImage);
         usernameTextView = findViewById(R.id.username);
-        bioTextView = findViewById(R.id.bio);
         moodPostsTextView = findViewById(R.id.moodPosts);
         fabAddMood = findViewById(R.id.fabAddMood);
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
@@ -130,6 +130,11 @@ public class UserProfileActivity extends AppCompatActivity {
 
         // Initialize FirestoreManager
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (SKIP_AUTH_FOR_TESTING) {
+            currentUserId = "dummyUserId"; // Use hardcoded test user ID
+        } else {
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        }
         firestoreManager = new FirestoreManager(currentUserId);
         mAuth = FirebaseAuth.getInstance();
 
@@ -367,16 +372,11 @@ public class UserProfileActivity extends AppCompatActivity {
     private void displayUserData(DocumentSnapshot documentSnapshot) {
         User user = User.fromDocument(documentSnapshot);
         String username = documentSnapshot.getString("username");
-        String bio = documentSnapshot.getString("bio");
         String profileImageUrl = documentSnapshot.getString("profileImageUrl");
 
         // Update UI with user data
         if (username != null) {
             usernameTextView.setText(username);
-        }
-
-        if (bio != null) {
-            bioTextView.setText(bio);
         }
 
         if (profileImageUrl != null && !profileImageUrl.isEmpty()) {

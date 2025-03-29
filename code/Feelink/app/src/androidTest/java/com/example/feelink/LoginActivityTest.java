@@ -65,10 +65,10 @@ public class LoginActivityTest {
         // Add a valid user with an email (Firestore)
         Map<String, Object> validUser = new HashMap<>();
         validUser.put("uid", "testUserId123");
-        validUser.put("email", "testuser@example.com");  // ✅ Ensure email exists!
+        validUser.put("email", "testuser@example.com");  // Ensure email exists!
         usernamesRef.document("validUsername").set(validUser);
 
-        // ✅ ALSO Create a Firebase Authentication user
+        // ALSO Create a Firebase Authentication user
         FirebaseAuth auth = FirebaseAuth.getInstance();
         auth.createUserWithEmailAndPassword("testuser@example.com", "P@ssw0rd")
                 .addOnCompleteListener(task -> {

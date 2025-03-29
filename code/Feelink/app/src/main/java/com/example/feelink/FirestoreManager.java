@@ -613,6 +613,7 @@ public class FirestoreManager {
         });
     }
 
+
     public void getFollowedUsersMoodEvents(List<String> followedUserIds, boolean filterByWeek, String emotionFilter, OnMoodEventsListener listener) {
         if (followedUserIds.isEmpty()) {
             listener.onSuccess(new ArrayList<>());

@@ -203,28 +203,15 @@
         </FrameLayout>
 
         <!-- Action buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
 
-            <ImageView
-                android:id="@+id/btnLike"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_heart"
-                android:padding="8dp"
-                app:tint="#757575" />
-
-            <ImageView
-                android:id="@+id/btnComment"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_comment"
-                android:padding="8dp"
-                android:layout_marginStart="16dp"
-                app:tint="#757575" />
-        </LinearLayout>
+        <ImageView
+            android:id="@+id/btnComment"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_comment"
+            app:layout_constraintStart_toStartOf="parent"
+            app:tint="#757575" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

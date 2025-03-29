@@ -42,12 +42,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
         holder.usernameTextView.setText(user.getUsername());
 
-        if (user.getBio() != null && !user.getBio().isEmpty()) {
-            holder.bioTextView.setText(user.getBio());
-            holder.bioTextView.setVisibility(View.VISIBLE);
-        } else {
-            holder.bioTextView.setVisibility(View.GONE);
-        }
 
         // Load profile image if available
         if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
@@ -88,13 +82,11 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     static class UserViewHolder extends RecyclerView.ViewHolder {
         ImageView profileImageView;
         TextView usernameTextView;
-        TextView bioTextView;
 
         UserViewHolder(@NonNull View itemView) {
             super(itemView);
             profileImageView = itemView.findViewById(R.id.userProfileImage);
             usernameTextView = itemView.findViewById(R.id.userUsername);
-            bioTextView = itemView.findViewById(R.id.userBio);
         }
     }
 
