@@ -1,18 +1,21 @@
 package com.example.feelink;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.feelink.NotificationAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -50,8 +53,8 @@ public class NotificationsActivity extends AppCompatActivity {
         ImageView navHome = findViewById(R.id.navHome);
         ImageView navProfile = findViewById(R.id.navProfile);
 
-        navSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
-        navHome.setOnClickListener(v -> startActivity(new Intent(this, FeedManagerActivity.class)));
+        navSearch.setOnClickListener(v -> {Log.d("NAVIGATION", "Search icon clicked"); startActivity(new Intent(this, SearchActivity.class));});
+        navHome.setOnClickListener(v -> {Log.d("NAVIGATION", "Search icon clicked"); startActivity(new Intent(this, FeedManagerActivity.class));});
         navProfile.setOnClickListener(v -> startActivity(new Intent(this, UserProfileActivity.class)));
     }
 
@@ -124,6 +127,7 @@ public class NotificationsActivity extends AppCompatActivity {
             @Override public void onTabUnselected(TabLayout.Tab tab) {}
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
+        tabLayout.post(this::applyCustomFontToTabs);
     }
 
 
@@ -137,4 +141,22 @@ public class NotificationsActivity extends AppCompatActivity {
             recyclerView.setVisibility(View.VISIBLE);
         }
     }
+
+    private void applyCustomFontToTabs() {
+        Typeface typeface = ResourcesCompat.getFont(this, R.font.poppins_regular);
+
+        for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            TabLayout.Tab tab = tabLayout.getTabAt(i);
+            if (tab != null) {
+                ViewGroup vg = (ViewGroup) tab.view;
+                for (int j = 0; j < vg.getChildCount(); j++) {
+                    View tabViewChild = vg.getChildAt(j);
+                    if (tabViewChild instanceof TextView) {
+                        ((TextView) tabViewChild).setTypeface(typeface);
+                    }
+                }
+            }
+        }
+    }
+
 }

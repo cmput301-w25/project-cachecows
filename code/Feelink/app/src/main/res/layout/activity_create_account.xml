@@ -158,6 +158,28 @@
         android:layout_marginEnd="32dp"
         android:layout_marginTop="16dp" />
 
+    <TextView
+        android:id="@+id/tvAddPhoto"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="16dp"
+        android:layout_weight="1"
+        android:drawableStart="@drawable/ic_add_photo"
+        android:drawablePadding="8dp"
+        android:text="Change Profile Picture"
+        android:fontFamily="@font/poppins_regular"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toBottomOf="@+id/create_date_of_birth_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <Button
         android:id="@+id/create_button"
         android:layout_width="150dp"

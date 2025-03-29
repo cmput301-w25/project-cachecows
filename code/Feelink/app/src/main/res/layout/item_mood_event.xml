@@ -14,13 +14,30 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- User profile circle and info -->
         <LinearLayout
-            android:id="@+id/profileRow"
+            android:id="@+id/userInfoRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="2dp">
+            android:padding="8dp">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/userProfileImage"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_profile_placeholder"
+                app:civ_border_color="@color/grey_violet"
+                app:civ_border_width="1dp" />
+
+            <TextView
+                android:id="@+id/userUsername"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Username"
+                android:textSize="14sp"
+                android:fontFamily="@font/poppins_medium"
+                android:textColor="@android:color/black"/>
 
             <View
                 android:layout_width="0dp"
@@ -46,6 +63,7 @@
                 android:src="@drawable/ic_delete"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Delete mood"/>
+
         </LinearLayout>
 
         <!-- Photo/Image container -->
