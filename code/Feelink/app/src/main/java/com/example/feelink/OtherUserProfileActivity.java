@@ -37,6 +37,9 @@ public class OtherUserProfileActivity extends AppCompatActivity {
     private List<MoodEvent> moodEventsList;
     private FirestoreManager firestoreManager;
 
+    public static boolean SKIP_AUTH_FOR_TESTING = false;
+    public static String FORCE_USER_ID = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,7 +57,11 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         followButton = findViewById(R.id.followButton);
 
         // Get current user ID
-        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (SKIP_AUTH_FOR_TESTING) {
+            currentUserId = FORCE_USER_ID != null ? FORCE_USER_ID : "test_user_id";
+        } else {
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        }
 
         // Get the profile user ID from the intent
         profileUserId = getIntent().getStringExtra("userId");

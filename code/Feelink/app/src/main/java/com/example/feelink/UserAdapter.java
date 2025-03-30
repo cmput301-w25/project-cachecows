@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
 
@@ -25,8 +26,18 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     public UserAdapter(List<User> users, Context context) {
         this.users = users;
         this.context = context;
-        this.currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        this.currentUserId = user != null ? user.getUid() : null;
     }
+
+    // New constructor for testing
+    public UserAdapter(List<User> users, Context context, String userId) {
+        this.users = users;
+        this.context = context;
+        this.currentUserId = userId;
+    }
+
+
 
     @NonNull
     @Override

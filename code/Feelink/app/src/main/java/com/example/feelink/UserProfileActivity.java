@@ -371,8 +371,10 @@ public class UserProfileActivity extends AppCompatActivity {
                         displayUserData(documentSnapshot);
                     } else {
                         // Handle the case where the user document doesn't exist
-                        Toast.makeText(UserProfileActivity.this, "User not found", Toast.LENGTH_SHORT).show();
-                        finish();
+                        if(!SKIP_AUTH_FOR_TESTING){
+                            Toast.makeText(UserProfileActivity.this, "User not found", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
                     }
                 })
                 .addOnFailureListener(e -> {
