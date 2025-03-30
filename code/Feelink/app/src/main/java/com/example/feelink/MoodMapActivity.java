@@ -50,18 +50,20 @@ import java.util.List;
 import java.util.Map;
 
 public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCallback {
+    public static boolean SKIP_AUTH_FOR_TESTING = false;
+    public static final Object FORCE_USER_ID = null;
     private MapView mapView;
-    private GoogleMap googleMap;
+    GoogleMap googleMap;
     private FirestoreManager firestoreManager;
     private String userId;
     private Map<String, Marker> moodMarkers = new HashMap<>();
     private RadioGroup filterRadioGroup;
-    private Location currentLocation;
+    Location currentLocation;
     private FusedLocationProviderClient fusedLocationClient;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private static final float NEARBY_DISTANCE_KM = 5.0f;
     private ArrayList<MoodEvent> moodEventsList;
-    private List<Marker> currentMarkers = new ArrayList<>();
+    List<Marker> currentMarkers = new ArrayList<>();
     private static final String TAG = "MoodMapActivity";
     private static final int REQUEST_CHECK_SETTINGS = 2;
     private static final float DEFAULT_ZOOM = 13f;  // Shows roughly 5km radius
@@ -294,7 +296,7 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
         }
     }
 
-    private void loadNearbyFollowingMoods() {
+    void loadNearbyFollowingMoods() {
         // Clear existing markers
         clearExistingMarkers();
 

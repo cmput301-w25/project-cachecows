@@ -48,15 +48,16 @@ import android.location.Address;
 import java.util.Locale;
 
 public class LocationPickerActivity extends AppCompatActivity implements OnMapReadyCallback {
-    private GoogleMap mMap;
-    private Marker selectedMarker;
+    public static final boolean SKIP_AUTH_FOR_TESTING = false;
+    GoogleMap mMap;
+    Marker selectedMarker;
     private LatLng selectedLocation;
     private PlacesClient placesClient;
     private ListView suggestionsList;
     private ArrayAdapter<String> suggestionsAdapter;
-    private LatLng selectedLatLng;
-    private double selectedLatitude;
-    private double selectedLongitude;
+    LatLng selectedLatLng;
+    double selectedLatitude;
+    double selectedLongitude;
     private FusedLocationProviderClient fusedLocationClient;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 

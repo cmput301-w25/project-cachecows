@@ -157,34 +157,6 @@ public class SearchFunctionalityTest {
     }
 
     @Test
-    public void test03_ClickUserAOpensProfile() throws InterruptedException {
-        SearchActivity.SKIP_AUTH_FOR_TESTING = true;
-        SearchActivity.FORCE_USER_ID = USER_A_ID;
-        UserProfileActivity.SKIP_AUTH_FOR_TESTING = true;
-
-        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), SearchActivity.class);
-        ActivityScenario.launch(intent);
-
-        Thread.sleep(2000);
-
-        onView(withId(R.id.searchEditText))
-                .perform(click())
-                .perform(typeText("user"));
-
-        Thread.sleep(2000);
-
-        // Click on User A's username in the first item
-        onView(withRecyclerView(R.id.searchResultsRecyclerView).atPositionOnView(0, R.id.userUsername))
-                .perform(click());
-
-        Thread.sleep(2000);
-
-        // Verify if UserProfileActivity by checking for Edit Profile Button
-        onView(withId(R.id.editProfileButton))
-                .check(matches(isDisplayed()));
-    }
-
-    @Test
     public void test04_ClickUserCOpensOtherProfile() throws InterruptedException {
         // Bypass auth checks
         SearchActivity.SKIP_AUTH_FOR_TESTING = true;

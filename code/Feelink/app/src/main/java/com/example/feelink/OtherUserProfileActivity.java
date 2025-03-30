@@ -27,7 +27,7 @@ import java.util.Map;
 public class OtherUserProfileActivity extends AppCompatActivity {
     private static final String TAG = "OtherUserProfileActivity";
     private ImageView profileImageView;
-    private TextView usernameTextView, bioTextView, followerCountTextView, followingCountTextView;
+    private TextView usernameTextView, followerCountTextView, followingCountTextView;
     private Button followButton, messageButton;
     private String currentUserId, profileUserId;
     private TextView moodPostsTextView;
@@ -48,7 +48,6 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         // Initialize views
         profileImageView = findViewById(R.id.profileImage);
         usernameTextView = findViewById(R.id.username);
-        bioTextView = findViewById(R.id.bio);
         followerCountTextView = findViewById(R.id.followerCount);
         followingCountTextView = findViewById(R.id.followingCount);
         moodPostsTextView = findViewById(R.id.moodPosts);
@@ -186,7 +185,6 @@ public class OtherUserProfileActivity extends AppCompatActivity {
     private void displayUserData(DocumentSnapshot documentSnapshot) {
         User user = User.fromDocument(documentSnapshot);
         usernameTextView.setText(user.getUsername());
-        bioTextView.setText(user.getBio());
 
         if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
             Glide.with(this).load(user.getProfileImageUrl()).into(profileImageView);
