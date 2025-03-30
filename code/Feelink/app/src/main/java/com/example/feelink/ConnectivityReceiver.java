@@ -2,6 +2,8 @@ package com.example.feelink;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -11,9 +13,14 @@ import android.os.Looper;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.firebase.auth.FirebaseAuth;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * A BroadcastReceiver that listens for changes in network connectivity.
@@ -64,64 +71,90 @@ public class ConnectivityReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         boolean isConnected = isNetworkAvailable(context);
         if (isConnected) {
-            //if no pending items to sync, notify listener
+            // Notify listener online.
             if (listener != null) {
                 listener.onNetworkConnectionChanged(true);
             }
-            // Connectivity is restored, check for pending syncs
+            // Connectivity restored – check for pending syncs.
             PendingSyncManager pendingSyncManager = new PendingSyncManager(context);
             String uid = FirebaseAuth.getInstance().getCurrentUser() != null ?
                     FirebaseAuth.getInstance().getCurrentUser().getUid() : "default_user";
             FirestoreManager firestoreManager = new FirestoreManager(uid);
 
             for (String documentId : pendingSyncManager.getPendingIds()) {
-                // Attempt to sync the pending mood event
                 firestoreManager.syncPendingMoodEvent(documentId, new FirestoreManager.OnMoodEventListener() {
                     @Override
                     public void onSuccess(MoodEvent moodEvent) {
-                        if (moodEvent.getImageUrl() == null && moodEvent.getTempLocalImagePath() != null) {
+                        // If location update is pending
+                        boolean needsLocationUpdate = (moodEvent.getLocationName() == null ||
+                                moodEvent.getLocationName().equals("Pending Location"));
+                        if (needsLocationUpdate) {
+                            Double lat = moodEvent.getLatitude();
+                            Double lon = moodEvent.getLongitude();
+                            if (lat != null && lon != null) {
+                                Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+                                try {
+                                    List<Address> addresses = geocoder.getFromLocation(lat, lon, 1);
+                                    assert addresses != null;
+                                    if (!addresses.isEmpty()) {
+                                        Address address = addresses.get(0);
+                                        moodEvent.setLocationName(address.getAddressLine(0));
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            } else {} // lat/lon are null
+                        }
+                        // If photo upload is pending
+                        boolean needsPhotoUpload = (moodEvent.getImageUrl() == null &&
+                                moodEvent.getTempLocalImagePath() != null);
+
+                        if (needsPhotoUpload) {
                             firestoreManager.uploadLocalFileThenUpdateDocument(
                                     moodEvent.getTempLocalImagePath(),
                                     moodEvent.getDocumentId(),
                                     new FirestoreManager.OnImageUploadListener() {
                                         @Override
                                         public void onImageUploadSuccess(String newImageUrl) {
-                                            // 2) Update the mood doc with the real image URL
                                             moodEvent.setImageUrl(newImageUrl);
                                             moodEvent.setTempLocalImagePath(null);
-
+                                            //Update the mood event with any changes (location and/or photo).
                                             firestoreManager.updateMoodEvent(moodEvent, moodEvent.getDocumentId(), new FirestoreManager.OnMoodEventListener() {
                                                 @Override
                                                 public void onSuccess(MoodEvent updated) {
-                                                    // Done => remove from pending
                                                     pendingSyncManager.removePendingId(documentId);
+                                                    Intent syncIntent = new Intent("MOOD_EVENT_SYNCED");
+                                                    syncIntent.putExtra("DOCUMENT_ID", documentId);
+                                                    LocalBroadcastManager.getInstance(context).sendBroadcast(syncIntent);
                                                 }
                                                 @Override
-                                                public void onFailure(String errorMessage) {}
+                                                public void onFailure(String errorMessage) {} //pending on failure
                                             });
                                         }
                                         @Override
-                                        public void onImageUploadFailure(String error) {
-                                            // remain pending
-                                        }
+                                        public void onImageUploadFailure(String error) {} //pending of failure
                                     }
                             );
-                        } else {
-                            // Sync successful so remove from pending list
-                            pendingSyncManager.removePendingId(documentId);
-
-                            Intent intent = new Intent("MOOD_EVENT_SYNCED");
-                            intent.putExtra("DOCUMENT_ID", documentId);
-                            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+                        } else { //if no photo upload is pending, update the mood event
+                            firestoreManager.updateMoodEvent(moodEvent, moodEvent.getDocumentId(), new FirestoreManager.OnMoodEventListener() {
+                                @Override
+                                public void onSuccess(MoodEvent updated) {
+                                    pendingSyncManager.removePendingId(documentId);
+                                    Intent syncIntent = new Intent("MOOD_EVENT_SYNCED");
+                                    syncIntent.putExtra("DOCUMENT_ID", documentId);
+                                    LocalBroadcastManager.getInstance(context).sendBroadcast(syncIntent);
+                                }
+                                @Override
+                                public void onFailure(String errorMessage) {}
+                            });
                         }
                     }
                     @Override
                     public void onFailure(String errorMessage) {}
                 });
             }
-        }
-        else {
-            //notify listener offline
+        } else {
+            // Notify listener offline.
             if (listener != null) {
                 listener.onNetworkConnectionChanged(false);
             }
@@ -150,13 +183,13 @@ public class ConnectivityReceiver extends BroadcastReceiver {
             if (wasOffline){
                 tvOfflineIndicator.setText(R.string.back_online);
                 tvOfflineIndicator.setBackgroundColor(
-                        context.getResources().getColor(R.color.online_indicator_background));
+                        ContextCompat.getColor(context, R.color.online_indicator_background));
                 tvOfflineIndicator.setVisibility(View.VISIBLE);
 
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     tvOfflineIndicator.setText(R.string.you_are_currently_offline);
                     tvOfflineIndicator.setBackgroundColor(
-                            context.getResources().getColor(R.color.offline_indicator_background)
+                            ContextCompat.getColor(context, R.color.offline_indicator_background)
                     );
                     tvOfflineIndicator.setVisibility(View.GONE);
                 }, 3000);
@@ -168,7 +201,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
             wasOffline = true;
             tvOfflineIndicator.setText(R.string.you_are_currently_offline);
             tvOfflineIndicator.setBackgroundColor(
-                    context.getResources().getColor(R.color.offline_indicator_background)
+                    ContextCompat.getColor(context, R.color.offline_indicator_background)
             );
             tvOfflineIndicator.setVisibility(View.VISIBLE);
         }
