@@ -2,6 +2,8 @@ package com.example.feelink;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -14,6 +16,10 @@ import android.widget.TextView;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.firebase.auth.FirebaseAuth;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * A BroadcastReceiver that listens for changes in network connectivity.
@@ -64,64 +70,102 @@ public class ConnectivityReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         boolean isConnected = isNetworkAvailable(context);
         if (isConnected) {
-            //if no pending items to sync, notify listener
+            // Notify listener online.
             if (listener != null) {
                 listener.onNetworkConnectionChanged(true);
             }
-            // Connectivity is restored, check for pending syncs
+            // Connectivity restored – check for pending syncs.
             PendingSyncManager pendingSyncManager = new PendingSyncManager(context);
             String uid = FirebaseAuth.getInstance().getCurrentUser() != null ?
                     FirebaseAuth.getInstance().getCurrentUser().getUid() : "default_user";
             FirestoreManager firestoreManager = new FirestoreManager(uid);
 
             for (String documentId : pendingSyncManager.getPendingIds()) {
-                // Attempt to sync the pending mood event
                 firestoreManager.syncPendingMoodEvent(documentId, new FirestoreManager.OnMoodEventListener() {
                     @Override
                     public void onSuccess(MoodEvent moodEvent) {
-                        if (moodEvent.getImageUrl() == null && moodEvent.getTempLocalImagePath() != null) {
+                        // Determine if we need to update the location.
+                        boolean needsLocationUpdate = (moodEvent.getLocationName() == null ||
+                                moodEvent.getLocationName().equals("Pending Location"));
+                        if (needsLocationUpdate) {
+                            Double lat = moodEvent.getLatitude();
+                            Double lon = moodEvent.getLongitude();
+                            if (lat != null && lon != null) {
+                                Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+                                try {
+                                    List<Address> addresses = geocoder.getFromLocation(lat, lon, 1);
+                                    if (!addresses.isEmpty()) {
+                                        Address address = addresses.get(0);
+                                        moodEvent.setLocationName(address.getAddressLine(0));
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    // If geocoding fails, you might choose to leave the location as-is.
+                                }
+                            } else {
+                                // If lat/lon are null, log the issue or decide on fallback behavior.
+                            }
+                        }
+
+                        // Determine if a photo upload is pending.
+                        boolean needsPhotoUpload = (moodEvent.getImageUrl() == null &&
+                                moodEvent.getTempLocalImagePath() != null);
+
+                        if (needsPhotoUpload) {
                             firestoreManager.uploadLocalFileThenUpdateDocument(
                                     moodEvent.getTempLocalImagePath(),
                                     moodEvent.getDocumentId(),
                                     new FirestoreManager.OnImageUploadListener() {
                                         @Override
                                         public void onImageUploadSuccess(String newImageUrl) {
-                                            // 2) Update the mood doc with the real image URL
                                             moodEvent.setImageUrl(newImageUrl);
                                             moodEvent.setTempLocalImagePath(null);
-
+                                            // Now update the mood event with any changes (location and/or photo).
                                             firestoreManager.updateMoodEvent(moodEvent, moodEvent.getDocumentId(), new FirestoreManager.OnMoodEventListener() {
                                                 @Override
                                                 public void onSuccess(MoodEvent updated) {
-                                                    // Done => remove from pending
                                                     pendingSyncManager.removePendingId(documentId);
+                                                    Intent syncIntent = new Intent("MOOD_EVENT_SYNCED");
+                                                    syncIntent.putExtra("DOCUMENT_ID", documentId);
+                                                    LocalBroadcastManager.getInstance(context).sendBroadcast(syncIntent);
                                                 }
                                                 @Override
-                                                public void onFailure(String errorMessage) {}
+                                                public void onFailure(String errorMessage) {
+                                                    // Remain pending on failure.
+                                                }
                                             });
                                         }
                                         @Override
                                         public void onImageUploadFailure(String error) {
-                                            // remain pending
+                                            // Remain pending.
                                         }
                                     }
                             );
                         } else {
-                            // Sync successful so remove from pending list
-                            pendingSyncManager.removePendingId(documentId);
-
-                            Intent intent = new Intent("MOOD_EVENT_SYNCED");
-                            intent.putExtra("DOCUMENT_ID", documentId);
-                            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+                            // If no photo update is needed, update the event (this will update location if it changed)
+                            firestoreManager.updateMoodEvent(moodEvent, moodEvent.getDocumentId(), new FirestoreManager.OnMoodEventListener() {
+                                @Override
+                                public void onSuccess(MoodEvent updated) {
+                                    pendingSyncManager.removePendingId(documentId);
+                                    Intent syncIntent = new Intent("MOOD_EVENT_SYNCED");
+                                    syncIntent.putExtra("DOCUMENT_ID", documentId);
+                                    LocalBroadcastManager.getInstance(context).sendBroadcast(syncIntent);
+                                }
+                                @Override
+                                public void onFailure(String errorMessage) {
+                                    // Optionally handle update failure.
+                                }
+                            });
                         }
                     }
                     @Override
-                    public void onFailure(String errorMessage) {}
+                    public void onFailure(String errorMessage) {
+                        // Handle sync failure if necessary.
+                    }
                 });
             }
-        }
-        else {
-            //notify listener offline
+        } else {
+            // Notify listener offline.
             if (listener != null) {
                 listener.onNetworkConnectionChanged(false);
             }

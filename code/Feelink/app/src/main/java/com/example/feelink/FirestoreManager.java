@@ -1165,7 +1165,9 @@ public class FirestoreManager {
         if (moodEvent.getTempLocalImagePath() != null && !moodEvent.getTempLocalImagePath().isEmpty()) {
             moodData.put("tempLocalImagePath", moodEvent.getTempLocalImagePath());
         }
-
+        moodData.put("locationName", moodEvent.getLocationName() != null ? moodEvent.getLocationName() : "Pending Location");
+        moodData.put("latitude", moodEvent.getLatitude() != null ? moodEvent.getLatitude() : 0.0);
+        moodData.put("longitude", moodEvent.getLongitude() != null ? moodEvent.getLongitude() : 0.0);
 
         db.collection(COLLECTION_MOOD_EVENTS)
                 .document(documentId)
