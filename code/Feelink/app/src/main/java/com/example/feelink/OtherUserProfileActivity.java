@@ -50,6 +50,34 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         followingCountTextView = findViewById(R.id.followingCount);
         moodPostsTextView = findViewById(R.id.moodPosts);
 
+        ImageView navHome = findViewById(R.id.navHome);
+        ImageView navChats = findViewById(R.id.navChats);
+        ImageView navProfile = findViewById(R.id.navProfile);
+        ImageView navMap = findViewById(R.id.navMap);
+
+
+        navHome.setOnClickListener(v -> {
+            startActivity(new Intent(this, FeedManagerActivity.class));
+            finish();
+        });
+
+        navChats.setOnClickListener(v -> {
+            startActivity(new Intent(this, NotificationsActivity.class));
+            finish();
+        });
+        navMap.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MoodMapActivity.class);
+            startActivity(intent);
+        });
+
+        navProfile.setOnClickListener(v -> {
+            startActivity(new Intent(this, UserProfileActivity.class));
+            finish();
+        });
+
+        // Set up back button
+
+
 
         followButton = findViewById(R.id.followButton);
 

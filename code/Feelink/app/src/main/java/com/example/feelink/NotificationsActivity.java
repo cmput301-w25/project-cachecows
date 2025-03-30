@@ -52,10 +52,16 @@ public class NotificationsActivity extends AppCompatActivity {
         ImageView navSearch = findViewById(R.id.navSearch);
         ImageView navHome = findViewById(R.id.navHome);
         ImageView navProfile = findViewById(R.id.navProfile);
+        ImageView navMap = findViewById(R.id.navMap);
+
 
         navSearch.setOnClickListener(v -> {Log.d("NAVIGATION", "Search icon clicked"); startActivity(new Intent(this, SearchActivity.class));});
         navHome.setOnClickListener(v -> {Log.d("NAVIGATION", "Search icon clicked"); startActivity(new Intent(this, FeedManagerActivity.class));});
         navProfile.setOnClickListener(v -> startActivity(new Intent(this, UserProfileActivity.class)));
+        navMap.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MoodMapActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void updateNotifications(int tabPosition) {
