@@ -10,10 +10,13 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Objects;
 
 public class UploadProfilePictureActivity extends AppCompatActivity {
+    public static boolean SKIP_AUTH_FOR_TESTING = false;
+    public static String FORCE_USER_ID = null;
 
     private ActivityResultLauncher<Intent> uploadProfilePictureLauncher;
 
@@ -32,7 +35,19 @@ public class UploadProfilePictureActivity extends AppCompatActivity {
                             String imageUrl = data.getStringExtra("imageUrl");
                             if (imageUrl != null && !imageUrl.trim().isEmpty()) {
                                 // Update Firestore with the new profile picture
-                                String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+                                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+                                //For UI testing
+                                String userId;
+                                if (SKIP_AUTH_FOR_TESTING) {
+                                    if (FORCE_USER_ID != null) {
+                                        userId = FORCE_USER_ID;
+                                    } else {
+                                        userId = "test_user_id";
+                                    }
+                                } else {
+                                    userId = Objects.requireNonNull(currentUser).getUid();
+                                }
                                 FirestoreManager fm = new FirestoreManager(userId);
                                 fm.updateUserProfileImage(userId, imageUrl,
                                         aVoid -> {
