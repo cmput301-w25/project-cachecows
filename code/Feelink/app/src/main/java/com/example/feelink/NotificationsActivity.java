@@ -42,7 +42,8 @@ public class NotificationsActivity extends AppCompatActivity {
 
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new NotificationAdapter(new ArrayList<>());
+
+        adapter = new NotificationAdapter(this, new ArrayList<>());
         recyclerView.setAdapter(adapter);
 
         setupTabLayout();

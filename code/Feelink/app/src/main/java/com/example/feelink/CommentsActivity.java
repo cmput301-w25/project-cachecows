@@ -2,7 +2,6 @@ package com.example.feelink;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -13,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +27,9 @@ public class CommentsActivity extends AppCompatActivity {
     private EditText etComment;
     private ImageButton btnSend;
 
+    public static boolean SKIP_AUTH_FOR_TESTING = false;
+    public static String FORCE_USER_ID = null;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +38,20 @@ public class CommentsActivity extends AppCompatActivity {
         // Get intent extras
         moodEventId = getIntent().getStringExtra("MOOD_EVENT_ID");
         String moodEventOwnerId = getIntent().getStringExtra("MOOD_EVENT_OWNER_ID");
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String currentUserId;
+        if (SKIP_AUTH_FOR_TESTING) {
+            currentUserId = FORCE_USER_ID != null ? FORCE_USER_ID : "default_test_user";
+        } else {
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                currentUserId = currentUser.getUid();
+            } else {
+                Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+        }
+
         firestoreManager = new FirestoreManager(currentUserId);
 
         // Initialize views
@@ -88,6 +104,11 @@ public class CommentsActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    public static void resetTestFlags() {
+        SKIP_AUTH_FOR_TESTING = false;
+        FORCE_USER_ID = null;
     }
 
     private void postComment(String commentText, String userId) {

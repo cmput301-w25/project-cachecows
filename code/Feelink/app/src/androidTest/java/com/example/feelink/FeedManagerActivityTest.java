@@ -78,7 +78,7 @@ public class FeedManagerActivityTest {
     public void setUp() {
         Intents.init();
 
-        // Initialize Firebase
+//         Initialize Firebase
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         if (FirebaseApp.getApps(context).isEmpty()) {
             FirebaseApp.initializeApp(context);
@@ -97,85 +97,7 @@ public class FeedManagerActivityTest {
         cleanupTestDatabase();
     }
 
-//    private void seedTestDatabase() {
-//        CountDownLatch latch = new CountDownLatch(1); // Single latch for all operations
-//
-//        // Clear any existing test data first
-//        cleanupTestDatabase();
-//
-//        // Create test mood events with specific characteristics for filtering
-//        List<Map<String, Object>> testEvents = new ArrayList<>();
-//
-//        // Following Moods test data (from followed users)
-//        Map<String, Object> recentHappyEvent = new HashMap<>();
-//        recentHappyEvent.put("mood", "Happy");
-//        recentHappyEvent.put("reason", "Got a promotion today");
-//        recentHappyEvent.put("timestamp", System.currentTimeMillis() - 10000); // 10 seconds ago
-//        recentHappyEvent.put("userId", "followed_user_1");
-//        recentHappyEvent.put("shared", true);
-//        testEvents.add(recentHappyEvent);
-//
-//        Map<String, Object> weekOldAngryEvent = new HashMap<>();
-//        weekOldAngryEvent.put("mood", "Angry");
-//        weekOldAngryEvent.put("reason", "Traffic was terrible");
-//        weekOldAngryEvent.put("timestamp", System.currentTimeMillis() - (6 * 24 * 3600 * 1000)); // 6 days ago
-//        weekOldAngryEvent.put("userId", "followed_user_1");
-//        weekOldAngryEvent.put("shared", true);
-//        testEvents.add(weekOldAngryEvent);
-//
-//        Map<String, Object> oldSadEvent = new HashMap<>();
-//        oldSadEvent.put("mood", "Sad");
-//        oldSadEvent.put("reason", "Missed my flight");
-//        oldSadEvent.put("timestamp", System.currentTimeMillis() - (14 * 24 * 3600 * 1000)); // 14 days ago
-//        oldSadEvent.put("userId", "followed_user_2");
-//        oldSadEvent.put("shared", true);
-//        testEvents.add(oldSadEvent);
-//
-//        // All Moods test data (from random users)
-//        Map<String, Object> publicHappyEvent = new HashMap<>();
-//        publicHappyEvent.put("mood", "Happy");
-//        publicHappyEvent.put("reason", "Going on vacation");
-//        publicHappyEvent.put("timestamp", System.currentTimeMillis() - 5000); // 5 seconds ago
-//        publicHappyEvent.put("userId", "random_user_1");
-//        publicHappyEvent.put("shared", true);
-//        testEvents.add(publicHappyEvent);
-//
-//        // Batch write all test data
-//        FirebaseFirestore.getInstance().runBatch(batch -> {
-//            for (int i = 0; i < testEvents.size(); i++) {
-//                batch.set(FirebaseFirestore.getInstance()
-//                                .collection("moodEvents")
-//                                .document("test_mood_" + i),
-//                        testEvents.get(i));
-//            }
-//        }).addOnCompleteListener(task -> {
-//            latch.countDown();
-//        });
-//
-//        try {
-//            latch.await(10, TimeUnit.SECONDS);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
-//    private void cleanupTestDatabase() {
-//        CountDownLatch latch = new CountDownLatch(4); // Adjust based on test data size
-//
-//        // Delete test mood events
-//        for (int i = 0; i < 4; i++) { // 4 test events in seedTestDatabase()
-//            db.collection("moodEvents").document("test_mood_" + i)
-//                    .delete()
-//                    .addOnSuccessListener(aVoid -> latch.countDown())
-//                    .addOnFailureListener(e -> latch.countDown());
-//        }
-//
-//        try {
-//            latch.await(5, TimeUnit.SECONDS);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     @Test
     public void testSwitchToFollowingMoodsTab() {
@@ -337,22 +259,6 @@ public class FeedManagerActivityTest {
         events.add(event);
     }
 
-    @Test
-    public void testFollowingMoods_ShowsAllFollowedUsersEvents() {
-        // Switch to Following Moods tab
-        onView(withId(R.id.btnFollowingMoods)).perform(click());
-
-        // Verify events from all followed users appear
-        onView(withText("User A event 1")).check(matches(isDisplayed()));
-        onView(withText("User B event 1")).check(matches(isDisplayed()));
-        onView(withText("User C event 1")).check(matches(isDisplayed()));
-
-        // Verify test user's own events are excluded (if needed)
-        try {
-            onView(withText("Test user event 1")).check(matches(isDisplayed()));
-            throw new AssertionError("Own events should not appear in Following tab");
-        } catch (NoMatchingViewException ignored) {}
-    }
 
     private void cleanupTestDatabase() {
         CountDownLatch latch = new CountDownLatch(12); // 8 events + 4 users

@@ -22,13 +22,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="?attr/actionBarSize"/>
-    />
+
+    <!-- Map Section -->
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/tvOfflineIndicator"/>
 
     <!-- Nested Scroll Container -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@+id/tvOfflineIndicator"
+        app:layout_constraintTop_toBottomOf="@+id/mapView"
         app:layout_constraintBottom_toTopOf="@+id/layoutBottomNav"
         android:clipToPadding="false"
         android:paddingBottom="16dp">
@@ -74,11 +81,20 @@
                         android:padding="4dp"
                         android:layout_marginTop="16dp">
 
+                        <!-- Map Button -->
+                        <ImageView
+                            android:id="@+id/mapButton"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_nav_map"
+                            android:contentDescription="View Map" />
+
                         <!-- Filter Button -->
                         <ImageButton
                             android:id="@+id/filterButton"
                             android:layout_width="32dp"
                             android:layout_height="32dp"
+                            android:layout_marginStart="8dp"
                             android:src="@drawable/ic_filter"
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:contentDescription="Filter"
@@ -320,13 +336,11 @@
     <LinearLayout
         android:id="@+id/layoutBottomNav"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        android:background="@drawable/bg_bottom_bar_chat"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageView
             android:id="@+id/navHome"

@@ -3,7 +3,8 @@ package com.example.feelink;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.content.BroadcastReceiver;
 import android.os.Handler;
 import android.os.Looper;
@@ -36,7 +37,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
     public interface ConnectivityReceiverListener {
         /**
          * Called when the network connection changes.
-         * @param isConnected
+         * @param isConnected True if the device is connected to a network, false otherwise.
          */
         void onNetworkConnectionChanged(boolean isConnected);
     }
@@ -46,7 +47,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
 
     /**
      * Constructor for the ConnectivityReceiver.
-     * @param listener
+     * @param listener The listener to notify when the network connection changes.
      */
     public ConnectivityReceiver(ConnectivityReceiverListener listener) {
         this.listener = listener;
@@ -129,14 +130,18 @@ public class ConnectivityReceiver extends BroadcastReceiver {
 
     /**
      * Checks if the device is connected to a network.
-     * @param context
+     * Adapted from Stack Overflow answer by Yoshimitsu
+     * <a href="https://stackoverflow.com/questions/57284582/networkinfo-has-been-deprecated-by-api-29">...</a>
+     * @param context The Context in which the method is called.
      * @return True if the device is connected to a network, false otherwise.
      */
     public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnected();
+        Network nw = connectivityManager.getActiveNetwork();
+        if (nw == null) return false;
+        NetworkCapabilities actNw = connectivityManager.getNetworkCapabilities(nw);
+        return actNw != null && (actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH));
     }
 
     public static void handleBanner(boolean isConnected, TextView tvOfflineIndicator, Context context) {

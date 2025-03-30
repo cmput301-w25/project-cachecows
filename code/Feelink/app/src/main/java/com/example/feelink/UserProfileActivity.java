@@ -5,6 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,7 +21,9 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,11 +35,31 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import androidx.appcompat.widget.PopupMenu;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.LatLngBounds;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import androidx.core.app.ActivityCompat;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 public class UserProfileActivity extends AppCompatActivity {
     private static final String TAG = "PersonalProfileActivity";
@@ -56,12 +81,16 @@ public class UserProfileActivity extends AppCompatActivity {
     private String selectedEmotion = null;
     private androidx.appcompat.widget.SearchView searchView;
     private ConnectivityReceiver connectivityReceiver;
+    static boolean SKIP_AUTH_FOR_TESTING = false;
+    static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private final BroadcastReceiver syncReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             fetchUserMoodEvents(currentUserId);
         }
     };
+
+    private List<MoodEvent> originalMoodEventsList; // Add this field at the class level
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,9 +149,9 @@ public class UserProfileActivity extends AppCompatActivity {
         findViewById(R.id.followersLayout).setOnClickListener(v -> openFollowList("followers"));
         findViewById(R.id.followingLayout).setOnClickListener(v -> openFollowList("following"));
 
-
         // Set up RecyclerView
         moodEventsList = new ArrayList<>();
+        originalMoodEventsList = new ArrayList<>(); // Initialize the original list
         moodEventAdapter = new MoodEventAdapter(moodEventsList, this);
         moodEventAdapter.setMyMoodSection(true);
         moodEventAdapter.setPublicFeed(false);
@@ -132,11 +161,16 @@ public class UserProfileActivity extends AppCompatActivity {
         recyclerMoodEvents.setAdapter(moodEventAdapter);
 
         // Initialize FirestoreManager
-        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null || SKIP_AUTH_FOR_TESTING) {
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null ?
+                    FirebaseAuth.getInstance().getCurrentUser().getUid() : "test_user_id";
+            firestoreManager = new FirestoreManager(currentUserId);
+        } else {
+            handleUnauthorizedAccess();
+            return;
+        }
         firestoreManager = new FirestoreManager(currentUserId);
         mAuth = FirebaseAuth.getInstance();
-
-
 
         ImageButton settingsButton = findViewById(R.id.settingsButton);
         if (settingsButton != null) {
@@ -148,6 +182,18 @@ public class UserProfileActivity extends AppCompatActivity {
             Log.e(TAG, "Settings button not found in layout");
         }
 
+        // Set up map button click handler
+        ImageView mapButton = findViewById(R.id.mapButton);
+        if (mapButton != null) {
+            mapButton.setOnClickListener(v -> {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                } else {
+                    openMapActivity();
+                }
+            });
+        }
+
         togglePrivacy.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isPublicMode = !isChecked; // Toggle state matches text labels
             fetchUserMoodEvents(currentUserId);
@@ -155,14 +201,13 @@ public class UserProfileActivity extends AppCompatActivity {
 
         filterButton.setOnClickListener(v -> showFilterMenu());
 
-
         fabAddMood.setOnClickListener(v -> {
-            if (mAuth.getCurrentUser() != null) {
-                navigateToAddMood();
-            } else {
-                handleUnauthorizedAccess();
-            }
-        }
+                    if (mAuth.getCurrentUser() != null) {
+                        navigateToAddMood();
+                    } else {
+                        handleUnauthorizedAccess();
+                    }
+                }
         );
         Button editProfileButton = findViewById(R.id.editProfileButton);
         editProfileButton.setOnClickListener(v -> {
@@ -170,8 +215,6 @@ public class UserProfileActivity extends AppCompatActivity {
             intent.putExtra("EDIT_MODE", true);
             startActivity(intent);
         });
-//         Get current user ID
-        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         // Fetch user data from Firestore
         fetchUserData(currentUserId);
@@ -185,7 +228,6 @@ public class UserProfileActivity extends AppCompatActivity {
         intent.putExtra("type", type);
         startActivity(intent);
     }
-
 
     @Override
     protected void onDestroy() {
@@ -255,17 +297,20 @@ public class UserProfileActivity extends AppCompatActivity {
         popup.show();
     }
     private void filterMoodEventsByReason(String query) {
-        List<MoodEvent> filteredList = new ArrayList<>();
         String queryLower = query.toLowerCase().trim(); // Normalize the query
         if (queryLower.isEmpty()) {
-            moodEventAdapter.updateMoodEvents(moodEventsList); // Show all if query is empty
+            // If query is empty, show all events
+            moodEventsList.clear();
+            moodEventsList.addAll(originalMoodEventsList);
+            moodEventAdapter.updateMoodEvents(moodEventsList);
             return;
         }
 
         // Regex to match exact word with word boundaries, case-insensitive
         Pattern pattern = Pattern.compile("\\b" + Pattern.quote(queryLower) + "\\b", Pattern.CASE_INSENSITIVE);
+        List<MoodEvent> filteredList = new ArrayList<>();
 
-        for (MoodEvent event : moodEventsList) {
+        for (MoodEvent event : originalMoodEventsList) {
             if (event.getReason() != null) {
                 Matcher matcher = pattern.matcher(event.getReason().toLowerCase());
                 if (matcher.find()) {
@@ -273,6 +318,10 @@ public class UserProfileActivity extends AppCompatActivity {
                 }
             }
         }
+
+        // Update the display list with filtered results
+        moodEventsList.clear();
+        moodEventsList.addAll(filteredList);
         moodEventAdapter.updateMoodEvents(filteredList);
     }
 
@@ -288,13 +337,11 @@ public class UserProfileActivity extends AppCompatActivity {
         return null;
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
         fetchUserData(currentUserId); // Refresh profile data
         fetchUserMoodEvents(currentUserId); // Refresh mood events
-
     }
     private void fetchTotalMoodEvents(String userId) {
         FirestoreManager firestoreManager = new FirestoreManager(userId);
@@ -318,6 +365,20 @@ public class UserProfileActivity extends AppCompatActivity {
         firestoreManager.getMoodEvents(isPublicMode, filterByWeek, selectedEmotion, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
+                // Filter for test user if in testing mode
+                if (getIntent().getBooleanExtra("TEST_MODE", false)) {
+                    List<MoodEvent> filteredEvents = new ArrayList<>();
+                    for (MoodEvent event : moodEvents) {
+                        if (event.getUserId().equals("test_user_id")) {
+                            filteredEvents.add(event);
+                        }
+                    }
+                    moodEvents = filteredEvents;
+                }
+
+                // Update both lists
+                originalMoodEventsList.clear();
+                originalMoodEventsList.addAll(moodEvents);
                 moodEventsList.clear();
                 moodEventsList.addAll(moodEvents);
 
@@ -346,7 +407,6 @@ public class UserProfileActivity extends AppCompatActivity {
         });
     }
 
-
     private void fetchUserData(String userId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("users").document(userId).get()
@@ -355,8 +415,10 @@ public class UserProfileActivity extends AppCompatActivity {
                         displayUserData(documentSnapshot);
                     } else {
                         // Handle the case where the user document doesn't exist
-                        Toast.makeText(UserProfileActivity.this, "User not found", Toast.LENGTH_SHORT).show();
-                        finish();
+                        if(!SKIP_AUTH_FOR_TESTING){
+                            Toast.makeText(UserProfileActivity.this, "User not found", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
                     }
                 })
                 .addOnFailureListener(e -> {
@@ -364,8 +426,6 @@ public class UserProfileActivity extends AppCompatActivity {
                     Toast.makeText(UserProfileActivity.this, "Failed to load user data", Toast.LENGTH_SHORT).show();
                 });
     }
-
-
 
     private void displayUserData(DocumentSnapshot documentSnapshot) {
         User user = User.fromDocument(documentSnapshot);
@@ -405,5 +465,24 @@ public class UserProfileActivity extends AppCompatActivity {
         if (position != -1) {
             moodEventAdapter.notifyItemChanged(position);
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openMapActivity();
+            }
+        }
+    }
+
+    private void openMapActivity() {
+        Intent intent = new Intent(UserProfileActivity.this, MoodMapActivity.class);
+        intent.putExtra("userId", currentUserId);
+        intent.putExtra("showMyMoods", true);
+        ArrayList<MoodEvent> filteredEvents = new ArrayList<>(moodEventsList);
+        intent.putParcelableArrayListExtra("moodEvents", filteredEvents);
+        startActivity(intent);
     }
 }

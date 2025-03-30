@@ -28,9 +28,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     private FirebaseFirestore db;
     private Map<String, User> userCache = new HashMap<>();
 
-    public NotificationAdapter(List<Notification> notifications) {
+    // Update the constructor to accept a Context
+    public NotificationAdapter(Context context, List<Notification> notifications) {
         this.notifications = notifications;
-        this.context = context;
+        this.context = context; // Use the passed context
         this.db = FirebaseFirestore.getInstance();
     }
 
@@ -60,7 +61,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         if (userCache.containsKey(senderId)) {
             User user = userCache.get(senderId);
             if (user != null && user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
-                Glide.with(context)
+                Glide.with(holder.itemView.getContext())
                         .load(user.getProfileImageUrl())
                         .placeholder(R.drawable.ic_nav_profile)
                         .into(holder.profileImage);
@@ -71,7 +72,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 public void onSuccess(User user) {
                     userCache.put(senderId, user);
                     // Check if the view is still attached to the window.
-                    if (holder.itemView.isAttachedToWindow()) {
+                    if (holder.getAdapterPosition() != RecyclerView.NO_POSITION && holder.itemView.isAttachedToWindow()) {
                         if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
                             Glide.with(holder.itemView.getContext())
                                     .load(user.getProfileImageUrl())
