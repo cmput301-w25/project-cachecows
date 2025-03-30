@@ -1,5 +1,6 @@
 package com.example.feelink;
 
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -19,6 +20,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -83,6 +86,11 @@ public class AddMoodEventActivity extends AppCompatActivity {
         SKIP_AUTH_FOR_TESTING = enabled;
     }
 
+    // New ActivityResultLaunchers to replace startActivityForResult
+    private ActivityResultLauncher<Intent> imageActivityResultLauncher;
+    private ActivityResultLauncher<Intent> locationActivityResultLauncher;
+
+
     /**
      * Initializes activity components and state
      *
@@ -124,6 +132,50 @@ public class AddMoodEventActivity extends AppCompatActivity {
                 }
             });
         }
+
+        // Register the launcher for the image activity result
+        imageActivityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        String downloadedUrl = result.getData().getStringExtra("imageUrl");
+                        Log.d("AddMoodEventActivity", "downloadedUrl=" + downloadedUrl);
+                        if (downloadedUrl != null && ConnectivityReceiver.isNetworkAvailable(this)) {
+                            Snackbar.make(findViewById(android.R.id.content),
+                                            "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT)
+                                    .setDuration(4000).show();
+                            this.uploadedImageUrl = downloadedUrl;
+                            tempLocalImagePath = null;
+                            btnDeletePhoto.setVisibility(View.VISIBLE);
+                        } else {
+                            String localPath = result.getData().getStringExtra("localImagePath");
+                            if (localPath != null) {
+                                this.uploadedImageUrl = null;
+                                this.tempLocalImagePath = localPath;
+                                btnDeletePhoto.setVisibility(View.VISIBLE);
+                                Snackbar.make(findViewById(android.R.id.content),
+                                        "Offline mode: image saved locally and will be uploaded later.",
+                                        Snackbar.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                }
+        );
+
+        // Register the launcher for the location picker result
+        locationActivityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        selectedLatitude = result.getData().getDoubleExtra("latitude", 0.0);
+                        selectedLongitude = result.getData().getDoubleExtra("longitude", 0.0);
+                        String locationName = result.getData().getStringExtra("locationName");
+                        tvAddLocation.setText(locationName);
+                        tvAddLocation.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+                        btnDeleteLocation.setVisibility(View.VISIBLE);
+                    }
+                }
+        );
 
         // Initialize views
         initializeViews();
@@ -302,7 +354,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         // Add location click listener
         tvAddLocation.setOnClickListener(v -> {
             Intent locationIntent = new Intent(this, LocationPickerActivity.class);
-            startActivityForResult(locationIntent, LOCATION_PICKER_REQUEST_CODE);
+            locationActivityResultLauncher.launch(locationIntent);
         });
 
         etReason.addTextChangedListener(new TextWatcher() {
@@ -324,7 +376,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
         tvAddPhoto.setOnClickListener(v -> {
             Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
-            startActivityForResult(intent, IMAGE_REQUEST_CODE);
+            imageActivityResultLauncher.launch(intent);
         });
 
         btnDeletePhoto = findViewById(R.id.btnDeletePhoto);
@@ -620,50 +672,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
         finish();
     }
 
-
-    /**
-     * Handles image upload results from UploadImageActivity
-     *
-     * <p>Processes image URL results and updates UI state.
-     * Implements US 02.02.01.03 photograph integration requirements.</p>
-     *
-     * @param requestCode Originating request identifier
-     * @param resultCode Operation result status
-     * @param data Result payload containing image URL
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            String downloadedUrl = data.getStringExtra("imageUrl");
-            Log.d("AddMoodEventActivity", "downloadedUrl=" + downloadedUrl);
-            if (downloadedUrl != null && ConnectivityReceiver.isNetworkAvailable(this)) {
-                Snackbar.make(findViewById(android.R.id.content), "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT)
-                        .setDuration(5000).show();
-                this.uploadedImageUrl = downloadedUrl;
-                tempLocalImagePath = null;
-                btnDeletePhoto.setVisibility(View.VISIBLE);
-            } else{
-                String localPath = data.getStringExtra("localImagePath");
-                if (localPath != null) {
-                    this.uploadedImageUrl = null;
-                    this.tempLocalImagePath = localPath;
-                    btnDeletePhoto.setVisibility(View.VISIBLE);
-                    Snackbar.make(findViewById(android.R.id.content),
-                                    "Offline mode: image saved locally and will be uploaded later.", Snackbar.LENGTH_SHORT).show();
-                }
-            }
-        } else if (requestCode == LOCATION_PICKER_REQUEST_CODE && resultCode == RESULT_OK) {
-            if (data != null) {
-                selectedLatitude = data.getDoubleExtra("latitude", 0.0);
-                selectedLongitude = data.getDoubleExtra("longitude", 0.0);
-                String locationName = data.getStringExtra("locationName");
-                tvAddLocation.setText(locationName);
-                tvAddLocation.setTextColor(ContextCompat.getColor(this, android.R.color.white));
-                btnDeleteLocation.setVisibility(View.VISIBLE);
-            }
-        }
-    }
 
     /**
      * Removes associated photograph from current mood event
