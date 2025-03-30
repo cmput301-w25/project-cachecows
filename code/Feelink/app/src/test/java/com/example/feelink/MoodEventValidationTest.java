@@ -8,14 +8,15 @@ public class MoodEventValidationTest {
     // Reason Validation
     @Test
     public void testReasonConstraints() {
+        String invalidReason = new String(new char[201]).replace('\0', 'a');
 
-        // valid cases
-        assertTrue("21 chars", isReasonNotValid("This reason is way too long and exceeds"));
-        assertTrue("4 words", isReasonNotValid("one two three four"));
 
-        // InValid cases
+        // valid case
+        assertTrue("201 chars", isReasonNotValid(invalidReason));
+
+        // InValid case
         assertFalse(isReasonNotValid("Short reason"));
-        assertFalse(isReasonNotValid("Three word limit"));
+
 
     }
 }

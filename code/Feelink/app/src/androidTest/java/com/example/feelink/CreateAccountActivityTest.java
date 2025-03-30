@@ -70,7 +70,6 @@ public class CreateAccountActivityTest {
             skipAuthFieldCA.setAccessible(true);
             skipAuthFieldCA.set(null, true);
 
-            // ALSO for FeedManagerActivity - notice the different flag name
             Class<?> feedManagerClass = Class.forName("com.example.feelink.FeedManagerActivity");
             java.lang.reflect.Field skipAuthFieldFM = feedManagerClass.getDeclaredField("SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT");
             skipAuthFieldFM.setAccessible(true);

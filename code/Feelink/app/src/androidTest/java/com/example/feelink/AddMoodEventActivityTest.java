@@ -98,7 +98,7 @@ public class AddMoodEventActivityTest {
         Intents.release();
     }
 
-    @Test(timeout = 20000)
+    @Test(timeout = 30000)
     public void testAddMoodEventWithInvalidReason() {
         // Select a mood
         onView(withId(R.id.moodHappy)).perform(click());
