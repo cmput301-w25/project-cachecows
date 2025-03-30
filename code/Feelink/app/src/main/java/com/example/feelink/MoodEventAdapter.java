@@ -3,26 +3,17 @@ package com.example.feelink;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.renderscript.Allocation;
-import android.renderscript.Element;
-import android.renderscript.RenderScript;
-import android.renderscript.ScriptIntrinsicBlur;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
@@ -30,9 +21,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.target.Target;
-import com.bumptech.glide.request.transition.Transition;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -199,6 +187,9 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             intent.putExtra("SOCIAL_SITUATION", moodEvent.getSocialSituation());
             intent.putExtra("IMAGE_URL", moodEvent.getImageUrl());
             intent.putExtra("IS_PUBLIC", moodEvent.isPublic());
+            intent.putExtra("LOCATION_NAME", moodEvent.getLocationName());
+            intent.putExtra("LATITUDE", moodEvent.getLatitude());
+            intent.putExtra("LONGITUDE", moodEvent.getLongitude());
             context.startActivity(intent);
         });
 
@@ -228,6 +219,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
                 holder.photoContainer.setVisibility(View.GONE);
             }
         }
+
 
         String postUserId = moodEvent.getUserId();
         if (moodEvent.getUsername() != null && !moodEvent.getUsername().isEmpty()
@@ -299,7 +291,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     private void showDeleteConfirmationDialog(MoodEvent moodEvent) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Delete Mood?");
-        builder.setMessage("By Deleting this post, you won’t be able to access it.?");
+        builder.setMessage("By Deleting this post, you won't be able to access it.?");
         builder.setPositiveButton("Yes, Delete", (dialog, which) -> {
             // User confirmed, delete the mood event
             deleteMoodEvent(moodEvent);
@@ -439,7 +431,15 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             tvLocation.setText("None");
         }
 
-
+        // Add location name display
+        String locationName = moodEvent.getLocationName();
+        if (locationName != null && !locationName.isEmpty()) {
+            TextView tvLocationName = dialogView.findViewById(R.id.tvLocationName);
+            if (tvLocationName != null) {
+                tvLocationName.setText(locationName);
+                tvLocationName.setVisibility(View.VISIBLE);
+            }
+        }
 
         // Set the content/reason
         tvContent.setText(moodEvent.getReason());
@@ -509,6 +509,21 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     }
 
     /**
+     * @return The current list of mood events (filtered or unfiltered)
+     */
+    public List<MoodEvent> getCurrentMoodEvents() {
+        return moodEvents;
+    }
+
+    /**
+     * Returns the current list of mood events in the adapter
+     * @return List<MoodEvent> The current list of mood events
+     */
+    public List<MoodEvent> getMoodEvents() {
+        return moodEvents;
+    }
+
+    /**
      * ViewHolder implementation for mood event items
      *
      * <p>Manages view references and click handlers for:</p>
@@ -524,6 +539,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         ImageView moodImage, moodPostedImage;
         View btnComment;
         CardView cardView;
+
         de.hdodenhof.circleimageview.CircleImageView userProfileImage;
         ImageButton btnEdit, btnDelete;
 

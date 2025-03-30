@@ -17,6 +17,9 @@ import android.widget.PopupMenu;
 import androidx.appcompat.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Spinner;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 
 
 import androidx.activity.EdgeToEdge;
@@ -59,8 +62,9 @@ import java.util.regex.Pattern;
  * @see AddMoodEventActivity
  */
 public class FeedManagerActivity extends AppCompatActivity {
+    private static final String TAG = "FeedManagerActivity";
     private Button btnTheirMood, btnMyMood;
-    private ImageButton btnFilter;
+    private ImageButton filterButton;
     private TextView tvShareInfo, tvEmptyState, tvOfflineIndicator;
     private RecyclerView recyclerMoodEvents;
     private FloatingActionButton fabAddMood;
@@ -77,6 +81,7 @@ public class FeedManagerActivity extends AppCompatActivity {
     private String selectedEmotion = null;
     private String searchReasonQuery = null;
     private SearchView searchView;
+    private Spinner viewMapSpinner;
 
 
     /**
@@ -118,6 +123,7 @@ public class FeedManagerActivity extends AppCompatActivity {
         }
 
         initializeViews();
+        setupMapViewSpinner();
         setupListeners();
         setupRecyclerView();
         updateTabSelection(false);
@@ -132,13 +138,21 @@ public class FeedManagerActivity extends AppCompatActivity {
         navChats.setOnClickListener(v -> navigateToNotifications());
 
         // Find navChats view
-
+        ImageView navMap = findViewById(R.id.navMap);
 
         // Set click listener for Search navigation
         navSearch.setOnClickListener(v -> navigateToSearch());
 
         // Set click listener for Profile navigation (existing code)
         navProfile.setOnClickListener(v -> navigateToProfile());
+
+        // Set up map button click listener
+        navMap.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MoodMapActivity.class);
+            intent.putExtra("userId", currentUser.getUid());
+            intent.putExtra("showMyMoods", false); // Show all moods, not just user's
+            startActivity(intent);
+        });
 
         // Check initial network state
         boolean isConnected = ConnectivityReceiver.isNetworkAvailable(this);
@@ -183,6 +197,21 @@ public class FeedManagerActivity extends AppCompatActivity {
             }
         });
         registerReceiver(connectivityReceiver, intentFilter);
+
+        // Add map button click handler
+        ImageButton mapButton = findViewById(R.id.mapButton);
+        if (mapButton != null) {
+            mapButton.setOnClickListener(v -> {
+                String currentUserId = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : "test_user_id";
+                Intent intent = new Intent(FeedManagerActivity.this, MoodMapActivity.class);
+                intent.putExtra("userId", currentUserId);
+                intent.putExtra("showMyMoods", false); // Show all moods, not just user's
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "Map button not found in layout");
+        }
+
 
     }
 
@@ -232,12 +261,13 @@ public class FeedManagerActivity extends AppCompatActivity {
     private void initializeViews() {
         btnTheirMood = findViewById(R.id.btnAllMoods);
         btnMyMood = findViewById(R.id.btnFollowingMoods);
-        btnFilter = findViewById(R.id.btnFilter);
-        searchView = findViewById(R.id.searchView);;
+        filterButton = findViewById(R.id.btnFilter);
+        searchView = findViewById(R.id.searchView);
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
         fabAddMood = findViewById(R.id.fabAddMood);
         tvOfflineIndicator = findViewById(R.id.tvOfflineIndicator);
         findViewById(R.id.btnChat).setOnClickListener(v -> navigateToConversationsList());
+        viewMapSpinner = findViewById(R.id.viewMapSpinner);
     }
 
     /**
@@ -261,7 +291,7 @@ public class FeedManagerActivity extends AppCompatActivity {
             loadMyMoodEvents();
         });
 
-        btnFilter.setOnClickListener(v -> {
+        filterButton.setOnClickListener(v -> {
             // Implement filter functionality
             // This could show a dialog with filter options
             showFilterMenu();
@@ -320,7 +350,8 @@ public class FeedManagerActivity extends AppCompatActivity {
             searchReasonQuery = null; // Reset filter
         }
 
-        btnFilter.setVisibility(showMyMood ? View.VISIBLE : View.GONE);
+        viewMapSpinner.setVisibility(showMyMood ? View.VISIBLE : View.GONE);
+        filterButton.setVisibility(showMyMood ? View.VISIBLE : View.GONE);
         ColorStateList selectedColor = ColorStateList.valueOf(getResources().getColor(R.color.selected_tab_color)); // Replace with your selected color
         ColorStateList unselectedColor = ColorStateList.valueOf(getResources().getColor(R.color.unselected_tab_color)); // Replace with your unselected color
 
@@ -632,6 +663,53 @@ public class FeedManagerActivity extends AppCompatActivity {
     }
     private void navigateToNotifications(){
         startActivity(new Intent(FeedManagerActivity.this, NotificationsActivity.class));
+    }
+
+    private void setupMapViewSpinner() {
+        Spinner viewMapSpinner = findViewById(R.id.viewMapSpinner);
+        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this,
+                R.array.map_view_options, android.R.layout.simple_spinner_item);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        viewMapSpinner.setAdapter(spinnerAdapter);
+
+        viewMapSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0) { // If not "View on Map"
+                    String currentUserId = mAuth.getCurrentUser() != null ? 
+                            mAuth.getCurrentUser().getUid() : "test_user_id";
+                    Intent intent = new Intent(FeedManagerActivity.this, MoodMapActivity.class);
+                    intent.putExtra("userId", currentUserId);
+                    intent.putExtra("showMyMoods", false);
+
+                    if (position == 1) { // Following Moods
+                        // Only pass filters for Following Moods view
+                        intent.putExtra("mapViewType", "following");
+                        intent.putExtra("filterByWeek", filterByWeek);
+                        intent.putExtra("selectedEmotion", selectedEmotion);
+                        intent.putExtra("searchReasonQuery", searchReasonQuery);
+                        
+                        // Pass the current mood events list from the MoodEventAdapter
+                        if (adapter != null && adapter.getCurrentMoodEvents() != null) {
+                            ArrayList<MoodEvent> currentMoodEvents = new ArrayList<>(adapter.getCurrentMoodEvents());
+                            intent.putParcelableArrayListExtra("moodEvents", currentMoodEvents);
+                        }
+                    } else { // Nearby Moods
+                        intent.putExtra("mapViewType", "nearby");
+                        // Don't pass any filters for nearby moods
+                    }
+
+                    startActivity(intent);
+                    // Reset spinner to "View on Map"
+                    viewMapSpinner.setSelection(0);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
+            }
+        });
     }
 
 

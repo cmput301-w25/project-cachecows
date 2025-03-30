@@ -1,5 +1,6 @@
 package com.example.feelink;
 
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -19,6 +20,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -51,9 +54,10 @@ import java.util.UUID;
 public class AddMoodEventActivity extends AppCompatActivity {
     public static boolean SKIP_AUTH_FOR_TESTING = true;
     private static final int IMAGE_REQUEST_CODE = 200;
+    private static final int LOCATION_PICKER_REQUEST_CODE = 2;
 
     // UI references
-    private TextView tvGreeting, tvAddPhoto;
+    private TextView tvGreeting, tvAddPhoto, tvAddLocation;
     private LinearLayout moodHappy, moodSad, moodAngry, moodSurprised,
             moodConfused, moodDisgusted, moodShame, moodFear;
     private EditText etReason;
@@ -73,7 +77,18 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private long moodEventId = -1;
 
     private ImageView btnDeletePhoto;
+    private double selectedLatitude = 0.0;
+    private double selectedLongitude = 0.0;
 
+    private ImageView btnDeleteLocation;
+
+    public static void enableTestMode(boolean enabled) {
+        SKIP_AUTH_FOR_TESTING = enabled;
+    }
+
+    // New ActivityResultLaunchers to replace startActivityForResult
+    private ActivityResultLauncher<Intent> imageActivityResultLauncher;
+    private ActivityResultLauncher<Intent> locationActivityResultLauncher;
 
 
     /**
@@ -118,10 +133,55 @@ public class AddMoodEventActivity extends AppCompatActivity {
             });
         }
 
+        // Register the launcher for the image activity result
+        imageActivityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        String downloadedUrl = result.getData().getStringExtra("imageUrl");
+                        Log.d("AddMoodEventActivity", "downloadedUrl=" + downloadedUrl);
+                        if (downloadedUrl != null && ConnectivityReceiver.isNetworkAvailable(this)) {
+                            Snackbar.make(findViewById(android.R.id.content),
+                                            "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT)
+                                    .setDuration(4000).show();
+                            this.uploadedImageUrl = downloadedUrl;
+                            tempLocalImagePath = null;
+                            btnDeletePhoto.setVisibility(View.VISIBLE);
+                        } else {
+                            String localPath = result.getData().getStringExtra("localImagePath");
+                            if (localPath != null) {
+                                this.uploadedImageUrl = null;
+                                this.tempLocalImagePath = localPath;
+                                btnDeletePhoto.setVisibility(View.VISIBLE);
+                                Snackbar.make(findViewById(android.R.id.content),
+                                        "Offline mode: image saved locally and will be uploaded later.",
+                                        Snackbar.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                }
+        );
+
+        // Register the launcher for the location picker result
+        locationActivityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        selectedLatitude = result.getData().getDoubleExtra("latitude", 0.0);
+                        selectedLongitude = result.getData().getDoubleExtra("longitude", 0.0);
+                        String locationName = result.getData().getStringExtra("locationName");
+                        tvAddLocation.setText(locationName);
+                        tvAddLocation.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+                        btnDeleteLocation.setVisibility(View.VISIBLE);
+                    }
+                }
+        );
+
         // Initialize views
         initializeViews();
         setupMoodSelectors();
         setupSocialSituationSpinner();
+        setupAddButton();
 
         Intent intent = getIntent();
         if (intent != null && intent.getBooleanExtra("EDIT_MODE", false)) {
@@ -132,9 +192,12 @@ public class AddMoodEventActivity extends AppCompatActivity {
             String reason = intent.getStringExtra("REASON");
             String socialSituation = intent.getStringExtra("SOCIAL_SITUATION");
             String imageUrl = intent.getStringExtra("IMAGE_URL");
+            String locationName = intent.getStringExtra("LOCATION_NAME");
+            selectedLatitude = intent.getDoubleExtra("LATITUDE", 0.0);
+            selectedLongitude = intent.getDoubleExtra("LONGITUDE", 0.0);
             boolean isPublic = intent.getBooleanExtra("IS_PUBLIC", true);
 
-            preFillFields(emotionalState, reason, socialSituation, imageUrl,isPublic);
+            preFillFields(emotionalState, reason, socialSituation, imageUrl, locationName, isPublic);
         }
 
         setupAddButton();
@@ -160,8 +223,9 @@ public class AddMoodEventActivity extends AppCompatActivity {
      * @param reason Stored reason text
      * @param socialSituation Selected social situation
      * @param imageUrl Stored image reference
+     * @param locationName Stored location name
      */
-    private void preFillFields(String emotionalState, String reason, String socialSituation, String imageUrl, boolean isPublic) {
+    private void preFillFields(String emotionalState, String reason, String socialSituation, String imageUrl, String locationName, boolean isPublic) {
         // Set the selected mood
         selectedMood = emotionalState;
         highlightSelectedMood(emotionalState);
@@ -197,6 +261,17 @@ public class AddMoodEventActivity extends AppCompatActivity {
         }
 
         togglePrivacy.setChecked(!isPublic);  // Toggle is "Private" when checked
+
+        // Handle location data
+        if (locationName != null && !locationName.isEmpty()) {
+            tvAddLocation.setText(locationName);
+            tvAddLocation.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+            btnDeleteLocation.setVisibility(View.VISIBLE);
+        } else {
+            tvAddLocation.setText("Add Location (Optional)");
+            tvAddLocation.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+            btnDeleteLocation.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -264,6 +339,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
         socialSituationSpinner = findViewById(R.id.socialSituationSpinner);
         btnAddMood = findViewById(R.id.btnAddMood);
         tvAddPhoto = findViewById(R.id.tvAddPhoto);
+        tvAddLocation = findViewById(R.id.tvAddLocation);
 
         // Mood selectors
         moodHappy = findViewById(R.id.moodHappy);
@@ -275,6 +351,11 @@ public class AddMoodEventActivity extends AppCompatActivity {
         moodShame = findViewById(R.id.moodShame);
         moodFear = findViewById(R.id.moodFear);
 
+        // Add location click listener
+        tvAddLocation.setOnClickListener(v -> {
+            Intent locationIntent = new Intent(this, LocationPickerActivity.class);
+            locationActivityResultLauncher.launch(locationIntent);
+        });
 
         etReason.addTextChangedListener(new TextWatcher() {
             @Override
@@ -295,12 +376,14 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
         tvAddPhoto.setOnClickListener(v -> {
             Intent intent = new Intent(AddMoodEventActivity.this, UploadImageActivity.class);
-            startActivityForResult(intent, IMAGE_REQUEST_CODE);
+            imageActivityResultLauncher.launch(intent);
         });
 
         btnDeletePhoto = findViewById(R.id.btnDeletePhoto);
         btnDeletePhoto.setOnClickListener(v -> deletePhoto());
 
+        btnDeleteLocation = findViewById(R.id.btnDeleteLocation);
+        btnDeleteLocation.setOnClickListener(v -> deleteLocation());
     }
 
     /**
@@ -316,6 +399,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
      * @param text Input to validate
      */
     private void validateReasonField(String text) {
+
+        // Show error if either limit is exceeded
         if (ValidationUtils.isReasonNotValid(text)) {
             etReason.setError("Reason must be limited to 200 characters");
             btnAddMood.setEnabled(false);
@@ -434,6 +519,15 @@ public class AddMoodEventActivity extends AppCompatActivity {
             btnAddMood.setEnabled(false); // Disable button to prevent multiple clicks
 
             MoodEvent moodEvent = createMoodEventFromInputs();
+
+            // Set the location data
+            String locationName = tvAddLocation.getText().toString();
+            if (!locationName.equals("Add Location (Optional)") && !locationName.equals("Add Location")) {
+                moodEvent.setLocationName(locationName);
+                moodEvent.setLatitude(selectedLatitude);
+                moodEvent.setLongitude(selectedLongitude);
+            }
+
             if (isEditMode) {
                 handleEditMode(v, moodEvent);
             } else {
@@ -584,41 +678,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
 
 
     /**
-     * Handles image upload results from UploadImageActivity
-     *
-     * <p>Processes image URL results and updates UI state.
-     * Implements US 02.02.01.03 photograph integration requirements.</p>
-     *
-     * @param requestCode Originating request identifier
-     * @param resultCode Operation result status
-     * @param data Result payload containing image URL
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            String downloadedUrl = data.getStringExtra("imageUrl");
-            Log.d("AddMoodEventActivity", "downloadedUrl=" + downloadedUrl);
-            if (downloadedUrl != null && ConnectivityReceiver.isNetworkAvailable(this)) {
-                Snackbar.make(findViewById(android.R.id.content), "Image uploaded! URL:\n" + downloadedUrl, Snackbar.LENGTH_SHORT)
-                        .setDuration(5000).show();
-                this.uploadedImageUrl = downloadedUrl;
-                tempLocalImagePath = null;
-                btnDeletePhoto.setVisibility(View.VISIBLE);
-            } else{
-                String localPath = data.getStringExtra("localImagePath");
-                if (localPath != null) {
-                    this.uploadedImageUrl = null;
-                    this.tempLocalImagePath = localPath;
-                    btnDeletePhoto.setVisibility(View.VISIBLE);
-                    Snackbar.make(findViewById(android.R.id.content),
-                                    "Offline mode: image saved locally and will be uploaded later.", Snackbar.LENGTH_SHORT).show();
-                }
-            }
-        }
-    }
-
-    /**
      * Removes associated photograph from current mood event
      *
      * <p>Clears image URL reference and updates UI state.
@@ -629,5 +688,15 @@ public class AddMoodEventActivity extends AppCompatActivity {
         tvAddPhoto.setText("Add Photograph");
         btnDeletePhoto.setVisibility(View.GONE);
         Snackbar.make(findViewById(R.id.layoutBottomNav),"Photo removed", Snackbar.LENGTH_SHORT).show();
+
+
+    }
+
+    private void deleteLocation() {
+        selectedLatitude = 0.0;
+        selectedLongitude = 0.0;
+        tvAddLocation.setText("Add Location");
+        btnDeleteLocation.setVisibility(View.GONE);
+        Snackbar.make(findViewById(R.id.layoutBottomNav), "Location removed", Snackbar.LENGTH_SHORT).show();
     }
 }

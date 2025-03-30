@@ -1,6 +1,9 @@
 package com.example.feelink;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import java.util.Date;
+import com.google.firebase.firestore.DocumentSnapshot;
 
 /**
  * Core data model representing a user's mood event with temporal and contextual metadata
@@ -16,7 +19,7 @@ import java.util.Date;
  * @see FirestoreManager
  * @see AddMoodEventActivity
  */
-public class MoodEvent {
+public class MoodEvent implements Parcelable {
     private long id;
     private Date timestamp;
     private String emotionalState;
@@ -26,12 +29,70 @@ public class MoodEvent {
     private String userId;  // Added to support authentication later
     private String imageUrl;
     private boolean isPublic = true; // Default to public
-
+    private Double latitude;  // Location latitude
+    private Double longitude; // Location longitude
+    private String locationName; // Optional location name/address
     private String tempLocalImagePath;
     private boolean isPendingSync;
-
     private String username;
     private String userProfileImageUrl;
+
+    // Parcelable constructor
+    protected MoodEvent(Parcel in) {
+        id = in.readLong();
+        timestamp = new Date(in.readLong());
+        emotionalState = in.readString();
+        socialSituation = in.readString();
+        documentId = in.readString();
+        reason = in.readString();
+        userId = in.readString();
+        imageUrl = in.readString();
+        isPublic = in.readByte() != 0;
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        locationName = in.readString();
+        tempLocalImagePath = in.readString();
+        isPendingSync = in.readByte() != 0;
+        username = in.readString();
+        userProfileImageUrl = in.readString();
+    }
+
+    public static final Creator<MoodEvent> CREATOR = new Creator<MoodEvent>() {
+        @Override
+        public MoodEvent createFromParcel(Parcel in) {
+            return new MoodEvent(in);
+        }
+
+        @Override
+        public MoodEvent[] newArray(int size) {
+            return new MoodEvent[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(id);
+        dest.writeLong(timestamp.getTime());
+        dest.writeString(emotionalState);
+        dest.writeString(socialSituation);
+        dest.writeString(documentId);
+        dest.writeString(reason);
+        dest.writeString(userId);
+        dest.writeString(imageUrl);
+        dest.writeByte((byte) (isPublic ? 1 : 0));
+        dest.writeDouble(latitude != null ? latitude : 0.0);
+        dest.writeDouble(longitude != null ? longitude : 0.0);
+        dest.writeString(locationName);
+        dest.writeString(tempLocalImagePath);
+        dest.writeByte((byte) (isPendingSync ? 1 : 0));
+        dest.writeString(username);
+        dest.writeString(userProfileImageUrl);
+    }
 
     /**
      * Default constructor initializes required temporal fields
@@ -82,7 +143,7 @@ public class MoodEvent {
     }
 
     /**
-    * @return Mood reason text (max 20 chars/3 words)
+     * @return Mood reason text (max 20 chars/3 words)
      */
     public String getReason() {
         return reason;
@@ -181,6 +242,48 @@ public class MoodEvent {
     }
 
     /**
+     * @return Location latitude coordinate
+     */
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    /**
+     * @param latitude Location latitude coordinate
+     */
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    /**
+     * @return Location longitude coordinate
+     */
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    /**
+     * @param longitude Location longitude coordinate
+     */
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    /**
+     * @return Location name/address
+     */
+    public String getLocationName() {
+        return locationName;
+    }
+
+    /**
+     * @param locationName Location name/address
+     */
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
+    }
+
+    /**
      * @return Firestore-generated document ID (US 1.01.01.02)
      */
     public String getDocumentId() {
@@ -233,5 +336,46 @@ public class MoodEvent {
 
     public void setUserProfileImageUrl(String userProfileImageUrl) {
         this.userProfileImageUrl = userProfileImageUrl;
+    }
+
+    /**
+     * Creates a MoodEvent instance from a Firestore DocumentSnapshot
+     * @param document The Firestore DocumentSnapshot
+     * @return A new MoodEvent instance
+     */
+    public static MoodEvent fromDocument(DocumentSnapshot document) {
+        String emotionalState = document.getString("emotionalState");
+        String socialSituation = document.getString("socialSituation");
+        String reason = document.getString("reason");
+        
+        MoodEvent moodEvent = new MoodEvent(emotionalState, socialSituation, reason);
+        
+        // Set additional fields
+        String id = document.getId();
+        moodEvent.setId(id.hashCode());
+        moodEvent.setDocumentId(id);
+        moodEvent.setUserId(document.getString("userId"));
+        moodEvent.setTimestamp(document.getDate("timestamp"));
+        moodEvent.setImageUrl(document.getString("imageUrl"));
+        
+        // Handle location data
+        Double latitude = document.getDouble("latitude");
+        Double longitude = document.getDouble("longitude");
+        String locationName = document.getString("locationName");
+        moodEvent.setLatitude(latitude);
+        moodEvent.setLongitude(longitude);
+        moodEvent.setLocationName(locationName);
+        
+        // Handle privacy setting (default to true for legacy data)
+        Boolean isPublic = document.getBoolean("isPublic");
+        moodEvent.setPublic(isPublic != null ? isPublic : true);
+        
+        // Handle temporary local image path if exists
+        String tempPath = document.getString("tempLocalImagePath");
+        if (tempPath != null && !tempPath.isEmpty()) {
+            moodEvent.setTempLocalImagePath(tempPath);
+        }
+        
+        return moodEvent;
     }
 }
