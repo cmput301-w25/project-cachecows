@@ -31,6 +31,9 @@ public class SearchActivity extends AppCompatActivity {
     private List<User> searchResults;
     private FirebaseFirestore db;
 
+    public static boolean SKIP_AUTH_FOR_TESTING = false;
+    public static String FORCE_USER_ID = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,12 +50,19 @@ public class SearchActivity extends AppCompatActivity {
 
         // Set up RecyclerView
         searchResults = new ArrayList<>();
-        adapter = new UserAdapter(searchResults, this);
+        if (FORCE_USER_ID != null) {
+            // Use test constructor when in testing mode
+            adapter = new UserAdapter(searchResults, this, FORCE_USER_ID);
+        } else {
+            // Use normal constructor for regular app usage
+            adapter = new UserAdapter(searchResults, this);
+        }
         searchResultsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         searchResultsRecyclerView.setAdapter(adapter);
         ImageView navHome = findViewById(R.id.navHome);
         ImageView navChats = findViewById(R.id.navChats);
         ImageView navProfile = findViewById(R.id.navProfile);
+        ImageView navMap = findViewById(R.id.navMap);
 
         navHome.setOnClickListener(v -> {
             startActivity(new Intent(this, FeedManagerActivity.class));
@@ -62,6 +72,10 @@ public class SearchActivity extends AppCompatActivity {
         navChats.setOnClickListener(v -> {
             startActivity(new Intent(this, NotificationsActivity.class));
             finish();
+        });
+        navMap.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MoodMapActivity.class);
+            startActivity(intent);
         });
 
         navProfile.setOnClickListener(v -> {

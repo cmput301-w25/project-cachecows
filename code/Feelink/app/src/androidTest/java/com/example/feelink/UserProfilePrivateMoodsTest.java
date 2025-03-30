@@ -32,7 +32,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 
 @RunWith(AndroidJUnit4.class)
-public class UserProfilePrivateMoodsTest {
+public class UserProfilePrivateMoodsTest { //not working, compare to Public moods test
     private static final String TAG = "PrivateMoodsTest";
     private static final String TEST_USER_ID = "test_user_id";
 

@@ -1167,6 +1167,11 @@ public class FirestoreManager {
             moodData.put("tempLocalImagePath", moodEvent.getTempLocalImagePath());
         }
 
+        if (moodEvent.getLocationName() != null && !moodEvent.getLocationName().isEmpty()) {
+            moodData.put("locationName", moodEvent.getLocationName());
+            moodData.put("latitude", moodEvent.getLatitude());
+            moodData.put("longitude", moodEvent.getLongitude());
+        }
 
         db.collection(COLLECTION_MOOD_EVENTS)
                 .document(documentId)

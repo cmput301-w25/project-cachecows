@@ -119,18 +119,24 @@
             android:padding="8dp">
 
             <!-- Like button -->
+            <ImageButton
+                android:id="@+id/btnLike"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_heart"
+                android:contentDescription="Like" />
 
             <!-- Comment button -->
-
-
             <ImageButton
                 android:id="@+id/btnComment"
-                android:layout_width="41dp"
-                android:layout_height="45dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:layout_marginStart="16dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Comment"
-                android:src="@drawable/ic_comment" />
+                android:src="@drawable/ic_comment"
+                android:contentDescription="Comment" />
+
 
             <View
                 android:layout_width="0dp"

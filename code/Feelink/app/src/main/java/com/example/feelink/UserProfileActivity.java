@@ -124,7 +124,6 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
         // Initialize views
         profileImageView = findViewById(R.id.profileImage);
         usernameTextView = findViewById(R.id.username);
-        bioTextView = findViewById(R.id.bio);
         moodPostsTextView = findViewById(R.id.moodPosts);
         fabAddMood = findViewById(R.id.fabAddMood);
         recyclerMoodEvents = findViewById(R.id.recyclerMoodEvents);
@@ -577,10 +576,10 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
                 BitmapDescriptor icon = createMarkerIcon(event.getEmotionalState());
 
                 MarkerOptions markerOptions = new MarkerOptions()
-                    .position(position)
-                    .title(event.getEmotionalState())
-                    .snippet(event.getReason())
-                    .icon(icon);
+                        .position(position)
+                        .title(event.getEmotionalState())
+                        .snippet(event.getReason())
+                        .icon(icon);
 
                 Marker marker = googleMap.addMarker(markerOptions);
                 if (marker != null) {

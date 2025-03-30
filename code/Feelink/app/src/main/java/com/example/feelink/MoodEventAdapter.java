@@ -150,6 +150,11 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             holder.moodImage.setVisibility(View.GONE);
         }
 
+        // Handle like & comment actions
+        holder.btnLike.setOnClickListener(v -> {
+            // Handle like action
+        });
+
         // Modify the comment button click listener in onBindViewHolder
         holder.btnComment.setOnClickListener(v -> {
             Intent intent = new Intent(context, CommentsActivity.class);
@@ -165,6 +170,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         });
 
         int socialVisibility = isPublicFeed ? View.GONE : View.VISIBLE;
+        holder.btnLike.setVisibility(socialVisibility);
         holder.btnComment.setVisibility(socialVisibility);
 
         if (isMyMoodSection) {
@@ -537,6 +543,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         ConstraintLayout photoContainer;
         TextView tvMoodDescription, tvPhotoPlaceholder, userUsername;
         ImageView moodImage, moodPostedImage;
+        View btnLike;
         View btnComment;
         CardView cardView;
 
@@ -555,6 +562,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
             // Initialize all views
             tvMoodDescription = itemView.findViewById(R.id.tvMoodDescription); // Critical fix
             moodImage = itemView.findViewById(R.id.ivMoodIcon); // Ensure this matches XML
+            btnLike = itemView.findViewById(R.id.btnLike);
             btnComment = itemView.findViewById(R.id.btnComment);
             cardView = itemView.findViewById(R.id.cardView);
 

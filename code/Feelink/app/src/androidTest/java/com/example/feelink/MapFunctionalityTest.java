@@ -254,7 +254,7 @@ public class MapFunctionalityTest {
     }
 
     @Test
-    public void testLocationPickerSelection() {
+    public void  testLocationPickerSelection() {
         Intent intent = new Intent(ApplicationProvider.getApplicationContext(), LocationPickerActivity.class);
         ActivityScenario<LocationPickerActivity> scenario = ActivityScenario.launch(intent);
 

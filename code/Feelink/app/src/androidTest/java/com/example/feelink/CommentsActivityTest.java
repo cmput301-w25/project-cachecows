@@ -42,7 +42,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static org.hamcrest.CoreMatchers.containsString;
 
 @RunWith(AndroidJUnit4.class)
-public class CommentsActivityTest {
+public class CommentsActivityTest { //all tests working
     private static final String TAG = "CommentsActivityTest";
     private static final String TEST_USER_ID = "test_user_id";
     private static final String MOOD_OWNER_ID = "mood_owner_id";

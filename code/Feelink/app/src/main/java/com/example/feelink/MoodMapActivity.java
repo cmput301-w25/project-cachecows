@@ -183,47 +183,10 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
     public void onMapReady(GoogleMap map) {
         googleMap = map;
         
-        // Enable location button if permission is granted
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             googleMap.setMyLocationEnabled(true);
-            
-            // Create location request for better accuracy
-            LocationRequest locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(10000)
-                .setFastestInterval(5000);
-
-            // Get current location and center map immediately
-            fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
-                .addOnSuccessListener(this, location -> {
-                    if (location != null) {
-                        currentLocation = location;
-                        // Center map on current location with appropriate zoom
-                        LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, DEFAULT_ZOOM));
-                        
-                        // After centering, load the appropriate mood events
-                        loadAppropriateEvents();
-                    } else {
-                        // If getCurrentLocation fails, try getLastLocation as fallback
-                        fusedLocationClient.getLastLocation().addOnSuccessListener(this, lastLocation -> {
-                            if (lastLocation != null) {
-                                currentLocation = lastLocation;
-                                LatLng currentLatLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
-                                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, DEFAULT_ZOOM));
-                            }
-                            // Load events even if location fails
-                            loadAppropriateEvents();
-                        });
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error getting location: " + e.getMessage());
-                    // Load events even if location fails
-                    loadAppropriateEvents();
-                });
+            getCurrentLocation();
         } else {
-            // Request location permission
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_PERMISSION_REQUEST_CODE);
@@ -492,39 +455,59 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                checkLocationPermissionAndLoadNearbyMoods();
+                // Permission granted, initialize map with location
+                if (googleMap != null) {
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        googleMap.setMyLocationEnabled(true);
+                        getCurrentLocation();
+                    }
+                }
             } else {
-                Toast.makeText(this, "Location permission is required to view nearby moods", Toast.LENGTH_LONG).show();
-                finish();
+                // Permission denied, load events without location
+                loadAppropriateEvents();
+                Toast.makeText(this, "Location permission denied. Some features may be limited.", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
     private void getCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST_CODE);
             return;
         }
 
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, location -> {
-                    if (location != null) {
-                        currentLocation = location;
-                        Log.d(TAG, "Current location: " + location.getLatitude() + ", " + location.getLongitude());
-                        // Center map on current location
-                        LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12));
-                    } else {
-                        Log.e(TAG, "Location is null");
-                        Toast.makeText(this, "Unable to get current location", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(this, e -> {
-                    Log.e(TAG, "Error getting location", e);
-                    Toast.makeText(this, "Error getting location: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+        LocationRequest locationRequest = LocationRequest.create()
+            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+            .setInterval(10000)
+            .setFastestInterval(5000);
+
+        fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener(this, location -> {
+                if (location != null) {
+                    currentLocation = location;
+                    LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, DEFAULT_ZOOM));
+                    loadAppropriateEvents();
+                } else {
+                    // Try getLastLocation as fallback
+                    fusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(this, lastLocation -> {
+                            if (lastLocation != null) {
+                                currentLocation = lastLocation;
+                                LatLng lastLatLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+                                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastLatLng, DEFAULT_ZOOM));
+                            }
+                            loadAppropriateEvents();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Error getting last location: " + e.getMessage());
+                            loadAppropriateEvents();
+                        });
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error getting current location: " + e.getMessage());
+                loadAppropriateEvents();
+            });
     }
 
     private void checkLocationPermissionAndLoadNearbyMoods() {
