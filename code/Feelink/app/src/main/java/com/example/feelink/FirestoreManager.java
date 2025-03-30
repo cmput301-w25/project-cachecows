@@ -131,6 +131,7 @@ public class FirestoreManager {
         moodData.put("emotionalState", moodEvent.getEmotionalState());
         moodData.put("isPublic", moodEvent.isPublic());
 
+
         // Only add optional fields if they're not null or empty
         if (moodEvent.getReason() != null && !moodEvent.getReason().isEmpty()) {
             moodData.put("reason", moodEvent.getReason());
@@ -1551,10 +1552,10 @@ public class FirestoreManager {
                 if (!queryDocumentSnapshots.isEmpty()) {
                     DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
                     String emotionalState = document.getString("emotionalState");
-                    
+
                     // Create mood event with just emotional state
                     MoodEvent moodEvent = new MoodEvent(emotionalState);
-                    
+
                     // Set all other fields if they exist
                     moodEvent.setUserId(document.getString("userId"));
                     moodEvent.setTimestamp(document.getDate("timestamp"));
@@ -1564,18 +1565,18 @@ public class FirestoreManager {
                     moodEvent.setLocationName(document.getString("locationName"));
                     moodEvent.setImageUrl(document.getString("imageUrl"));
                     moodEvent.setPublic(true);
-                    
+
                     // Only set optional fields if they exist
                     String socialSituation = document.getString("socialSituation");
                     if (socialSituation != null) {
                         moodEvent.setSocialSituation(socialSituation);
                     }
-                    
+
                     String reason = document.getString("reason");
                     if (reason != null) {
                         moodEvent.setReason(reason);
                     }
-                    
+
                     listener.onSuccess(moodEvent);
                 } else {
                     listener.onSuccess(null);

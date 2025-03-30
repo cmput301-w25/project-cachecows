@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -56,11 +58,6 @@ public class UploadImageActivity extends AppCompatActivity {
     /** Request code for capturing an image from the camera */
     private static final int CAPTURE_IMAGE = 101;
 
-    /** Maximum allowed file size (65 KB) for uploaded images */
-    private static final int MAX_FILE_SIZE = 65536;
-    private static final String[] ALLOWED_EXTENSIONS = {
-            "image/jpeg", "image/png", "image/jpg"};
-
     private Button btnUseCamera, btnUploadImage, btnConfirm, btnCancel, btnBack;
     private ImageView ivPreview;
 
@@ -69,6 +66,10 @@ public class UploadImageActivity extends AppCompatActivity {
     private String pendingExtensionType = null; // type extension for the selected image (gallery or camera)
 
     private StorageReference storageRef;  // Firebase Storage reference for uploading images
+
+    private ActivityResultLauncher<Intent> galleryLauncher;
+    private ActivityResultLauncher<Intent> cameraLauncher;
+
 
     /**
      * Initializes image upload UI and Firebase Storage references
@@ -97,6 +98,37 @@ public class UploadImageActivity extends AppCompatActivity {
         btnCancel = findViewById(R.id.btnCancelUpload);
         btnBack = findViewById(R.id.btnUploadImageBack);
         ivPreview = findViewById(R.id.ivPreview);
+
+        //  ActivityResultLauncher for the gallery
+        galleryLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri galleryUri = result.getData().getData();
+                        if (galleryUri != null) {
+                            validateGalleryImage(galleryUri);
+                        }
+                    } else {
+                        Toast.makeText(this, "Canceled.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        //  ActivityResultLauncher for the camera
+        cameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Bitmap photo = (Bitmap) (result.getData().getExtras() != null ?
+                                result.getData().getExtras().get("data") : null);
+                        if (photo != null) {
+                            validateCameraBitmap(photo);
+                        }
+                    } else {
+                        Toast.makeText(this, "Canceled.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
 
 
         btnUseCamera.setOnClickListener(v -> openCamera());
@@ -173,7 +205,7 @@ public class UploadImageActivity extends AppCompatActivity {
     private void launchCamera() {
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
-            startActivityForResult(cameraIntent, CAPTURE_IMAGE);
+            cameraLauncher.launch(cameraIntent);
         } else {
             Toast.makeText(this, "No camera detected on this device", Toast.LENGTH_SHORT).show();
         }
@@ -185,45 +217,9 @@ public class UploadImageActivity extends AppCompatActivity {
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        startActivityForResult(Intent.createChooser(intent, "Select Image"), SELECT_IMAGE);
+        galleryLauncher.launch(Intent.createChooser(intent, "Select Image"));
     }
 
-    /**
-     * Handles image selection results from camera/gallery intents
-     *
-     * <p>Routes processing based on source:
-     * <ul>
-     *   <li>Camera images: Directly processes bitmap data</li>
-     * </ul>
-     *
-     * @param requestCode Originating request identifier
-     * @param resultCode Operation result status
-     * @param data Image data payload
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != Activity.RESULT_OK || data == null) {
-            Toast.makeText(this, "No data or canceled. " + requestCode, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        switch (requestCode) {
-            case SELECT_IMAGE:
-                Uri galleryUri = data.getData();
-                if (galleryUri != null) {
-                    validateGalleryImage(galleryUri);
-                }
-                break;
-
-            case CAPTURE_IMAGE:
-                Bitmap photo = (Bitmap) (data.getExtras() != null ? data.getExtras().get("data") : null);
-                if (photo != null) {
-                    validateCameraBitmap(photo);
-                }
-                break;
-        }
-    }
 
     /**
      * Validates gallery images against size and format constraints
@@ -240,7 +236,7 @@ public class UploadImageActivity extends AppCompatActivity {
     private void validateGalleryImage(Uri uri) {
         try {
             String extensionType = getContentResolver().getType(uri);
-            if (!allowedExtensionType(extensionType)) {
+            if (!ImageUtils.allowedExtensionType(extensionType)) {
                 Toast.makeText(this, "Only JPEG, JPG, or PNG allowed.", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -254,10 +250,10 @@ public class UploadImageActivity extends AppCompatActivity {
                 }
                 fileSize = is.available();
             }
-            if (fileSize > MAX_FILE_SIZE) {
+            if (fileSize > ImageUtils.MAX_FILE_SIZE) {
                 InputStream is = getContentResolver().openInputStream(uri);
                 Bitmap originalBitmap = BitmapFactory.decodeStream(is);
-                Bitmap compressedBitmap = compressBitmap(originalBitmap);
+                Bitmap compressedBitmap = ImageUtils.compressBitmap(originalBitmap);
                 pendingBitmap = compressedBitmap;
                 pendingUri = null;
                 pendingExtensionType = "image/jpeg";
@@ -293,8 +289,8 @@ public class UploadImageActivity extends AppCompatActivity {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 
-        if (stream.toByteArray().length > MAX_FILE_SIZE){
-            Bitmap compressedBitmap = compressBitmap(photo);
+        if (stream.toByteArray().length > ImageUtils.MAX_FILE_SIZE){
+            Bitmap compressedBitmap = ImageUtils.compressBitmap(photo);
             pendingBitmap = compressedBitmap;
             pendingUri = null;
             pendingExtensionType = "image/jpeg";
@@ -386,109 +382,6 @@ public class UploadImageActivity extends AppCompatActivity {
     }
 
     /**
-     * Checks whether the provided extension type is in the allowed extension types.
-     *
-     * @param extensionType The extension type of the file
-     * @return True if it's a permitted type; false otherwise
-     */
-    private boolean allowedExtensionType(String extensionType) {
-        if (extensionType == null) return false;
-        for (String allowed : ALLOWED_EXTENSIONS) {
-            if (extensionType.equalsIgnoreCase(allowed)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Compresses the given bitmap to ensure it does not exceed MAX_FILE_SIZE (65 KB).
-     * <p>
-     * Steps:
-     * <ol>
-     *   <li>Iteratively reduce JPEG quality until under size or until quality is &lt;= 10</li>
-     *   <li>If still too large, rescale the bitmap dimensions while preserving aspect ratio</li>
-     *   <li>Re-compress after rescaling if necessary</li>
-     * </ol>
-     *
-     * @param bitmap The original bitmap to compress
-     * @return A bitmap that should be under the size limit
-     */
-    private Bitmap compressBitmap(Bitmap bitmap){
-        int quality = 100;
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream);
-        byte[] data  = stream.toByteArray();
-
-        // If quality was good enough, return the original bitmap.
-        if (data.length <= UploadImageActivity.MAX_FILE_SIZE) {
-            return bitmap;
-        }
-
-        //Reducing quality until it fits or gets too low
-        while (data.length > UploadImageActivity.MAX_FILE_SIZE && quality > 10){
-            stream.reset();
-            quality -= 5;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream);
-            data = stream.toByteArray();
-        }
-
-        //if quality loss didn't help, rescale the dimensions
-        ImageDimensions dims = calculateNewDimensionsForBitmap(bitmap);
-        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, dims.width, dims.height, true);
-
-        // reset quality and compress the now scaled bitmap.
-        quality = 100;
-        stream.reset();
-        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream);
-        data = stream.toByteArray();
-
-
-        while (data.length > UploadImageActivity.MAX_FILE_SIZE && quality > 10) {
-            stream.reset();
-            quality -= 5;
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream);
-            data = stream.toByteArray();
-        }
-
-        return scaledBitmap;
-    }
-
-    /**
-     * Calculates new dimensions for the bitmap based on a target "box" width,
-     * preserving aspect ratio.
-     * <p>
-     * Adapted from answer by Jason Evans:
-     * https://codereview.stackexchange.com/questions/70908/resizing-image-but-keeping-aspect-ratio
-     *
-     * @param original The original Bitmap
-     * @return An ImageDimensions object with new width and height values
-     */
-    private ImageDimensions calculateNewDimensionsForBitmap(Bitmap original) {
-        final int BOX_WIDTH = 200;
-        int originalWidth = original.getWidth();
-        int originalHeight = original.getHeight();
-
-        // Calculate the aspect ratio.
-        float aspect = (float) originalWidth / originalHeight;
-        int newWidth = (int) (BOX_WIDTH * aspect);
-        int newHeight = (int) (newWidth / aspect);
-
-        // If one dimension exceeds the BOX_WIDTH, adjust the dimensions.
-        if (newWidth > BOX_WIDTH || newHeight > BOX_WIDTH) {
-            if (newWidth > newHeight) {
-                newWidth = BOX_WIDTH;
-                newHeight = (int) (newWidth / aspect);
-            } else {
-                newHeight = BOX_WIDTH;
-                newWidth = (int) (newHeight * aspect);
-            }
-        }
-
-        return new ImageDimensions(newWidth, newHeight);
-    }
-
-    /**
      * Receives camera permission results and launches camera if granted.
      *
      * @param requestCode  The request code passed in requestPermissions
@@ -538,21 +431,6 @@ public class UploadImageActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
-        }
-
-    }
-
-
-    /**
-     * Simple class for image dimensions.
-     */
-    private class ImageDimensions {
-        int width;
-        int height;
-
-        ImageDimensions(int width, int height) {
-            this.width = width;
-            this.height = height;
         }
     }
 }
