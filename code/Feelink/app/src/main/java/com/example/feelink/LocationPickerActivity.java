@@ -118,31 +118,34 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
         Button btnConfirmLocation = findViewById(R.id.btnConfirmLocation);
         btnConfirmLocation.setOnClickListener(v -> {
             if (selectedLatLng != null) {
-                // Get the address for the selected location
-                Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-                try {
-                    List<Address> addresses = geocoder.getFromLocation(selectedLatLng.latitude, selectedLatLng.longitude, 1);
-                    if (!addresses.isEmpty()) {
-                        Address address = addresses.get(0);
-                        String locationName = address.getAddressLine(0);
-                        selectedLatitude = selectedLatLng.latitude;
-                        selectedLongitude = selectedLatLng.longitude;
-
-                        // Create result intent with location data
-                        Intent resultIntent = new Intent();
-                        resultIntent.putExtra("latitude", selectedLatitude);
-                        resultIntent.putExtra("longitude", selectedLongitude);
-                        resultIntent.putExtra("locationName", locationName);
-                        setResult(RESULT_OK, resultIntent);
-                        finish();
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("latitude", selectedLatLng.latitude);
+                resultIntent.putExtra("longitude", selectedLatLng.longitude);
+                // In offline mode, set a placeholder since no full geocoding is available yet.
+                if (!ConnectivityReceiver.isNetworkAvailable(this)) {
+                    resultIntent.putExtra("locationName", "Pending Location");
+                } else {
+                    // Online mode: perform reverse geocoding to get the full address
+                    Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                    try {
+                        List<Address> addresses = geocoder.getFromLocation(
+                                selectedLatLng.latitude, selectedLatLng.longitude, 1);
+                        if (!addresses.isEmpty()) {
+                            Address address = addresses.get(0);
+                            resultIntent.putExtra("locationName", address.getAddressLine(0));
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        resultIntent.putExtra("locationName", "Unknown Address");
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+                setResult(RESULT_OK, resultIntent);
+                finish();
             } else {
                 Toast.makeText(this, "Please select a location on the map", Toast.LENGTH_SHORT).show();
             }
         });
+
     }
 
     private void searchSuggestions(String query) {
@@ -197,11 +200,11 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        
+
         // Set initial camera position to Edmonton
         LatLng edmonton = new LatLng(53.5461, -113.4937);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(edmonton, 12));
-        
+
         // Enable the my-location layer if permission is granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -216,16 +219,29 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
 
         // Handle map clicks
         mMap.setOnMapClickListener(latLng -> {
-            // Just update the marker position without setting the location
-            if (selectedMarker == null) {
-                MarkerOptions markerOptions = new MarkerOptions()
-                    .position(latLng)
-                    .title("Selected Location");
-                selectedMarker = mMap.addMarker(markerOptions);
+
+            if (!ConnectivityReceiver.isNetworkAvailable(this)) {
+                // Remove any existing marker
+                if (selectedMarker != null) {
+                    selectedMarker.remove();
+                }
+                // Drop a marker with a placeholder title
+                selectedMarker = mMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title("Pending Location"));
+                selectedLatLng = latLng;
             } else {
-                selectedMarker.setPosition(latLng);
+                // Just update the marker position without setting the location
+                if (selectedMarker == null) {
+                    MarkerOptions markerOptions = new MarkerOptions()
+                            .position(latLng)
+                            .title("Selected Location");
+                    selectedMarker = mMap.addMarker(markerOptions);
+                } else {
+                    selectedMarker.setPosition(latLng);
+                }
+                selectedLatLng = latLng;
             }
-            selectedLatLng = latLng;
         });
     }
 
