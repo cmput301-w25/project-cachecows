@@ -168,6 +168,10 @@ public class FirestoreManager {
         // Log the complete moodData map
         Log.d(TAG, "Complete moodData being sent to Firestore: " + moodData.toString());
 
+        if (moodEvent.getTempLocalImagePath() != null && !moodEvent.getTempLocalImagePath().isEmpty()) {
+            moodData.put("tempLocalImagePath", moodEvent.getTempLocalImagePath());
+        }
+
         // Add to Firestore
         db.collection(COLLECTION_MOOD_EVENTS)
                 .add(moodData)
