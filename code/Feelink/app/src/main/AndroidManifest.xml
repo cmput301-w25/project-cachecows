@@ -43,7 +43,7 @@
         <activity android:name=".CreateAccount" />
         <activity android:name=".AddMoodEventActivity" />
         <activity android:name=".ForgotPasswordActivity"/>
-        <activity android:name=".UploadImageActivity" />
+        <activity android:name=".UploadImageActivity"/>
         <activity android:name=".NotificationsActivity" />
         <activity android:name=".UploadProfilePictureActivity" />
         <activity android:name=".SettingsActivity"
@@ -75,6 +75,15 @@
 
         <activity android:name=".MoodMapActivity" />
 
+        <!-- Add Google Play Services version -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
     </application>
+
+    <queries>
+        <package android:name="com.google.android.gms" />
+    </queries>
 
 </manifest>
