@@ -2,13 +2,23 @@ package com.example.feelink;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.allOf;
 
 import android.content.Context;
-//import androidx.test.espresso.contrib.RecyclerViewActions;
+import android.util.Log;
+import android.view.View;
+
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.test.espresso.NoMatchingViewException;
+import androidx.test.espresso.UiController;
+import androidx.test.espresso.ViewAction;
 import androidx.test.espresso.intent.Intents;
 import androidx.test.espresso.intent.matcher.IntentMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -19,6 +29,9 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -26,6 +39,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,13 +49,21 @@ import java.util.concurrent.TimeUnit;
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class FeedManagerActivityTest {
-
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
-    private static final String TEST_USERNAME = "testuser";
-    private static final String TEST_EMAIL = "test@example.com";
+
+    // Test User IDs
+    private static final String TEST_USER_UID = "test_user";
+    private static final String USER_A_UID = "user_a";
+    private static final String USER_B_UID = "user_b";
+    private static final String USER_C_UID = "user_c";
+
+    // Test User Emails (for auth)
+    private static final String TEST_USER_EMAIL = "test@example.com";
+    private static final String USER_A_EMAIL = "user_a@example.com";
+    private static final String USER_B_EMAIL = "user_b@example.com";
+    private static final String USER_C_EMAIL = "user_c@example.com";
     private static final String TEST_PASSWORD = "Test@123";
-    private static final String TEST_UID = "test_user_id";
 
     // Set test mode flag to skip authentication
     static {
@@ -75,103 +97,93 @@ public class FeedManagerActivityTest {
         cleanupTestDatabase();
     }
 
-    private void seedTestDatabase() {
-        // Create a latch to wait for async operations
-        CountDownLatch latch = new CountDownLatch(3);
+//    private void seedTestDatabase() {
+//        CountDownLatch latch = new CountDownLatch(1); // Single latch for all operations
+//
+//        // Clear any existing test data first
+//        cleanupTestDatabase();
+//
+//        // Create test mood events with specific characteristics for filtering
+//        List<Map<String, Object>> testEvents = new ArrayList<>();
+//
+//        // Following Moods test data (from followed users)
+//        Map<String, Object> recentHappyEvent = new HashMap<>();
+//        recentHappyEvent.put("mood", "Happy");
+//        recentHappyEvent.put("reason", "Got a promotion today");
+//        recentHappyEvent.put("timestamp", System.currentTimeMillis() - 10000); // 10 seconds ago
+//        recentHappyEvent.put("userId", "followed_user_1");
+//        recentHappyEvent.put("shared", true);
+//        testEvents.add(recentHappyEvent);
+//
+//        Map<String, Object> weekOldAngryEvent = new HashMap<>();
+//        weekOldAngryEvent.put("mood", "Angry");
+//        weekOldAngryEvent.put("reason", "Traffic was terrible");
+//        weekOldAngryEvent.put("timestamp", System.currentTimeMillis() - (6 * 24 * 3600 * 1000)); // 6 days ago
+//        weekOldAngryEvent.put("userId", "followed_user_1");
+//        weekOldAngryEvent.put("shared", true);
+//        testEvents.add(weekOldAngryEvent);
+//
+//        Map<String, Object> oldSadEvent = new HashMap<>();
+//        oldSadEvent.put("mood", "Sad");
+//        oldSadEvent.put("reason", "Missed my flight");
+//        oldSadEvent.put("timestamp", System.currentTimeMillis() - (14 * 24 * 3600 * 1000)); // 14 days ago
+//        oldSadEvent.put("userId", "followed_user_2");
+//        oldSadEvent.put("shared", true);
+//        testEvents.add(oldSadEvent);
+//
+//        // All Moods test data (from random users)
+//        Map<String, Object> publicHappyEvent = new HashMap<>();
+//        publicHappyEvent.put("mood", "Happy");
+//        publicHappyEvent.put("reason", "Going on vacation");
+//        publicHappyEvent.put("timestamp", System.currentTimeMillis() - 5000); // 5 seconds ago
+//        publicHappyEvent.put("userId", "random_user_1");
+//        publicHappyEvent.put("shared", true);
+//        testEvents.add(publicHappyEvent);
+//
+//        // Batch write all test data
+//        FirebaseFirestore.getInstance().runBatch(batch -> {
+//            for (int i = 0; i < testEvents.size(); i++) {
+//                batch.set(FirebaseFirestore.getInstance()
+//                                .collection("moodEvents")
+//                                .document("test_mood_" + i),
+//                        testEvents.get(i));
+//            }
+//        }).addOnCompleteListener(task -> {
+//            latch.countDown();
+//        });
+//
+//        try {
+//            latch.await(10, TimeUnit.SECONDS);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
-        // Create test user in usernames collection
-        Map<String, Object> usernameData = new HashMap<>();
-        usernameData.put("uid", TEST_UID);
-        usernameData.put("email", TEST_EMAIL);
-        db.collection("usernames").document(TEST_USERNAME)
-                .set(usernameData)
-                .addOnSuccessListener(aVoid -> latch.countDown())
-                .addOnFailureListener(e -> latch.countDown());
-
-        // Create test mood events for "My Mood" tab
-        List<Map<String, Object>> myMoodEvents = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            Map<String, Object> event = new HashMap<>();
-            event.put("mood", "Happy");
-            event.put("description", "Test mood " + i);
-            event.put("timestamp", System.currentTimeMillis() - (i * 3600000)); // Different times
-            event.put("userId", TEST_UID);
-            event.put("shared", false);
-
-            db.collection("moodEvents").document("myMood" + i)
-                    .set(event)
-                    .addOnSuccessListener(aVoid -> {})
-                    .addOnFailureListener(e -> {});
-
-            myMoodEvents.add(event);
-        }
-        latch.countDown();
-
-        // Create test mood events for "Their Mood" tab
-        List<Map<String, Object>> theirMoodEvents = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            Map<String, Object> event = new HashMap<>();
-            event.put("mood", "Excited");
-            event.put("description", "Friend's mood " + i);
-            event.put("timestamp", System.currentTimeMillis() - (i * 3600000)); // Different times
-            event.put("userId", "other_user_id");
-            event.put("shared", true);
-
-            db.collection("moodEvents").document("theirMood" + i)
-                    .set(event)
-                    .addOnSuccessListener(aVoid -> {})
-                    .addOnFailureListener(e -> {});
-
-            theirMoodEvents.add(event);
-        }
-        latch.countDown();
-
-        try {
-            // Wait for database operations to complete
-            latch.await(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void cleanupTestDatabase() {
-        // Create a latch to wait for async operations
-        CountDownLatch latch = new CountDownLatch(7);
-
-        // Remove test user
-        db.collection("usernames").document(TEST_USERNAME)
-                .delete()
-                .addOnSuccessListener(aVoid -> latch.countDown())
-                .addOnFailureListener(e -> latch.countDown());
-
-        // Remove test mood events
-        for (int i = 0; i < 3; i++) {
-            db.collection("moodEvents").document("myMood" + i)
-                    .delete()
-                    .addOnSuccessListener(aVoid -> latch.countDown())
-                    .addOnFailureListener(e -> latch.countDown());
-
-            db.collection("moodEvents").document("theirMood" + i)
-                    .delete()
-                    .addOnSuccessListener(aVoid -> latch.countDown())
-                    .addOnFailureListener(e -> latch.countDown());
-        }
-
-        try {
-            // Wait for database operations to complete
-            latch.await(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+//    private void cleanupTestDatabase() {
+//        CountDownLatch latch = new CountDownLatch(4); // Adjust based on test data size
+//
+//        // Delete test mood events
+//        for (int i = 0; i < 4; i++) { // 4 test events in seedTestDatabase()
+//            db.collection("moodEvents").document("test_mood_" + i)
+//                    .delete()
+//                    .addOnSuccessListener(aVoid -> latch.countDown())
+//                    .addOnFailureListener(e -> latch.countDown());
+//        }
+//
+//        try {
+//            latch.await(5, TimeUnit.SECONDS);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @Test
-    public void testSwitchToMyMoodTab() {
+    public void testSwitchToFollowingMoodsTab() {
         // Click on My Mood tab
         onView(withId(R.id.btnFollowingMoods)).perform(click());
 
         // Verify My Mood tab is displayed
-        onView(withText("My Mood")).check(matches(isDisplayed()));
+        onView(withText("Following Moods")).check(matches(isDisplayed()));
 
         // Verify recycler view is displayed
         onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
@@ -179,12 +191,12 @@ public class FeedManagerActivityTest {
     }
 
     @Test
-    public void testSwitchToTheirMoodTab() {
+    public void testSwitchToAllMoodsTab() {
         // Click on Their Mood tab
         onView(withId(R.id.btnAllMoods)).perform(click());
 
         // Verify Their Mood tab is displayed
-        onView(withText("Their Mood")).check(matches(isDisplayed()));
+        onView(withText("All Moods")).check(matches(isDisplayed()));
 
         // Verify recycler view is displayed
         onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
@@ -196,15 +208,23 @@ public class FeedManagerActivityTest {
         // Verify the FAB for adding mood is displayed
         onView(withId(R.id.fabAddMood)).check(matches(isDisplayed()));
     }
+    @Test
+    public void testChatMoodButtonIsDisplayed() {
+        onView(withId(R.id.btnChat)).check(matches(isDisplayed()));
+    }
 
     @Test
     public void testFilterButtonIsDisplayed() {
+        // Switch to Following Moods tab where filter button is visible
+        onView(withId(R.id.btnFollowingMoods)).perform(click());
         // Verify the filter button is displayed
         onView(withId(R.id.btnFilter)).check(matches(isDisplayed()));
     }
 
     @Test
     public void testFilterButtonClick() {
+        // Switch to Following Moods tab where filter button is visible
+        onView(withId(R.id.btnFollowingMoods)).perform(click());
         // Click on filter button
         onView(withId(R.id.btnFilter)).perform(click());
 
@@ -242,14 +262,121 @@ public class FeedManagerActivityTest {
         onView(withId(R.id.btnFollowingMoods)).perform(click());
 
         // Verify My Mood tab is displayed
-        onView(withText("My Mood")).check(matches(isDisplayed()));
+        onView(withText("Following Moods")).check(matches(isDisplayed()));
 
         // Click on Their Mood tab
         onView(withId(R.id.btnAllMoods)).perform(click());
 
         // Verify Their Mood tab is displayed
-        onView(withText("Their Mood")).check(matches(isDisplayed()));
+        onView(withText("All Moods")).check(matches(isDisplayed()));
 
     }
+
+
+    private void seedTestDatabase() {
+        CountDownLatch latch = new CountDownLatch(1);
+
+        // 1. Create users with mutual follows
+        Map<String, Object> testUser = new HashMap<>();
+        testUser.put("following", Arrays.asList(USER_A_UID, USER_B_UID, USER_C_UID)); // Test user follows all
+
+        Map<String, Object> userA = new HashMap<>();
+        userA.put("following", Arrays.asList(TEST_USER_UID, USER_B_UID, USER_C_UID)); // User A follows others
+
+        Map<String, Object> userB = new HashMap<>();
+        userB.put("following", Arrays.asList(TEST_USER_UID, USER_A_UID, USER_C_UID)); // User B follows others
+
+        Map<String, Object> userC = new HashMap<>();
+        userC.put("following", Arrays.asList(TEST_USER_UID, USER_A_UID, USER_B_UID)); // User C follows others
+
+        // 2. Create mood events for all users
+        List<Map<String, Object>> testEvents = new ArrayList<>();
+
+        // Test user's events
+        addEvent(testEvents, TEST_USER_UID, "Happy", "Test user event 1", System.currentTimeMillis() - 10000);
+        addEvent(testEvents, TEST_USER_UID, "Sad", "Test user event 2", System.currentTimeMillis() - 20000);
+
+        // User A's events
+        addEvent(testEvents, USER_A_UID, "Angry", "User A event 1", System.currentTimeMillis() - 5000);
+        addEvent(testEvents, USER_A_UID, "Sad", "User A event 2", System.currentTimeMillis() - 15000);
+
+        // User B's events
+        addEvent(testEvents, USER_B_UID, "Happy", "User B event 1", System.currentTimeMillis() - 8000);
+        addEvent(testEvents, USER_B_UID, "Sad", "User B event 2", System.currentTimeMillis() - 18000);
+
+        // User C's events
+        addEvent(testEvents, USER_C_UID, "Sad", "User C event 1", System.currentTimeMillis() - 12000);
+        addEvent(testEvents, USER_C_UID, "Happy", "User C event 2", System.currentTimeMillis() - 25000);
+
+        FirebaseFirestore.getInstance().runBatch(batch -> {
+            // Create users
+            batch.set(db.collection("users").document(TEST_USER_UID), testUser);
+            batch.set(db.collection("users").document(USER_A_UID), userA);
+            batch.set(db.collection("users").document(USER_B_UID), userB);
+            batch.set(db.collection("users").document(USER_C_UID), userC);
+
+            // Create mood events
+            for (int i = 0; i < testEvents.size(); i++) {
+                batch.set(db.collection("moodEvents").document("test_event_" + i), testEvents.get(i));
+            }
+        }).addOnCompleteListener(task -> latch.countDown());
+
+        try { latch.await(10, TimeUnit.SECONDS); }
+        catch (InterruptedException e) { e.printStackTrace(); }
+    }
+
+
+
+    private void addEvent(List<Map<String, Object>> events, String userId, String mood, String reason, long timestamp) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("userId", userId);
+        event.put("mood", mood);
+        event.put("reason", reason);
+        event.put("timestamp", timestamp);
+        event.put("shared", true);
+        events.add(event);
+    }
+
+    @Test
+    public void testFollowingMoods_ShowsAllFollowedUsersEvents() {
+        // Switch to Following Moods tab
+        onView(withId(R.id.btnFollowingMoods)).perform(click());
+
+        // Verify events from all followed users appear
+        onView(withText("User A event 1")).check(matches(isDisplayed()));
+        onView(withText("User B event 1")).check(matches(isDisplayed()));
+        onView(withText("User C event 1")).check(matches(isDisplayed()));
+
+        // Verify test user's own events are excluded (if needed)
+        try {
+            onView(withText("Test user event 1")).check(matches(isDisplayed()));
+            throw new AssertionError("Own events should not appear in Following tab");
+        } catch (NoMatchingViewException ignored) {}
+    }
+
+    private void cleanupTestDatabase() {
+        CountDownLatch latch = new CountDownLatch(12); // 8 events + 4 users
+
+        // Delete users
+        deleteDocument("users", TEST_USER_UID, latch);
+        deleteDocument("users", USER_A_UID, latch);
+        deleteDocument("users", USER_B_UID, latch);
+        deleteDocument("users", USER_C_UID, latch);
+
+        // Delete events
+        for (int i = 0; i < 8; i++) {
+            deleteDocument("moodEvents", "test_event_" + i, latch);
+        }
+
+        try { latch.await(10, TimeUnit.SECONDS); }
+        catch (InterruptedException e) { e.printStackTrace(); }
+    }
+
+    private void deleteDocument(String collection, String docId, CountDownLatch latch) {
+        db.collection(collection).document(docId)
+                .delete()
+                .addOnCompleteListener(task -> latch.countDown());
+    }
+
 
 }
