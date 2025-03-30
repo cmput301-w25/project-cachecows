@@ -46,11 +46,6 @@
                             android:rotation="45" />
                     </LinearLayout>
 
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="end"
-                        android:src="@drawable/ic_settings_button" />
                 </FrameLayout>
 
                 <!-- Profile Picture and Username -->

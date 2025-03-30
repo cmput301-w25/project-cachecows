@@ -1,0 +1,23 @@
+<!-- res/menu/bottom_nav_menu.xml -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navHome"
+        android:icon="@drawable/ic_nav_home"
+        android:title="Home" />
+    <item
+        android:id="@+id/navSearch"
+        android:icon="@drawable/ic_search"
+        android:title="Search" />
+    <item
+        android:id="@+id/navChats"
+        android:icon="@drawable/ic_nav_chats"
+        android:title="Chats" />
+    <item
+        android:id="@+id/navProfile"
+        android:icon="@drawable/ic_nav_profile"
+        android:title="Profile" />
+    <item
+        android:id="@+id/navMap"
+        android:icon="@drawable/ic_nav_map"
+        android:title="Map" />
+</menu>

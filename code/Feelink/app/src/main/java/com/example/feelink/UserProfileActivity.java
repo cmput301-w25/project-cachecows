@@ -140,7 +140,10 @@ public class UserProfileActivity extends AppCompatActivity {
 
         navSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
         navHome.setOnClickListener(v -> startActivity(new Intent(this, FeedManagerActivity.class)));
-
+        navMap.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MoodMapActivity.class);
+            startActivity(intent);
+        });
         navChats.setOnClickListener(v -> startActivity(new Intent(this, NotificationsActivity.class)));
 
         findViewById(R.id.followersLayout).setOnClickListener(v -> openFollowList("followers"));
