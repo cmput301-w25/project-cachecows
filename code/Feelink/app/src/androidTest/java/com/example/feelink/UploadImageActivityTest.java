@@ -21,6 +21,8 @@ import androidx.test.espresso.intent.Intents;
 import androidx.test.espresso.intent.matcher.IntentMatchers;
 import androidx.test.rule.GrantPermissionRule;
 
+import com.example.feelink.view.UploadImageActivity;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

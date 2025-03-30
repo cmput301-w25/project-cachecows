@@ -5,6 +5,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+import com.example.feelink.view.ChatActivity;
+
 public class ChatActivityTest {
     @Test
     public void testGenerateConversationId_ordering() {

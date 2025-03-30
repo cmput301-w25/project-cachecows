@@ -7,12 +7,8 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.intent.Intents.intended;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.equalTo;
-
-import android.widget.DatePicker;
 
 
 import android.util.Log;
@@ -23,6 +19,8 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 
+import com.example.feelink.view.CreateAccount;
+import com.example.feelink.view.FeedManagerActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
@@ -65,12 +63,12 @@ public class CreateAccountActivityTest {
         // Set the SKIP_AUTH flag in BOTH activities
         try {
             // For CreateAccount
-            Class<?> createAccountClass = Class.forName("com.example.feelink.CreateAccount");
+            Class<?> createAccountClass = Class.forName("com.example.feelink.view.CreateAccount");
             java.lang.reflect.Field skipAuthFieldCA = createAccountClass.getDeclaredField("SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT");
             skipAuthFieldCA.setAccessible(true);
             skipAuthFieldCA.set(null, true);
 
-            Class<?> feedManagerClass = Class.forName("com.example.feelink.FeedManagerActivity");
+            Class<?> feedManagerClass = Class.forName("com.example.feelink.view.FeedManagerActivity");
             java.lang.reflect.Field skipAuthFieldFM = feedManagerClass.getDeclaredField("SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT");
             skipAuthFieldFM.setAccessible(true);
             skipAuthFieldFM.set(null, true);

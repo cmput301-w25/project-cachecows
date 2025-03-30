@@ -2,7 +2,7 @@ package com.example.feelink;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static com.example.feelink.ValidationUtils.*;
+import static com.example.feelink.utils.ValidationUtils.*;
 
 public class LoginValidationTest {
     // Test credential validation edge cases

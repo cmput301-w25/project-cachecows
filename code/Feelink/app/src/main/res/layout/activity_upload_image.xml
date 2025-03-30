@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/gradient_background_2"
-    tools:context=".UploadImageActivity">
+    tools:context=".view.UploadImageActivity">
 
     <TextView
         android:id="@+id/tvUploadMood"

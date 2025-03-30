@@ -4,6 +4,8 @@ package com.example.feelink;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import com.example.feelink.utils.ValidationUtils;
+
 public class ValidationUtilsTest {
     // Username Validation
     @Test
