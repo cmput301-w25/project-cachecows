@@ -49,6 +49,7 @@ import java.util.UUID;
  * </ul>
  */
 public class AddMoodEventActivity extends AppCompatActivity {
+    public static boolean SKIP_AUTH_FOR_TESTING = true;
     private static final int IMAGE_REQUEST_CODE = 200;
 
     // UI references
@@ -72,7 +73,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private long moodEventId = -1;
 
     private ImageView btnDeletePhoto;
-    private static boolean SKIP_AUTH_FOR_TESTING = false;
 
 
 
@@ -546,6 +546,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
                     new PendingSyncManager(AddMoodEventActivity.this).removePendingId(moodEvent.getDocumentId());
                 }
                 Snackbar.make(v, "Mood added successfully!", Snackbar.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
                 finish();
             }
 
@@ -567,6 +568,8 @@ public class AddMoodEventActivity extends AppCompatActivity {
             @Override
             public void onSuccess(MoodEvent moodEvent) {
                 // No action needed for offline success
+                setResult(RESULT_OK);
+                finish();
             }
 
             @Override
@@ -575,6 +578,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
             }
         });
         Toast.makeText(AddMoodEventActivity.this, "You are offline. Your changes have been saved locally!", Toast.LENGTH_SHORT).show();
+        setResult(RESULT_OK);
         finish();
     }
 

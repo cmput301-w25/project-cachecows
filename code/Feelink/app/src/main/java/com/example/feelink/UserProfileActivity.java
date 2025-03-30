@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import androidx.appcompat.widget.PopupMenu;
@@ -134,6 +135,19 @@ public class UserProfileActivity extends AppCompatActivity {
             currentUserId = "dummyUserId"; // Use hardcoded test user ID
         } else {
             currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        }
+
+        // Handle test mode
+        if (SKIP_AUTH_FOR_TESTING) {
+            currentUserId = "testUserId123"; // Use test user ID
+        } else {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                currentUserId = user.getUid();
+            } else {
+                handleUnauthorizedAccess();
+                return;
+            }
         }
         firestoreManager = new FirestoreManager(currentUserId);
         mAuth = FirebaseAuth.getInstance();
@@ -403,4 +417,5 @@ public class UserProfileActivity extends AppCompatActivity {
             moodEventAdapter.notifyItemChanged(position);
         }
     }
+
 }
