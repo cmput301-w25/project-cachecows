@@ -25,10 +25,10 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
         <activity
-            android:name=".FeedManagerActivity"
+            android:name=".view.FeedManagerActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".view.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,44 +36,44 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".FollowListActivity"/>
-        <activity android:name=".ConversationsListActivity"/>
+        <activity android:name=".view.FollowListActivity"/>
+        <activity android:name=".view.ConversationsListActivity"/>
 
-        <activity android:name=".Login" />
-        <activity android:name=".CreateAccount" />
-        <activity android:name=".AddMoodEventActivity" />
-        <activity android:name=".ForgotPasswordActivity"/>
-        <activity android:name=".UploadImageActivity"/>
-        <activity android:name=".NotificationsActivity" />
-        <activity android:name=".UploadProfilePictureActivity" />
-        <activity android:name=".SettingsActivity"
+        <activity android:name=".view.Login" />
+        <activity android:name=".view.CreateAccount" />
+        <activity android:name=".view.AddMoodEventActivity" />
+        <activity android:name=".view.ForgotPasswordActivity"/>
+        <activity android:name=".view.UploadImageActivity"/>
+        <activity android:name=".view.NotificationsActivity" />
+        <activity android:name=".view.UploadProfilePictureActivity" />
+        <activity android:name=".view.SettingsActivity"
             android:exported="false" />
 
         <activity
-            android:name=".CommentsActivity"
+            android:name=".view.CommentsActivity"
             android:windowSoftInputMode="adjustResize|stateAlwaysVisible"
             android:screenOrientation="portrait"/>
-        <activity android:name=".UserProfileActivity"
+        <activity android:name=".view.UserProfileActivity"
         android:exported="false"/>
-        <activity android:name=".SearchActivity" android:exported="false" />
+        <activity android:name=".view.SearchActivity" android:exported="false" />
         <activity
-            android:name=".OtherUserProfileActivity"
+            android:name=".view.OtherUserProfileActivity"
             android:exported="false" />
 
         <activity
-            android:name=".ChatActivity"
+            android:name=".view.ChatActivity"
             android:windowSoftInputMode="adjustResize|stateHidden" />
 
 
         <activity
-            android:name=".LocationPickerActivity"
+            android:name=".view.LocationPickerActivity"
             android:exported="false" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDJTEdK53CkAlOXLDt1nmJEmZeJcX5zvW4"/>
 
 
-        <activity android:name=".MoodMapActivity" />
+        <activity android:name=".view.MoodMapActivity" />
 
         <!-- Add Google Play Services version -->
         <meta-data
