@@ -16,5 +16,9 @@
     <string name="you_are_currently_offline">You are currently offline</string>
     <string name="empty_followed_moods">No public moods from followed users</string>
     <string name="empty_shared_moods">No shared moods available</string>
-
+    <string-array name="map_view_options">
+        <item>View on Map</item>
+        <item>Following Moods</item>
+        <item>Nearby Moods</item>
+    </string-array>
 </resources>

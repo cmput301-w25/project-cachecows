@@ -515,6 +515,21 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
     }
 
     /**
+     * @return The current list of mood events (filtered or unfiltered)
+     */
+    public List<MoodEvent> getCurrentMoodEvents() {
+        return moodEvents;
+    }
+
+    /**
+     * Returns the current list of mood events in the adapter
+     * @return List<MoodEvent> The current list of mood events
+     */
+    public List<MoodEvent> getMoodEvents() {
+        return moodEvents;
+    }
+
+    /**
      * ViewHolder implementation for mood event items
      *
      * <p>Manages view references and click handlers for:</p>
