@@ -74,7 +74,7 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
     private TextView usernameTextView, bioTextView, followerCountTextView, followingCountTextView;
     private String currentUserId;
     private RecyclerView recyclerMoodEvents;
-    private MoodEventAdapter moodEventAdapter;
+    public MoodEventAdapter moodEventAdapter;
     private List<MoodEvent> moodEventsList;
     private TextView moodPostsTextView;
     private FirestoreManager firestoreManager;

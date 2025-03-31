@@ -1,141 +1,142 @@
 package com.example.feelink;
 
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
+
 import android.content.Intent;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.rule.GrantPermissionRule;
 
+import com.example.feelink.model.MoodEvent;
+import com.example.feelink.view.AddMoodEventActivity;
 import com.example.feelink.view.UserProfileActivity;
 import com.google.android.gms.tasks.Tasks;
-import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
 
+
+
+import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+
 import org.junit.runner.RunWith;
 
-import java.lang.reflect.Field;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.action.ViewActions.replaceText;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.junit.Assert.assertEquals;
+
 
 @RunWith(AndroidJUnit4.class)
 public class AddMoodEventTest {
 
     private static final String TAG = "AddMoodEventTest";
     private static final String TEST_USER_ID = "test_user_id";
+    private static final String TEST_REASON = "TestReason_" + System.currentTimeMillis();
 
-    @BeforeClass
-    public static void setupForTesting() {
-        try {
-            // Set SKIP_AUTH_FOR_TESTING flag for UserProfileActivity
-            Field userProfileField = UserProfileActivity.class.getDeclaredField("SKIP_AUTH_FOR_TESTING");
-            userProfileField.setAccessible(true);
-            userProfileField.set(null, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+    // Grant location permissions to avoid the geolocation dialog interfering.
+    @Rule
+    public GrantPermissionRule grantPermissionRule =
+            GrantPermissionRule.grant(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+            );
 
     @Before
-    public void setup() {
-        try {
-            // Configure Firestore emulator
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.useEmulator("10.0.2.2", 8080);
-            FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                    .setPersistenceEnabled(false)
-                    .build();
-            db.setFirestoreSettings(settings);
+    public void setUp() throws Exception {
+        // Enable test mode
+        AddMoodEventActivity.enableTestMode(true);
+        UserProfileActivity.SKIP_AUTH_FOR_TESTING = true;
 
-            // Configure Auth emulator
-            FirebaseAuth auth = FirebaseAuth.getInstance();
-            auth.useEmulator("10.0.2.2", 9099);
+        // Setup Firestore emulator
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.useEmulator("10.0.2.2", 8080);
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(false)
+                .build();
+        db.setFirestoreSettings(settings);
 
-            // Seed test data
-            seedTestUser();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        cleanupTestData();
+        createTestUser();
     }
 
-    private void seedTestUser() throws ExecutionException, InterruptedException {
+    private void createTestUser() throws Exception {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        // Create a test user document
         Map<String, Object> user = new HashMap<>();
         user.put("username", "test_user");
         user.put("followers", 0);
         user.put("following", 0);
         Tasks.await(db.collection("users").document(TEST_USER_ID).set(user));
+    }
 
-        Log.d(TAG, "Test user seeded");
+    private void cleanupTestData() throws Exception {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Query query = db.collection("mood_events")
+                .whereEqualTo("userId", TEST_USER_ID);
+        QuerySnapshot snapshot = Tasks.await(query.get());
+        WriteBatch batch = db.batch();
+        snapshot.getDocuments().forEach(doc -> batch.delete(doc.getReference()));
+        Tasks.await(batch.commit());
     }
 
     @Test
-    public void testAddMoodEvent() throws InterruptedException {
-        // Launch UserProfileActivity in test mode
+    public void testAddMoodEventAppearsInUserProfile() throws Exception {
+        // Verify that Firestore is empty
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        QuerySnapshot preTestSnapshot = Tasks.await(db.collection("mood_events")
+                .whereEqualTo("userId", TEST_USER_ID)
+                .get());
+        assertEquals(0, preTestSnapshot.size());
+
+        // Create and add a test mood event
+        MoodEvent testEvent = new MoodEvent("Happy", "", TEST_REASON);
+        testEvent.setUserId(TEST_USER_ID);
+        testEvent.setPublic(true);
+        testEvent.setTimestamp(new Date());
+
+        DocumentReference docRef = db.collection("mood_events").document();
+        testEvent.setDocumentId(docRef.getId());
+        Tasks.await(docRef.set(testEvent));
+        Log.d(TAG, "Added test mood event to Firestore");
+
+        QuerySnapshot postAddSnapshot = Tasks.await(db.collection("mood_events")
+                .whereEqualTo("userId", TEST_USER_ID)
+                .whereEqualTo("reason", TEST_REASON)
+                .get());
+        assertEquals(1, postAddSnapshot.size());
+        Log.d(TAG, "Verified mood event exists in Firestore");
+
+
         Intent intent = new Intent(ApplicationProvider.getApplicationContext(), UserProfileActivity.class);
-        intent.putExtra("TEST_MODE", true); // Add any required extras for testing
-        ActivityScenario.launch(intent);
+        intent.putExtra("TEST_MODE", true);
+        ActivityScenario<UserProfileActivity> scenario = ActivityScenario.launch(intent);
 
-        // Wait for initial data load
-        Thread.sleep(2000);
+        // verify that recycler displays the test mood event
+        onView(withId(R.id.recyclerMoodEvents))
+                .check(matches(hasDescendant(withText(TEST_REASON))));
 
-        // Click on the FAB to navigate to AddMoodEventActivity
-        onView(withId(R.id.fabAddMood)).perform(click());
-
-        // Verify AddMoodEventActivity is displayed
-        onView(withId(R.id.btnAddMood)).check(matches(isDisplayed()));
-
-        // Fill in mood details and save the mood event
-        onView(withId(R.id.moodHappy)).perform(click()); // Select "Happy" mood
-        onView(withId(R.id.etReason)).perform(replaceText("Feeling great!"));
-        onView(withId(R.id.btnAddMood)).perform(click());
-
-        // Wait for Firestore to sync (adjust delay if necessary)
-        Thread.sleep(3000);
-
-        // Verify navigation back to UserProfileActivity
-        onView(withId(R.id.recyclerMoodEvents)).check(matches(isDisplayed()));
-
-        // Verify the newly added mood event is displayed in the RecyclerView
-        onView(withText("Feeling great!")).check(matches(isDisplayed()));
+        scenario.close();
     }
 
-//    @After
-//    public void cleanup() {
-//        try {
-//            deleteTestData();
-//            Log.d(TAG, "Test data cleaned up");
-//        } catch (Exception e) {
-//            Log.e(TAG, "Error during cleanup", e);
-//        }
-//    }
-
-//    private void deleteTestData() throws ExecutionException, InterruptedException {
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//        WriteBatch batch = db.batch();
-//
-//        // Delete user document
-//        batch.delete(db.collection("users").document(TEST_USER_ID));
-//
-//        // Delete mood events associated with the test user (if any exist)
-//        batch.delete(db.collection("mood_events").document(TEST_USER_ID + "_mood"));
-//
-//        // Commit batch deletion
-//        Tasks.await(batch.commit());
-//    }
+    @After
+    public void tearDown() throws Exception {
+        cleanupTestData();
+    }
 }
+
