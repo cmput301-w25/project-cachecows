@@ -183,7 +183,7 @@ public class MapFunctionalityTest {
         ActivityScenario<MoodMapActivity> scenario = ActivityScenario.launch(intent);
 
         // Wait for map to load
-        try { Thread.sleep(3000); } catch (InterruptedException e) {}
+        try { Thread.sleep(10000); } catch (InterruptedException e) {}
 
         scenario.onActivity(activity -> {
             // Verify map is initialized
@@ -270,7 +270,7 @@ public class MapFunctionalityTest {
         ActivityScenario<MoodMapActivity> scenario = ActivityScenario.launch(intent);
 
         // Wait for map to load
-        try { Thread.sleep(3000); } catch (InterruptedException e) {}
+        try { Thread.sleep(10000); } catch (InterruptedException e) {}
 
         scenario.onActivity(activity -> {
             // Should show only "Sad" moods (1 in test data)

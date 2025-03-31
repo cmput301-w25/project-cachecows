@@ -49,10 +49,6 @@ public class CreateAccount extends AppCompatActivity {
     private boolean usernameAvailable = false;
     private boolean isEditMode = false;
     private String existingUsername;
-
-    // Regex patterns
-    private static final String VALID_USERNAME = "^(?=.*[a-zA-Z])[a-zA-Z0-9_]{3,25}$";
-    private static final String VALID_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_+\\-=]{6,}$";
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private ActivityResultLauncher<Intent> editProfileImageLauncher; // Launcher for editing the profile image
 

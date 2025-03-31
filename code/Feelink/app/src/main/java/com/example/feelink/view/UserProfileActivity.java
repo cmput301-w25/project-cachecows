@@ -89,7 +89,6 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
     private androidx.appcompat.widget.SearchView searchView;
     private ConnectivityReceiver connectivityReceiver;
     public static boolean SKIP_AUTH_FOR_TESTING = false;
-    static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private final BroadcastReceiver syncReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -513,13 +512,6 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
         finish();
     }
 
-    private void removeAnimation(String docId) {
-        int position = moodEventAdapter.findPositionById(docId);
-        if (position != -1) {
-            moodEventAdapter.notifyItemChanged(position);
-        }
-    }
-
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
@@ -653,7 +645,4 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
         return googleMap;
     }
 
-    public void setIsPublicMode(boolean isPublicMode){
-        this.isPublicMode = isPublicMode;
-    }
 }

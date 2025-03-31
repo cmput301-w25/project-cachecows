@@ -31,6 +31,12 @@ import static androidx.test.espresso.matcher.ViewMatchers.hasChildCount;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+
+//-----------------------------------------
+//To run these tests, allow map permissions
+//-----------------------------------------
+
+
 @RunWith(AndroidJUnit4.class)
 public class UserProfileEmotionFilterTest {  //tests run, just give permission for maps
     private static final String TAG = "EmotionFilterTest";

@@ -112,26 +112,6 @@ public class MoodEvent implements Parcelable {
         this.userId = "default_user"; // Default user ID until auth is implemented
     }
 
-    /**
-     * Minimal valid constructor for emotional state recording
-     * @param emotionalState Required emotional state from predefined values
-     */
-    public MoodEvent(String emotionalState) {
-        this();
-        this.emotionalState = emotionalState;
-    }
-
-
-    /**
-     * Full social context constructor
-     * @param emotionalState Selected emotional state
-     * @param socialSituation Social situation category
-     */
-    public MoodEvent(String emotionalState, String socialSituation) {
-        this();
-        this.emotionalState = emotionalState;
-        this.socialSituation = socialSituation;
-    }
 
     /**
      * Complete event constructor with all user-facing fields
@@ -211,12 +191,6 @@ public class MoodEvent implements Parcelable {
         return socialSituation;
     }
 
-    /**
-     * @param socialSituation Selected social situation value
-     */
-    public void setSocialSituation(String socialSituation) {
-        this.socialSituation = socialSituation;
-    }
 
     /**
      * @return Associated user ID from authentication system

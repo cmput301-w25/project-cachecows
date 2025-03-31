@@ -30,6 +30,10 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasChildCount;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 
+//-----------------------------------------
+//To run these tests, allow map permissions
+//-----------------------------------------
+
 @RunWith(AndroidJUnit4.class)
 public class UserProfilePrivateMoodsTest { //not working, compare to Public moods test
     private static final String TAG = "PrivateMoodsTest";

@@ -201,22 +201,6 @@ public class FeedManagerActivity extends AppCompatActivity {
             }
         });
         registerReceiver(connectivityReceiver, intentFilter);
-
-        // Add map button click handler
-        ImageButton mapButton = findViewById(R.id.mapButton);
-        if (mapButton != null) {
-            mapButton.setOnClickListener(v -> {
-                String currentUserId = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : "test_user_id";
-                Intent intent = new Intent(FeedManagerActivity.this, MoodMapActivity.class);
-                intent.putExtra("userId", currentUserId);
-                intent.putExtra("showMyMoods", false); // Show all moods, not just user's
-                startActivity(intent);
-            });
-        } else {
-            Log.e(TAG, "Map button not found in layout");
-        }
-
-
     }
 
     /**
@@ -609,26 +593,6 @@ public class FeedManagerActivity extends AppCompatActivity {
         }
     }
 
-//    private void handleSearchReason() {
-//        SearchView searchView = new SearchView(this);
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-//                .setTitle("Search by Exact Words")
-//                .setView(searchView)
-//                .setPositiveButton("Search", (dialog, which) -> {
-//                    // Clear other filters when searching
-//                    searchReasonQuery = searchView.getQuery().toString().trim();
-//                    showThreeMostRecent = false;
-//                    filterByWeek = false;
-//                    selectedEmotion = null;
-//                    loadMyMoodEvents();
-//                })
-//                .setNegativeButton("Cancel", (dialog, which) -> {
-//                    searchReasonQuery = null;
-//                    loadMyMoodEvents();
-//                });
-//
-//        builder.show();
-//    }
     /**
      * Navigates to AddMoodEventActivity
      *

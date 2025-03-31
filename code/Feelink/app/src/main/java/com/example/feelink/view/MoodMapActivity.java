@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -13,7 +12,6 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -26,12 +24,9 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.feelink.controller.FirestoreManager;
 import com.example.feelink.R;
 import com.example.feelink.model.MoodEvent;
-import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -39,12 +34,11 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.android.gms.tasks.Task;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,11 +53,9 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
     private FirestoreManager firestoreManager;
     private String userId;
     private Map<String, Marker> moodMarkers = new HashMap<>();
-    private RadioGroup filterRadioGroup;
     Location currentLocation;
     private FusedLocationProviderClient fusedLocationClient;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
-    private static final float NEARBY_DISTANCE_KM = 5.0f;
     private ArrayList<MoodEvent> moodEventsList;
     List<Marker> currentMarkers = new ArrayList<>();
     private static final String TAG = "MoodMapActivity";
@@ -73,17 +65,6 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
     private String selectedEmotion = null;
     private String searchReasonQuery = null;
 
-    // Map mood types to marker colors
-    private final Map<String, Float> moodColors = new HashMap<String, Float>() {{
-        put("Happy", BitmapDescriptorFactory.HUE_GREEN);
-        put("Sad", BitmapDescriptorFactory.HUE_BLUE);
-        put("Angry", BitmapDescriptorFactory.HUE_RED);
-        put("Surprised", BitmapDescriptorFactory.HUE_YELLOW);
-        put("Confused", BitmapDescriptorFactory.HUE_ORANGE);
-        put("Disgusted", BitmapDescriptorFactory.HUE_VIOLET);
-        put("Fear", BitmapDescriptorFactory.HUE_MAGENTA);
-        put("Shame", BitmapDescriptorFactory.HUE_ROSE);
-    }};
 
     // Map mood types to drawable resources
     private final Map<String, Integer> moodIconMap = new HashMap<String, Integer>() {{
@@ -184,7 +165,7 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
-        
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             googleMap.setMyLocationEnabled(true);
             getCurrentLocation();
@@ -368,53 +349,6 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
         });
     }
 
-    private void displayMoodEvents(List<MoodEvent> moodEvents, boolean showUsername) {
-        for (MoodEvent moodEvent : moodEvents) {
-            // Only show moods with location data
-            if (moodEvent.getLatitude() != null && moodEvent.getLongitude() != null) {
-                LatLng position = new LatLng(moodEvent.getLatitude(), moodEvent.getLongitude());
-                
-                // Get username for the mood event
-                firestoreManager.getUsernameById(moodEvent.getUserId(), new FirestoreManager.OnUsernameListener() {
-                    @Override
-                    public void onSuccess(String username) {
-                        runOnUiThread(() -> {
-                            // Create marker with mood icon and username
-                            MarkerOptions markerOptions = new MarkerOptions()
-                                .position(position)
-                                .title(moodEvent.getEmotionalState())
-                                .snippet(username)  // Use username instead of reason
-                                .icon(createMarkerIcon(moodEvent.getEmotionalState()));
-
-                            // Add marker to map and store reference
-                            Marker marker = googleMap.addMarker(markerOptions);
-                            if (marker != null) {
-                                currentMarkers.add(marker);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onFailure(String fallbackName) {
-                        runOnUiThread(() -> {
-                            // Use userId as fallback if username fetch fails
-                            MarkerOptions markerOptions = new MarkerOptions()
-                                .position(position)
-                                .title(moodEvent.getEmotionalState())
-                                .snippet(moodEvent.getUserId())  // Use userId as fallback
-                                .icon(createMarkerIcon(moodEvent.getEmotionalState()));
-
-                            // Add marker to map and store reference
-                            Marker marker = googleMap.addMarker(markerOptions);
-                            if (marker != null) {
-                                currentMarkers.add(marker);
-                            }
-                        });
-                    }
-                });
-            }
-        }
-    }
 
     private void clearMarkers() {
         for (Marker marker : moodMarkers.values()) {
@@ -512,43 +446,6 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
             });
     }
 
-    private void checkLocationPermissionAndLoadNearbyMoods() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST_CODE);
-            return;
-        }
-
-        LocationRequest locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(10000)        // 10 seconds
-                .setFastestInterval(5000); // 5 seconds
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest)
-                .setAlwaysShow(true);
-
-        Task<LocationSettingsResponse> task = LocationServices.getSettingsClient(this)
-                .checkLocationSettings(builder.build());
-
-        task.addOnSuccessListener(this, locationSettingsResponse -> {
-            // Location settings are satisfied, load nearby moods
-            loadNearbyFollowingMoods();
-        }).addOnFailureListener(this, e -> {
-            if (e instanceof ResolvableApiException) {
-                try {
-                    // Show the dialog by calling startResolutionForResult(),
-                    // and check the result in onActivityResult().
-                    ResolvableApiException resolvable = (ResolvableApiException) e;
-                    resolvable.startResolutionForResult(MoodMapActivity.this,
-                            REQUEST_CHECK_SETTINGS);
-                } catch (IntentSender.SendIntentException sendEx) {
-                    // Ignore the error.
-                }
-            }
-        });
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -612,17 +509,6 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
         });
     }
 
-    private void adjustCameraToShowAllMarkers() {
-        if (currentMarkers.isEmpty()) return;
-
-        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        for (Marker marker : currentMarkers) {
-            builder.include(marker.getPosition());
-        }
-        LatLngBounds bounds = builder.build();
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
-    }
-
     public void clearExistingMarkers() {
         runOnUiThread(() -> {
             for (Marker marker : currentMarkers) {
@@ -641,22 +527,12 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
         return googleMap;
     }
 
-    public void setCurrentLocation(Location currentLocation){
-        this.currentLocation = currentLocation;
-    }
 
     private void showNoNearbyMoodsMessage() {
         runOnUiThread(() -> Toast.makeText(MoodMapActivity.this, 
             "No nearby moods found within 5km", Toast.LENGTH_SHORT).show());
     }
 
-    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        // Use Android's built-in distance calculation
-        float[] results = new float[1];
-        Location.distanceBetween(lat1, lon1, lat2, lon2, results);
-        // Convert meters to kilometers
-        return results[0] / 1000.0;
-    }
 
     private void addMoodMarker(MoodEvent moodEvent) {
         if (moodEvent.getLatitude() != null && moodEvent.getLongitude() != null) {

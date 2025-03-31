@@ -504,19 +504,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
         this.moodEvents = moodEvents;
         notifyDataSetChanged();
     }
-    public int findPositionById(String documentId) {
-        if (moodEvents == null) return -1;
-        for (int i = 0; i < moodEvents.size(); i++) {
-            if (moodEvents.get(i).getDocumentId().equals(documentId)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public boolean isPublicFeed() {
-        return isPublicFeed;
-    }
 
     public void setPublicFeed(boolean isPublicFeed) {
         this.isPublicFeed = isPublicFeed;
@@ -526,14 +513,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.Mood
      * @return The current list of mood events (filtered or unfiltered)
      */
     public List<MoodEvent> getCurrentMoodEvents() {
-        return moodEvents;
-    }
-
-    /**
-     * Returns the current list of mood events in the adapter
-     * @return List<MoodEvent> The current list of mood events
-     */
-    public List<MoodEvent> getMoodEvents() {
         return moodEvents;
     }
 

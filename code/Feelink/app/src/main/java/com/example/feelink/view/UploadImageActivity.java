@@ -55,12 +55,6 @@ public class UploadImageActivity extends AppCompatActivity {
     /** Request code for camera permission */
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
 
-    /** Request code for selecting an image from the gallery */
-    private static final int SELECT_IMAGE = 100;
-
-    /** Request code for capturing an image from the camera */
-    private static final int CAPTURE_IMAGE = 101;
-
     private Button btnUseCamera, btnUploadImage, btnConfirm, btnCancel, btnBack;
     private ImageView ivPreview;
 

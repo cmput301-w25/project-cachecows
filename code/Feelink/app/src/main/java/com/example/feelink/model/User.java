@@ -40,28 +40,12 @@ public class User {
         this.username_lowercase = username.toLowerCase();
     }
 
-    public String getUsername_lowercase() {
-        return username_lowercase;
-    }
-
-    public void setUsername_lowercase(String username_lowercase) {
-        this.username_lowercase = username_lowercase;
-    }
-
     public String getProfileImageUrl() {
         return profileImageUrl;
     }
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
-    }
-
-    public long getMoodPosts() {
-        return moodPosts;
-    }
-
-    public void setMoodPosts(long moodPosts) {
-        this.moodPosts = moodPosts;
     }
 
     public long getFollowers() {

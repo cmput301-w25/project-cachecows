@@ -282,25 +282,6 @@ public class OtherUserProfileActivity extends AppCompatActivity {
                 });
     }
 
-    private void followUser() {
-        String targetUsername = usernameTextView.getText().toString();
-
-        FirestoreManager firestoreManager = new FirestoreManager(currentUserId);
-        firestoreManager.createFollowRelationship(profileUserId, targetUsername, new FirestoreManager.OnFollowRequestListener() {
-            @Override
-            public void onSuccess() {
-                followButton.setText("Following");
-                Toast.makeText(OtherUserProfileActivity.this, "Now following", Toast.LENGTH_SHORT).show();
-                // Refresh counts
-                fetchUserData(profileUserId);
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Toast.makeText(OtherUserProfileActivity.this, "Follow failed: " + error, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 
     private void unfollowUser() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();

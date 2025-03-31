@@ -83,35 +83,6 @@ public class FirestoreManager {
         db = FirebaseFirestore.getInstance();
         this.userId = userId;
     }
-    public void updateAllUsersWithLowercaseUsername() {
-        Log.d(TAG, "Starting update of all users with lowercase usernames");
-
-        db.collection("users").get()
-                .addOnSuccessListener(querySnapshot -> {
-                    int updatedCount = 0;
-                    for (QueryDocumentSnapshot document : querySnapshot) {
-                        String username = document.getString("username");
-                        if (username != null) {
-                            String usernameLowercase = username.toLowerCase();
-
-                            // Update the document with the lowercase username
-                            document.getReference().update("username_lowercase", usernameLowercase)
-                                    .addOnSuccessListener(aVoid -> {
-                                        Log.d(TAG, "Updated lowercase username for user: " + document.getId());
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Log.e(TAG, "Error updating lowercase username for user: " + document.getId(), e);
-                                    });
-
-                            updatedCount++;
-                        }
-                    }
-                    Log.d(TAG, "Processed " + updatedCount + " users for lowercase username update");
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error fetching users for lowercase username update", e);
-                });
-    }
 
     /**
      * Persists mood event to Firestore with partial field updates
@@ -203,15 +174,6 @@ public class FirestoreManager {
                         }
                     }
                 });
-    }
-
-
-
-    public void updateUserEmail(String username, String newEmail, OnSuccessListener<Void> success, OnFailureListener failure) {
-        db.collection("usernames").document(username)
-                .update("email", newEmail)
-                .addOnSuccessListener(success)
-                .addOnFailureListener(failure);
     }
 
     /**
@@ -306,64 +268,6 @@ public class FirestoreManager {
                     }
                 });
     }
-//    public void getMoodEvents(Boolean showPublic, boolean filterByWeek, final OnMoodEventsListener listener) {
-//        long oneWeekAgoMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000);
-//        Date oneWeekAgo = new Date(oneWeekAgoMillis);
-//
-//        db.collection(COLLECTION_MOOD_EVENTS)
-//                .whereEqualTo("userId", this.userId)
-//                .orderBy("timestamp", Query.Direction.DESCENDING)
-//                .get()
-//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                        if (task.isSuccessful()) {
-//                            List<MoodEvent> moodEvents = new ArrayList<>();
-//                            for (QueryDocumentSnapshot document : task.getResult()) {
-//                                String id = document.getId();
-//                                Date timestamp = document.getDate("timestamp");
-//                                String emotionalState = document.getString("emotionalState");
-//                                String socialSituation = document.getString("socialSituation");
-//                                String reason = document.getString("reason");
-//                                String userId = document.getString("userId");
-//                                String imageUrl = document.getString("imageUrl");
-//
-//                                // Handle legacy moods (missing isPublic field)
-//                                Boolean isPublic = document.getBoolean("isPublic");
-//                                if (isPublic == null) {
-//                                    isPublic = true; // Treat old moods as public
-//                                }
-//
-//                                // Apply filtering based on toggle state
-//                                boolean shouldInclude = (showPublic == null) || // For total count
-//                                        (showPublic && isPublic) || // Public mode
-//                                        (!showPublic && !isPublic); // Private mode
-//
-//                                if (shouldInclude) {
-//                                    MoodEvent moodEvent = new MoodEvent(emotionalState, socialSituation, reason);
-//                                    moodEvent.setUserId(userId);
-//                                    moodEvent.setId(id.hashCode());
-//                                    moodEvent.setTimestamp(timestamp);
-//                                    moodEvent.setDocumentId(id);
-//                                    moodEvent.setImageUrl(imageUrl);
-//                                    moodEvent.setPublic(isPublic);
-//
-//                                    moodEvents.add(moodEvent);
-//                                }
-//                            }
-//
-//                            if (listener != null) {
-//                                listener.onSuccess(moodEvents);
-//                            }
-//                        } else {
-//                            Log.w(TAG, "Error getting mood events", task.getException());
-//                            if (listener != null) {
-//                                listener.onFailure(task.getException().getMessage());
-//                            }
-//                        }
-//                    }
-//                });
-//    }
 
     /**
      * Fetches public mood events from other users
@@ -433,9 +337,6 @@ public class FirestoreManager {
                     }
                 });
     }
-
-
-
 
     /**
      * Deletes mood event with ownership verification
@@ -919,22 +820,6 @@ public class FirestoreManager {
     }
 
 
-
-//    public Query getPublicMoodEvents(String userId) {
-//        return db.collection("mood_events")
-//                .whereEqualTo("userId", userId)
-//                .whereEqualTo("isPublic", true); // Only fetch public events
-//    }
-
-    /**
-     * Fetches all mood events for the current authenticated user (private and public).
-     */
-//    public Query getAllMoodEvents(String userId) {
-//        return db.collection("mood_events")
-//                .whereEqualTo("userId", userId); // Fetch all events regardless of visibility
-//    }
-
-
     public void createCommentNotification(String receiverId, String moodEventId, String commentText, OnNotificationListener listener) {
         Map<String, Object> notification = new HashMap<>();
         notification.put("type", "COMMENT");
@@ -976,11 +861,6 @@ public class FirestoreManager {
                 });
     }
 
-    void setDb(FirebaseFirestore db) {
-        this.db = db;
-    }
-
-
     public interface OnNotificationsListener {
         void onSuccess(List<Notification> notifications);
         void onFailure(String errorMessage);
@@ -990,8 +870,6 @@ public class FirestoreManager {
         void onSuccess();
         void onFailure(String error);
     }
-
-
 
     /**
      * Callback interface for deletion operations
@@ -1336,153 +1214,6 @@ public class FirestoreManager {
     }
 
 
-
-    /**
-     * Updates location data for an existing mood event
-     *
-     * @param documentId Firestore document ID of the mood event
-     * @param latitude Location latitude
-     * @param longitude Location longitude
-     * @param locationName Optional location name/address
-     * @param listener Callback for operation results
-     */
-    public void updateMoodEventLocation(String documentId, Double latitude, Double longitude,
-            String locationName, final OnMoodEventListener listener) {
-        Map<String, Object> locationData = new HashMap<>();
-
-        if (latitude != null) {
-            locationData.put("latitude", latitude);
-        }
-        if (longitude != null) {
-            locationData.put("longitude", longitude);
-        }
-        if (locationName != null && !locationName.isEmpty()) {
-            locationData.put("locationName", locationName);
-        }
-
-        db.collection(COLLECTION_MOOD_EVENTS)
-                .document(documentId)
-                .update(locationData)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "Location updated for mood event: " + documentId);
-                    if (listener != null) {
-                        MoodEvent updatedEvent = new MoodEvent();
-                        updatedEvent.setDocumentId(documentId);
-                        updatedEvent.setLatitude(latitude);
-                        updatedEvent.setLongitude(longitude);
-                        updatedEvent.setLocationName(locationName);
-                        listener.onSuccess(updatedEvent);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.w(TAG, "Error updating location for mood event: " + documentId, e);
-                    if (listener != null) {
-                        listener.onFailure(e.getMessage());
-                    }
-                });
-    }
-
-    /**
-     * Retrieves mood events within a specified geographic radius
-     *
-     * @param centerLatitude Center point latitude
-     * @param centerLongitude Center point longitude
-     * @param radiusInKm Radius in kilometers
-     * @param listener Callback for mood events within radius
-     */
-    public void getMoodEventsInRadius(double centerLatitude, double centerLongitude,
-            double radiusInKm, final OnMoodEventsListener listener) {
-        // Note: This is a simplified version. For production, you should implement
-        // proper geohashing or use a geospatial database
-        db.collection(COLLECTION_MOOD_EVENTS)
-                .whereEqualTo("userId", this.userId)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        List<MoodEvent> moodEvents = new ArrayList<>();
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            Double eventLat = document.getDouble("latitude");
-                            Double eventLng = document.getDouble("longitude");
-
-                            if (eventLat != null && eventLng != null) {
-                                // Calculate distance using Haversine formula
-                                double distance = calculateDistance(centerLatitude, centerLongitude,
-                                        eventLat, eventLng);
-
-                                if (distance <= radiusInKm) {
-                                    MoodEvent moodEvent = createMoodEventFromDocument(document);
-                                    moodEvents.add(moodEvent);
-                                }
-                            }
-                        }
-
-                        if (listener != null) {
-                            listener.onSuccess(moodEvents);
-                        }
-                    } else {
-                        Log.w(TAG, "Error getting mood events in radius", task.getException());
-                        if (listener != null) {
-                            listener.onFailure(task.getException().getMessage());
-                        }
-                    }
-                });
-    }
-
-    /**
-     * Calculates distance between two points using Haversine formula
-     *
-     * @param lat1 First point latitude
-     * @param lon1 First point longitude
-     * @param lat2 Second point latitude
-     * @param lon2 Second point longitude
-     * @return Distance in kilometers
-     */
-    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        final int R = 6371; // Earth's radius in kilometers
-
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        return R * c;
-    }
-
-    /**
-     * Creates a MoodEvent object from a Firestore document
-     *
-     * @param document Firestore document
-     * @return MoodEvent object
-     */
-    private MoodEvent createMoodEventFromDocument(QueryDocumentSnapshot document) {
-        String id = document.getId();
-        Date timestamp = document.getDate("timestamp");
-        String emotionalState = document.getString("emotionalState");
-        String socialSituation = document.getString("socialSituation");
-        String reason = document.getString("reason");
-        String userId = document.getString("userId");
-        String imageUrl = document.getString("imageUrl");
-        Double latitude = document.getDouble("latitude");
-        Double longitude = document.getDouble("longitude");
-        String locationName = document.getString("locationName");
-
-        MoodEvent moodEvent = new MoodEvent(emotionalState, socialSituation, reason);
-        moodEvent.setUserId(userId);
-        moodEvent.setId(id.hashCode());
-        moodEvent.setTimestamp(timestamp);
-        moodEvent.setDocumentId(id);
-        moodEvent.setImageUrl(imageUrl);
-        moodEvent.setLatitude(latitude);
-        moodEvent.setLongitude(longitude);
-        moodEvent.setLocationName(locationName);
-
-        return moodEvent;
-    }
-
     /**
      * Get mood events from users that the current user is following, with optional filters
      * @param filterByWeek Filter to show only events from the past week
@@ -1547,57 +1278,6 @@ public class FirestoreManager {
                 listener.onFailure(error);
             }
         });
-    }
-
-    /**
-     * Gets the most recent mood event for a user with specified privacy setting
-     * @param userId The ID of the user whose mood to fetch
-     * @param isPublic Whether to fetch only public moods (true) or all moods (false)
-     * @param listener Callback for the result
-     */
-    public void getMostRecentMoodEvent(String userId, boolean isPublic, OnMoodEventListener listener) {
-        Query query = db.collection(COLLECTION_MOOD_EVENTS)
-            .whereEqualTo("userId", userId)
-            .whereEqualTo("isPublic", isPublic)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .limit(1);
-
-        query.get()
-            .addOnSuccessListener(queryDocumentSnapshots -> {
-                if (!queryDocumentSnapshots.isEmpty()) {
-                    DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
-                    String emotionalState = document.getString("emotionalState");
-
-                    // Create mood event with just emotional state
-                    MoodEvent moodEvent = new MoodEvent(emotionalState);
-
-                    // Set all other fields if they exist
-                    moodEvent.setUserId(document.getString("userId"));
-                    moodEvent.setTimestamp(document.getDate("timestamp"));
-                    moodEvent.setDocumentId(document.getId());
-                    moodEvent.setLatitude(document.getDouble("latitude"));
-                    moodEvent.setLongitude(document.getDouble("longitude"));
-                    moodEvent.setLocationName(document.getString("locationName"));
-                    moodEvent.setImageUrl(document.getString("imageUrl"));
-                    moodEvent.setPublic(true);
-
-                    // Only set optional fields if they exist
-                    String socialSituation = document.getString("socialSituation");
-                    if (socialSituation != null) {
-                        moodEvent.setSocialSituation(socialSituation);
-                    }
-
-                    String reason = document.getString("reason");
-                    if (reason != null) {
-                        moodEvent.setReason(reason);
-                    }
-
-                    listener.onSuccess(moodEvent);
-                } else {
-                    listener.onSuccess(null);
-                }
-            })
-            .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 
     public interface OnFollowingIdsListener {

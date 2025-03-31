@@ -206,10 +206,6 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         return notifications.size();
     }
 
-    public void clearNotifications() {
-        this.notifications.clear();
-        notifyDataSetChanged();
-    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         de.hdodenhof.circleimageview.CircleImageView profileImage;
