@@ -16,6 +16,40 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Objects;
 
+/**
+ * An Android Activity that handles profile picture uploads and optional skipping of the process.
+ * <p>
+ * This activity provides UI elements for initiating image uploads via {@link UploadImageActivity}
+ * and handles the result using {@link ActivityResultLauncher}. Manages Firebase user authentication
+ * state and coordinates with {@link FirestoreManager} to update profile images in Firestore.
+ * </p>
+ * <p>
+ * Key features:
+ * <ul>
+ *   <li>Launches image selection workflow through activity result contracts</li>
+ *   <li>Handles Firestore updates for profile images with success/error callbacks</li>
+ *   <li>Provides navigation to {@link UserProfileActivity} or {@link FeedManagerActivity}</li>
+ *   <li>Contains testing flags to bypass authentication constraints</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Testing notes:
+ * <ul>
+ *   <li>{@link #SKIP_AUTH_FOR_TESTING} - Bypasses Firebase auth checks when true</li>
+ *   <li>{@link #FORCE_USER_ID} - Allows overriding Firebase UID for test scenarios</li>
+ * </ul>
+ * </p>
+ * <p>
+ * The activity shows appropriate Toast messages for upload failures and empty image selections.
+ * </p>
+ *
+ * @author Example Author
+ * @version 1.0
+ * @see FirestoreManager
+ * @see UploadImageActivity
+ * @since 1.0
+ */
+
 public class UploadProfilePictureActivity extends AppCompatActivity {
     public static boolean SKIP_AUTH_FOR_TESTING = false;
     public static String FORCE_USER_ID = null;

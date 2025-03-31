@@ -8,6 +8,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.feelink.R;
 import com.google.firebase.firestore.FirebaseFirestore;
+/**
+ * Displays detailed view of individual mood events
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 01.04.01 - Mood history detail viewing</li>
+ *   <li>US 01.05.01 - Mood context visualization</li>
+ * </ul>
+ */
 
 public class MoodEventDetailsActivity extends AppCompatActivity {
 
@@ -28,6 +37,17 @@ public class MoodEventDetailsActivity extends AppCompatActivity {
 
         loadMoodEventDetails(moodEventId);
     }
+    /**
+     * Fetches and displays complete mood event data from Firestore
+     * @param moodEventId Document ID of the mood event to display
+     *
+     * <p>Retrieves:
+     * <ul>
+     *   <li>Emotional state classification</li>
+     *   <li>Social context metadata</li>
+     *   <li>Timestamped occurrence data</li>
+     * </ul>
+     */
 
     private void loadMoodEventDetails(String moodEventId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();

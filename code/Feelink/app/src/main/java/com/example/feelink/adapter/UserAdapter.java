@@ -20,6 +20,16 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
+/**
+ * Shows user profiles in lists with navigation to full profiles. Handles both current user
+ * and other users' profiles.
+ * <p>
+ * Core implementation for:
+ * <ul>
+ *   <li>US 03.03.01 (View user profiles)</li>
+ *   <li>Profile switching between own/others' views</li>
+ * </ul>
+ */
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
 
@@ -50,6 +60,13 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
                 .inflate(R.layout.user_item, parent, false);
         return new UserViewHolder(view);
     }
+    /**
+     * Configures user items with profile images and click handlers
+     * @param holder ViewHolder to populate
+     * @param position User position in list
+     *
+     * Implements profile navigation from US 03.03.01
+     */
 
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {

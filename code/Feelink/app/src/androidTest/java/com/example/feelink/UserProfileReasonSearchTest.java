@@ -36,6 +36,11 @@ import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.Matchers.endsWith;
 
+//-----------------------------------------
+//To run these tests, allow map permissions
+//-----------------------------------------
+
+
 @RunWith(AndroidJUnit4.class)
 public class UserProfileReasonSearchTest {
     private static final String TAG = "ReasonSearchTest";

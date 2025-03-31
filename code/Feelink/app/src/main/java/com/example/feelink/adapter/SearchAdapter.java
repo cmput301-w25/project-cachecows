@@ -12,6 +12,15 @@ import com.example.feelink.R;
 import com.example.feelink.model.User;
 
 import java.util.List;
+/**
+ * Displays user search results with profiles. Enables navigation to user profiles.
+ * <p>
+ * Directly implements:
+ * <ul>
+ *   <li>US 03.02.01 (User search functionality)</li>
+ *   <li>US 03.03.01 (Profile previews in search results)</li>
+ * </ul>
+ */
 
 public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.SearchViewHolder> {
     private List<User> searchResults;
@@ -29,6 +38,13 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.SearchView
                 .inflate(R.layout.item_search_result, parent, false);
         return new SearchViewHolder(view);
     }
+    /**
+     * Binds user data to search result items
+     * @param holder ViewHolder to configure
+     * @param position Result position in list
+     *
+     * Uses Glide for US 03.03.01 profile image display
+     */
 
     @Override
     public void onBindViewHolder(@NonNull SearchViewHolder holder, int position) {

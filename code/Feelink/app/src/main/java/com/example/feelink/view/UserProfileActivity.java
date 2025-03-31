@@ -67,6 +67,15 @@ import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
+/**
+ * Main profile screen with mood history and map integration
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 01.04.01 - Mood history timeline</li>
+ *   <li>US 02.04.01 - Geospatial mood visualization</li>
+ * </ul>
+ */
 
 public class UserProfileActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static final String TAG = "PersonalProfileActivity";
@@ -89,7 +98,6 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
     private androidx.appcompat.widget.SearchView searchView;
     private ConnectivityReceiver connectivityReceiver;
     public static boolean SKIP_AUTH_FOR_TESTING = false;
-    static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private final BroadcastReceiver syncReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -172,6 +180,10 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
         navHome.setOnClickListener(v -> startActivity(new Intent(this, FeedManagerActivity.class)));
 
         navChats.setOnClickListener(v -> startActivity(new Intent(this, NotificationsActivity.class)));
+        navMap.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MoodMapActivity.class);
+            startActivity(intent);
+        });
 
         findViewById(R.id.followersLayout).setOnClickListener(v -> openFollowList("followers"));
         findViewById(R.id.followingLayout).setOnClickListener(v -> openFollowList("following"));
@@ -513,13 +525,6 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
         finish();
     }
 
-    private void removeAnimation(String docId) {
-        int position = moodEventAdapter.findPositionById(docId);
-        if (position != -1) {
-            moodEventAdapter.notifyItemChanged(position);
-        }
-    }
-
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
@@ -568,6 +573,11 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
             }
         }
     }
+    /**
+     * Renders mood events on embedded map view
+     * @see MoodEvent#getLatitude
+     * @see MoodEvent#getLongitude
+     */
 
     private void displayMoodEventsOnMap() {
         if (googleMap == null) return;
@@ -653,7 +663,4 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
         return googleMap;
     }
 
-    public void setIsPublicMode(boolean isPublicMode){
-        this.isPublicMode = isPublicMode;
-    }
 }

@@ -54,8 +54,6 @@ import java.util.UUID;
  */
 public class AddMoodEventActivity extends AppCompatActivity {
     public static boolean SKIP_AUTH_FOR_TESTING = true;
-    private static final int IMAGE_REQUEST_CODE = 200;
-    private static final int LOCATION_PICKER_REQUEST_CODE = 2;
 
     // UI references
     private TextView tvGreeting, tvAddPhoto, tvAddLocation;
@@ -72,7 +70,6 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private String tempLocalImagePath = null;
     private FirestoreManager firestoreManager;
     private PendingSyncManager pendingSyncManager;
-    private String docId;
     private Date currentDateTime;
     private boolean isEditMode = false;
     private long moodEventId = -1;

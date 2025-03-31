@@ -2,7 +2,15 @@ package com.example.feelink.model;
 
 import java.util.Date;
 
-// Message.java
+/**
+ * Encapsulates chat message data and delivery status
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 04.02.01 - Message sending functionality</li>
+ *   <li>US 05.03.01 - Real-time message synchronization</li>
+ * </ul>
+ */
 public class Message {
 
     private String id;

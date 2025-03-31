@@ -26,6 +26,15 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
+/**
+ * Displays external user profiles with follow functionality
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 04.02.01 - Profile viewing</li>
+ *   <li>US 04.03.01 - Follow relationship management</li>
+ * </ul>
+ */
 
 public class OtherUserProfileActivity extends AppCompatActivity {
     private static final String TAG = "OtherUserProfileActivity";
@@ -59,6 +68,7 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         ImageView navChats = findViewById(R.id.navChats);
         ImageView navProfile = findViewById(R.id.navProfile);
         ImageView navMap = findViewById(R.id.navMap);
+        ImageView navSearch = findViewById(R.id.navSearch);
 
 
         navHome.setOnClickListener(v -> {
@@ -70,6 +80,9 @@ public class OtherUserProfileActivity extends AppCompatActivity {
             startActivity(new Intent(this, NotificationsActivity.class));
             finish();
         });
+
+        navSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+
         navMap.setOnClickListener(v -> {
             Intent intent = new Intent(this, MoodMapActivity.class);
             startActivity(intent);
@@ -282,25 +295,6 @@ public class OtherUserProfileActivity extends AppCompatActivity {
                 });
     }
 
-    private void followUser() {
-        String targetUsername = usernameTextView.getText().toString();
-
-        FirestoreManager firestoreManager = new FirestoreManager(currentUserId);
-        firestoreManager.createFollowRelationship(profileUserId, targetUsername, new FirestoreManager.OnFollowRequestListener() {
-            @Override
-            public void onSuccess() {
-                followButton.setText("Following");
-                Toast.makeText(OtherUserProfileActivity.this, "Now following", Toast.LENGTH_SHORT).show();
-                // Refresh counts
-                fetchUserData(profileUserId);
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Toast.makeText(OtherUserProfileActivity.this, "Follow failed: " + error, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 
     private void unfollowUser() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();

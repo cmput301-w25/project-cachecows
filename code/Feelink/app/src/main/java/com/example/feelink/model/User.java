@@ -1,6 +1,17 @@
 package com.example.feelink.model;
 
 import com.google.firebase.firestore.DocumentSnapshot;
+/**
+ * Contains user profile data and social metrics
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 01.02.01 - Profile management</li>
+ *   <li>US 03.02.01 - User search functionality</li>
+ * </ul>
+ *
+ * <p>Maintains case-insensitive username matching through lowercase variant</p>
+ */
 
 public class User {
     private String id;
@@ -40,28 +51,12 @@ public class User {
         this.username_lowercase = username.toLowerCase();
     }
 
-    public String getUsername_lowercase() {
-        return username_lowercase;
-    }
-
-    public void setUsername_lowercase(String username_lowercase) {
-        this.username_lowercase = username_lowercase;
-    }
-
     public String getProfileImageUrl() {
         return profileImageUrl;
     }
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
-    }
-
-    public long getMoodPosts() {
-        return moodPosts;
-    }
-
-    public void setMoodPosts(long moodPosts) {
-        this.moodPosts = moodPosts;
     }
 
     public long getFollowers() {

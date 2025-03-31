@@ -25,6 +25,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+/**
+ * Manages display and interaction with notifications (follow requests/comments). Handles
+ * profile image caching and request resolution.
+ * <p>
+ * Key user stories:
+ * <ul>
+ *   <li>US 05.02.02 (Follow request handling)</li>
+ *   <li>US 05.07.01 (Comment notification display)</li>
+ * </ul>
+ */
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
     private List<Notification> notifications;
@@ -51,6 +61,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 .inflate(R.layout.item_notification, parent, false);
         return new ViewHolder(view);
     }
+    /**
+     * Configures notification items with action buttons and user details
+     * @param holder ViewHolder to populate
+     * @param position Item position in list
+     *
+     * Implements: US 03.03.01 (Profile image resolution via Glide)
+     */
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
@@ -206,10 +223,6 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         return notifications.size();
     }
 
-    public void clearNotifications() {
-        this.notifications.clear();
-        notifyDataSetChanged();
-    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         de.hdodenhof.circleimageview.CircleImageView profileImage;

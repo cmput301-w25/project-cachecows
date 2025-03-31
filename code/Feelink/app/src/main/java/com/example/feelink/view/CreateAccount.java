@@ -35,6 +35,16 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+/**
+ * Handles user account creation and profile management operations
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 01.01.01 - New user registration workflow</li>
+ *   <li>US 01.02.01 - Profile editing capabilities</li>
+ *   <li>US 01.03.01 - Username availability checking</li>
+ * </ul>
+ */
 
 public class CreateAccount extends AppCompatActivity {
     private EditText nameEditText, usernameEditText, dobEditText,
@@ -49,10 +59,6 @@ public class CreateAccount extends AppCompatActivity {
     private boolean usernameAvailable = false;
     private boolean isEditMode = false;
     private String existingUsername;
-
-    // Regex patterns
-    private static final String VALID_USERNAME = "^(?=.*[a-zA-Z])[a-zA-Z0-9_]{3,25}$";
-    private static final String VALID_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_+\\-=]{6,}$";
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private ActivityResultLauncher<Intent> editProfileImageLauncher; // Launcher for editing the profile image
 
@@ -292,6 +298,7 @@ public class CreateAccount extends AppCompatActivity {
         return false;
     }
 
+
     private void updateProfile() {
         String name = nameEditText.getText().toString().trim();
         String username = usernameEditText.getText().toString().trim();
@@ -355,6 +362,7 @@ public class CreateAccount extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
+
 
     void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
         WriteBatch batch = db.batch();

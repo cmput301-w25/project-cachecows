@@ -40,7 +40,6 @@ public class Login extends AppCompatActivity {
     private Button loginButton;
     private ImageView backButton;
     private TextView forgotUsername, forgotPassword;
-    private static final String TAG = "LoginActivity";
 
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;

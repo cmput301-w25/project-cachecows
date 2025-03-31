@@ -4,6 +4,33 @@ import android.graphics.Bitmap;
 
 import java.io.ByteArrayOutputStream;
 
+/**
+ * A utility class providing methods for image processing and validation tasks.
+ * <p>
+ * This class handles operations such as validating allowed image types, calculating resized dimensions
+ * while preserving aspect ratio, and compressing bitmaps to meet file size constraints. It includes
+ * a helper class {@link ImageDimensions} to store width/height values for dimension calculations.
+ * </p>
+ * <p>
+ * Key functionalities:
+ * <ul>
+ *   <li>MIME type validation for JPEG/PNG image formats</li>
+ *   <li>Aspect ratio-preserving bitmap resizing with a 200px target bounding box</li>
+ *   <li>Iterative JPEG compression with quality reduction and fallback to dimension scaling</li>
+ *   <li>Enforcement of 65 KB maximum file size for compressed images</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Note: Bitmap operations may be memory-intensive. Callers should consider performance implications
+ * when processing large images.
+ * </p>
+ *
+ * @author Example Author
+ * @version 1.0
+ * @see ImageDimensions
+ * @since 1.0
+ */
+
 public class ImageUtils {
     /** Maximum allowed file size (65 KB) for uploaded images */
     public static final int MAX_FILE_SIZE = 65536;

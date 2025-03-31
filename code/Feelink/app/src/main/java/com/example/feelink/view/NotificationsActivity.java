@@ -26,6 +26,15 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 import java.util.List;
+/**
+ * Manages follow requests and interaction notifications
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 05.01.01 - Follow request notifications</li>
+ *   <li>US 05.02.01 - Comment interaction alerts</li>
+ * </ul>
+ */
 
 public class NotificationsActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -69,6 +78,10 @@ public class NotificationsActivity extends AppCompatActivity {
             startActivity(intent);
         });
     }
+    /**
+     * Updates notification list based on selected tab
+     * @param tabPosition 0 for follow requests, 1 for interactions
+     */
 
     private void updateNotifications(int tabPosition) {
         if (tabPosition == 0) { // Follow Requests tab
