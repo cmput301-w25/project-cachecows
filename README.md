@@ -66,7 +66,8 @@ Maps & Location: Google Maps API
 - Mood Event Adapter: Displays mood events in desired manner and allows viewer of the mood event to expand it and see the mood event in more detail.
 - user Profile Page: Each user has a profile page that allows you to view and edit profile, view and edit public/private moods of the logged-in user.
 - User Search and Follow Requests: Search for other users and follow request can be sent to connect with others and can also view public moods of other users.
-- Location-Based Mood Tracking: allows users to optionally attach locations to mood events and view maps of mood events from their history, followed users, and nearby recent   events within 5 km.
+- Location-Based Mood Tracking: allows users to optionally attach locations to mood events and view maps of mood events from their history, followed users, and nearby recent events within 5 km.
+- Real-Time Chat Integration: A chat feature that allows users to communicate with others in real time.
 
 ## Setup Instructions
 
