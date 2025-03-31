@@ -82,7 +82,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
     private double selectedLongitude = 0.0;
 
     private ImageView btnDeleteLocation;
-
+    private boolean forceOffline = false; // for testing purposes
     public static void enableTestMode(boolean enabled) {
         SKIP_AUTH_FOR_TESTING = enabled;
     }
@@ -109,6 +109,20 @@ public class AddMoodEventActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_mood_event);
+
+        //for testing purposes
+        // Check for forced offline
+        if (getIntent() != null) {
+            forceOffline = getIntent().getBooleanExtra("FORCE_OFFLINE", false);
+        }
+
+        // Initialize Firestore manager with test mode if forced offline
+        if (forceOffline) {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            String uid = (user != null) ? user.getUid() : "test_user";
+            firestoreManager = new FirestoreManager(uid);
+            pendingSyncManager = new PendingSyncManager(this);
+        }
 
         // Initialize Firestore manager
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -625,7 +639,7 @@ public class AddMoodEventActivity extends AppCompatActivity {
     }
 
     private void handleAddMode(View v, MoodEvent moodEvent) {
-        if (ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)) {
+        if (!forceOffline && ConnectivityReceiver.isNetworkAvailable(AddMoodEventActivity.this)) {
             addMoodEventOnline(v, moodEvent);
         } else {
             addMoodEventOffline(v, moodEvent);
@@ -699,5 +713,13 @@ public class AddMoodEventActivity extends AppCompatActivity {
         tvAddLocation.setText("Add Location");
         btnDeleteLocation.setVisibility(View.GONE);
         Snackbar.make(findViewById(R.id.layoutBottomNav), "Location removed", Snackbar.LENGTH_SHORT).show();
+    }
+
+    //for testing purposes
+    private boolean isNetworkAvailable() {
+        if (forceOffline) {
+            return false;
+        }
+        return ConnectivityReceiver.isNetworkAvailable(this);
     }
 }
