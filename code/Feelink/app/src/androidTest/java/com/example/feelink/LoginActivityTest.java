@@ -2,13 +2,12 @@ package com.example.feelink;
 
 import static android.app.PendingIntent.getActivity;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import androidx.test.core.app.ActivityScenario;
-import androidx.test.espresso.IdlingRegistry;
-import androidx.test.platform.app.InstrumentationRegistry;
+
+
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.replaceText;
@@ -23,6 +22,8 @@ import android.util.Log;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.example.feelink.view.FeedManagerActivity;
+import com.example.feelink.view.Login;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -65,10 +66,10 @@ public class LoginActivityTest {
         // Add a valid user with an email (Firestore)
         Map<String, Object> validUser = new HashMap<>();
         validUser.put("uid", "testUserId123");
-        validUser.put("email", "testuser@example.com");  // ✅ Ensure email exists!
+        validUser.put("email", "testuser@example.com");  // Ensure email exists!
         usernamesRef.document("validUsername").set(validUser);
 
-        // ✅ ALSO Create a Firebase Authentication user
+        // ALSO Create a Firebase Authentication user
         FirebaseAuth auth = FirebaseAuth.getInstance();
         auth.createUserWithEmailAndPassword("testuser@example.com", "P@ssw0rd")
                 .addOnCompleteListener(task -> {

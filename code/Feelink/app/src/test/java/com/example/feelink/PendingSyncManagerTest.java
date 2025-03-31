@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.feelink.controller.PendingSyncManager;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

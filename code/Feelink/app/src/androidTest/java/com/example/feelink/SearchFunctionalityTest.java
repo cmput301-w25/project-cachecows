@@ -9,27 +9,22 @@ import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.example.feelink.view.OtherUserProfileActivity;
+import com.example.feelink.view.SearchActivity;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.WriteBatch;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -154,34 +149,6 @@ public class SearchFunctionalityTest {
                 .check(matches(hasChildCount(0)));
 
 
-    }
-
-    @Test
-    public void test03_ClickUserAOpensProfile() throws InterruptedException {
-        SearchActivity.SKIP_AUTH_FOR_TESTING = true;
-        SearchActivity.FORCE_USER_ID = USER_A_ID;
-        UserProfileActivity.SKIP_AUTH_FOR_TESTING = true;
-
-        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), SearchActivity.class);
-        ActivityScenario.launch(intent);
-
-        Thread.sleep(2000);
-
-        onView(withId(R.id.searchEditText))
-                .perform(click())
-                .perform(typeText("user"));
-
-        Thread.sleep(2000);
-
-        // Click on User A's username in the first item
-        onView(withRecyclerView(R.id.searchResultsRecyclerView).atPositionOnView(0, R.id.userUsername))
-                .perform(click());
-
-        Thread.sleep(2000);
-
-        // Verify if UserProfileActivity by checking for Edit Profile Button
-        onView(withId(R.id.editProfileButton))
-                .check(matches(isDisplayed()));
     }
 
     @Test

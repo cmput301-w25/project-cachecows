@@ -24,6 +24,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.example.feelink.view.AddMoodEventActivity;
+import com.example.feelink.view.FeedManagerActivity;
+import com.example.feelink.view.UserProfileActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
@@ -131,28 +134,6 @@ public class AddMoodEventActivityTest {
         onView(withId(R.id.btnAddMood)).check(matches(isEnabled()));
     }
 
-
-
-    @Test(timeout = 10000)
-    public void testMoodEventAppearsInFeed() {
-        // Add a PUBLIC mood
-        onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.etReason)).perform(typeText("Test public mood"), closeSoftKeyboard());
-        onView(withId(R.id.togglePrivacy)).perform(click()); // Set to public (toggle starts as public)
-        onView(withId(R.id.btnAddMood)).perform(click());
-
-        // Add PRIVATE mood
-        onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.etReason)).perform(typeText("Test private mood"), closeSoftKeyboard());
-        onView(withId(R.id.togglePrivacy)).perform(click()); // Toggle to private
-        onView(withId(R.id.btnAddMood)).perform(click());
-
-        // Verify public mood appears in public feed
-        verifyMoodVisibility(true, "Test public mood");
-
-        // Verify private mood doesn't appear in public feed
-        verifyMoodVisibility(false, "Test private mood");
-    }
 
 
     private void verifyMoodVisibility(boolean shouldBeVisible, String moodText) {

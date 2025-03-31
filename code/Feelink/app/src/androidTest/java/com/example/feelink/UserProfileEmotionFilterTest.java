@@ -5,10 +5,10 @@ import android.util.Log;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.espresso.Espresso;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.example.feelink.view.UserProfileActivity;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
@@ -32,7 +32,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 @RunWith(AndroidJUnit4.class)
-public class UserProfileEmotionFilterTest {
+public class UserProfileEmotionFilterTest {  //tests run, just give permission for maps
     private static final String TAG = "EmotionFilterTest";
     private static final String TEST_USER_ID = "test_user_id";
 

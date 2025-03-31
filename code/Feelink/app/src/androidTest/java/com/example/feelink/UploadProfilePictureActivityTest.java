@@ -18,6 +18,10 @@ import androidx.test.espresso.intent.Intents;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 
+import com.example.feelink.view.FeedManagerActivity;
+import com.example.feelink.view.UploadImageActivity;
+import com.example.feelink.view.UploadProfilePictureActivity;
+import com.example.feelink.view.UserProfileActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
