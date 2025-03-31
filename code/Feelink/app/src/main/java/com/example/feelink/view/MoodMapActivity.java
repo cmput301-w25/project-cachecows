@@ -623,7 +623,7 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
         googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
     }
 
-    private void clearExistingMarkers() {
+    public void clearExistingMarkers() {
         runOnUiThread(() -> {
             for (Marker marker : currentMarkers) {
                 marker.remove();

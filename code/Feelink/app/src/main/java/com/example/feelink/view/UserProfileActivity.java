@@ -587,7 +587,7 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
                 MarkerOptions markerOptions = new MarkerOptions()
                         .position(position)
                         .title(event.getEmotionalState())
-                        .snippet(event.getReason())
+                        .snippet(event.getLocationName())
                         .icon(icon);
 
                 Marker marker = googleMap.addMarker(markerOptions);
