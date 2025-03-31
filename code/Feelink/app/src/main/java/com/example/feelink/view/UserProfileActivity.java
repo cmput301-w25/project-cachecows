@@ -180,6 +180,10 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
         navHome.setOnClickListener(v -> startActivity(new Intent(this, FeedManagerActivity.class)));
 
         navChats.setOnClickListener(v -> startActivity(new Intent(this, NotificationsActivity.class)));
+        navMap.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MoodMapActivity.class);
+            startActivity(intent);
+        });
 
         findViewById(R.id.followersLayout).setOnClickListener(v -> openFollowList("followers"));
         findViewById(R.id.followingLayout).setOnClickListener(v -> openFollowList("following"));
