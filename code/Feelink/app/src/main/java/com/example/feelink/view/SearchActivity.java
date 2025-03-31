@@ -24,6 +24,15 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
+/**
+ * Handles user search functionality with real-time filtering
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 04.04.01 - User discovery through search</li>
+ *   <li>US 04.05.01 - Partial username matching</li>
+ * </ul>
+ */
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -113,6 +122,11 @@ public class SearchActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
     }
+    /**
+     * Executes Firestore query for username matches
+     * @param searchText Partial or complete username input
+     * @see FirebaseFirestore#collection
+     */
 
     private void performSearch(String searchText) {
         // Search for users with username starting with the search text

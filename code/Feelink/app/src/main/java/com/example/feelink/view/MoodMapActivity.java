@@ -38,12 +38,19 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+/**
+ * Visualizes mood events on a geographic map
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 03.02.01 - Nearby mood discovery</li>
+ *   <li>US 03.03.01 - Mood clustering on map</li>
+ * </ul>
+ */
 
 public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCallback {
     public static boolean SKIP_AUTH_FOR_TESTING = false;
@@ -278,6 +285,10 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
                 });
         }
     }
+    /**
+     * Loads moods from followed users within 5km radius
+     * @see FirestoreManager#getSharedMoodEvents
+     */
     @VisibleForTesting
     public void loadNearbyFollowingMoods() {
         // Clear existing markers

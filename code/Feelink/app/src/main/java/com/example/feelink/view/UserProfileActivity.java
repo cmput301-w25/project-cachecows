@@ -67,6 +67,15 @@ import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
+/**
+ * Main profile screen with mood history and map integration
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 01.04.01 - Mood history timeline</li>
+ *   <li>US 02.04.01 - Geospatial mood visualization</li>
+ * </ul>
+ */
 
 public class UserProfileActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static final String TAG = "PersonalProfileActivity";
@@ -560,6 +569,11 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
             }
         }
     }
+    /**
+     * Renders mood events on embedded map view
+     * @see MoodEvent#getLatitude
+     * @see MoodEvent#getLongitude
+     */
 
     private void displayMoodEventsOnMap() {
         if (googleMap == null) return;

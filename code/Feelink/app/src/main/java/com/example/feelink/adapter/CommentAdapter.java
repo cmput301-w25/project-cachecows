@@ -20,6 +20,15 @@ import java.util.Locale;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
+/**
+ * Displays comments with user profiles and timestamps. Automatically resolves usernames from IDs.
+ * <p>
+ * Directly supports:
+ * <ul>
+ *   <li>US 05.07.02 (View comments on mood events)</li>
+ *   <li>US 03.01.01/03.03.01 (User profile integration)</li>
+ * </ul>
+ */
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
 
     private List<Comment> comments;
@@ -34,6 +43,15 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_comment, parent, false);
         return new CommentViewHolder(view);
     }
+
+    /**
+     * Populates comment items with user data fetched from Firestore
+     * @param holder ViewHolder to configure
+     * @param position Comment position in list
+     *
+     * Implements: US 03.03.01 (Profile viewing via Glide-loaded images)
+     */
+
 
     @Override
     public void onBindViewHolder(@NonNull CommentViewHolder holder, int position) {

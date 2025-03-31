@@ -22,6 +22,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+/**
+ * Manages real-time chat conversations between users
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 04.01.01 - Chat initiation logic</li>
+ *   <li>US 04.02.01 - Message persistence</li>
+ * </ul>
+ */
 
 public class ChatActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -48,6 +57,12 @@ public class ChatActivity extends AppCompatActivity {
         loadMessages();
 
     }
+    /**
+     * Generates unique conversation ID from user IDs
+     * @param userId1 First participant's user ID
+     * @param userId2 Second participant's user ID
+     * @return Alphabetically sorted concatenated ID string
+     */
 
      public static String generateConversationId(String userId1, String userId2) {
         String[] ids = {userId1, userId2};

@@ -178,6 +178,28 @@ public class ConnectivityReceiver extends BroadcastReceiver {
         NetworkCapabilities actNw = connectivityManager.getNetworkCapabilities(nw);
         return actNw != null && (actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH));
     }
+    /**
+     * Manages visibility and state of network connectivity status banner
+     *
+     * <h3>User Stories Implemented:</h3>
+     * <ul>
+     *   <li>US 07.01.01.01 - Offline status indication</li>
+     *   <li>US 07.01.01.02 - Connection restoration feedback</li>
+     * </ul>
+     *
+     * <p>Visual behavior:
+     * <ul>
+     *   <li>Displays persistent red banner when offline</li>
+     *   <li>Shows temporary green confirmation when connection resumes</li>
+     *   <li>Automatically hides banner after 3 seconds when online</li>
+     * </ul>
+     *
+     * @param isConnected Current network connectivity state
+     * @param tvOfflineIndicator TextView element for status display
+     * @param context Application context for resource access
+     *
+     * @see ConnectivityReceiver#isNetworkAvailable
+     */
 
     public static void handleBanner(boolean isConnected, TextView tvOfflineIndicator, Context context) {
         if (tvOfflineIndicator == null) return;

@@ -1,6 +1,16 @@
 package com.example.feelink.model;
 
 import java.util.Date;
+/**
+ * Represents a follow request between users with status tracking. Used in notification systems
+ * and follow approval workflows.
+ * <p>
+ * Directly enables:
+ * <ul>
+ *   <li>US 05.02.02 (View follow requests)</li>
+ *   <li>US 03.01.01 (Username display in requests)</li>
+ * </ul>
+ */
 
 public class FollowRequest {
     private String id;

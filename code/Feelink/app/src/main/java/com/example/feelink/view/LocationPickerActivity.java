@@ -39,6 +39,15 @@ import java.io.IOException;
 import android.location.Geocoder;
 import android.location.Address;
 import java.util.Locale;
+/**
+ * Handles geographic location selection for mood events
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 02.03.01 - Location attachment to moods</li>
+ *   <li>US 02.04.01 - Map visualization support</li>
+ * </ul>
+ */
 
 public class LocationPickerActivity extends AppCompatActivity implements OnMapReadyCallback {
     public static final boolean SKIP_AUTH_FOR_TESTING = false;
@@ -141,6 +150,10 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
         });
 
     }
+    /**
+     * Searches for place suggestions using Places API
+     * @param query Partial search text input
+     */
 
     private void searchSuggestions(String query) {
         FindAutocompletePredictionsRequest request = FindAutocompletePredictionsRequest.newInstance(query);
@@ -158,6 +171,10 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
             }
         });
     }
+    /**
+     * Geocodes location name to coordinates
+     * @param query Full location name to search
+     */
 
     private void searchForPlace(String query) {
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());

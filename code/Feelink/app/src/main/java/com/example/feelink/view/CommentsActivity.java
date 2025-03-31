@@ -20,6 +20,15 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
+/**
+ * Enables commenting on mood events with real-time updates. Manages comment permissions and notifications.
+ * <p>
+ * Core implementation for:
+ * <ul>
+ *   <li>US 05.07.01 (Post comments on mood events)</li>
+ *   <li>US 05.07.02 (View comment history)</li>
+ * </ul>
+ */
 
 public class CommentsActivity extends AppCompatActivity {
 
@@ -34,6 +43,12 @@ public class CommentsActivity extends AppCompatActivity {
     public static boolean SKIP_AUTH_FOR_TESTING = false;
     public static String FORCE_USER_ID = null;
 
+    /**
+     * Configures comment interface and handles authentication checks
+     * @param savedInstanceState Previous state data
+     *
+     * Enforces: US 05.02.01 (Follow permissions for commenting)
+     */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,7 +124,9 @@ public class CommentsActivity extends AppCompatActivity {
             }
         });
     }
-
+    /**
+     * Resets testing configuration flags
+     */
     public static void resetTestFlags() {
         SKIP_AUTH_FOR_TESTING = false;
         FORCE_USER_ID = null;
