@@ -43,7 +43,7 @@ Control privacy by marking mood events as private or public.
 
 Comment on mood events and view all comments.
 
-* Direct messaging between users for private conversations.
+*Direct messaging between users for private conversations.*
 
 ## Offline Support
 Add, edit, or delete mood events while offline.
