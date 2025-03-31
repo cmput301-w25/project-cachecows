@@ -57,6 +57,7 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         ImageView navChats = findViewById(R.id.navChats);
         ImageView navProfile = findViewById(R.id.navProfile);
         ImageView navMap = findViewById(R.id.navMap);
+        ImageView navSearch = findViewById(R.id.navSearch);
 
 
         navHome.setOnClickListener(v -> {
@@ -68,6 +69,9 @@ public class OtherUserProfileActivity extends AppCompatActivity {
             startActivity(new Intent(this, NotificationsActivity.class));
             finish();
         });
+
+        navSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+
         navMap.setOnClickListener(v -> {
             Intent intent = new Intent(this, MoodMapActivity.class);
             startActivity(intent);

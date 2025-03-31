@@ -10,6 +10,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+/**
+ * Displays either followers or followed users with profile details. Handles empty states and
+ * real-time updates. Central to follow management features.
+ * <p>
+ * Key user stories:
+ * <ul>
+ *   <li>US 05.02.02 (View follow requests)</li>
+ *   <li>US 03.03.01 (View user profiles)</li>
+ * </ul>
+ */
 
 public class FollowListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -18,6 +28,13 @@ public class FollowListActivity extends AppCompatActivity {
     private TextView emptyStateText;
 
     private TextView titleText;
+    /**
+     * Initializes the activity with dynamic header and list based on follow type
+     *
+     * @param savedInstanceState Preserved state if available
+     *
+     * Handles: US 05.02.01 (Follow management), US 05.03.01 (Recent mood visibility)
+     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

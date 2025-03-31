@@ -15,10 +15,26 @@ import com.google.firebase.auth.FirebaseAuth;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+/**
+ * Manages display of chat conversations with profile images and timestamps. Enables click-to-chat functionality.
+ * <p>
+ * Directly supports:
+ * <ul>
+ *   <li>US 03.03.01 (Profile viewing through participant details)</li>
+ *   <li>"Wow" Factor (Direct messaging implementation)</li>
+ * </ul>
+ */
 
 public class ConversationsAdapter extends RecyclerView.Adapter<ConversationsAdapter.ViewHolder> {
     private List<Conversation> conversations;
     private OnConversationClickListener listener;
+
+    /**
+     * Initializes the adapter with conversation data and click behavior.
+     *
+     * @param conversations List of objects to display
+     * @param listener       Handles clicks on conversations to launch chats
+     */
 
     public ConversationsAdapter(List<Conversation> conversations, OnConversationClickListener listener) {
         this.conversations = conversations;
@@ -96,8 +112,15 @@ public class ConversationsAdapter extends RecyclerView.Adapter<ConversationsAdap
                     conversation.getTimestamp().getTime(), DateUtils.FORMAT_SHOW_TIME));
         }
     }
+    /**
+     * Interface for responding to conversation clicks. Used to launch chat screens.
+     */
 
     public interface OnConversationClickListener {
+        /**
+         * Triggered when a conversation is selected.
+         * @param conversation The clicked conversation
+         */
         void onConversationClick(Conversation conversation);
     }
 }

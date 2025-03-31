@@ -11,11 +11,27 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.List;
+/**
+ * Displays chat conversations between users. Shows recent messages and allows navigation to chat threads.
+ * Implements core features of the app's direct messaging "Wow" factor.
+ * <p>
+ * Key user stories:
+ * <ul>
+ *   <li>US 03.03.01 (View other users' profiles via participant details)</li>
+ *   <li>Follow system requirements from US 05.02.01 (Messaging requires mutual follows)</li>
+ * </ul>
+ */
 
 public class ConversationsListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ConversationsAdapter adapter;
     private FirestoreManager firestoreManager;
+    /**
+     * Initializes conversation list and real-time updates from Firestore
+     * @param savedInstanceState Preserved state if available
+     *
+     * Handles: US 05.03.01 (Recent social interactions visibility)
+     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
