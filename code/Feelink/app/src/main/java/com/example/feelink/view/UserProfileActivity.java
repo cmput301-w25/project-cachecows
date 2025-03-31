@@ -22,6 +22,7 @@ import android.widget.ToggleButton;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -73,7 +74,7 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
     private TextView usernameTextView, bioTextView, followerCountTextView, followingCountTextView;
     private String currentUserId;
     private RecyclerView recyclerMoodEvents;
-    private MoodEventAdapter moodEventAdapter;
+    public MoodEventAdapter moodEventAdapter;
     private List<MoodEvent> moodEventsList;
     private TextView moodPostsTextView;
     private FirestoreManager firestoreManager;
@@ -87,7 +88,7 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
     private String selectedEmotion = null;
     private androidx.appcompat.widget.SearchView searchView;
     private ConnectivityReceiver connectivityReceiver;
-    static boolean SKIP_AUTH_FOR_TESTING = false;
+    public static boolean SKIP_AUTH_FOR_TESTING = false;
     static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private final BroadcastReceiver syncReceiver = new BroadcastReceiver() {
         @Override
@@ -97,6 +98,7 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
     };
 
     private MapView mapView;
+    @VisibleForTesting
     GoogleMap googleMap;
     List<Marker> currentMarkers = new ArrayList<>();
     private Map<String, Integer> moodIconMap = new HashMap<String, Integer>() {{
@@ -407,8 +409,9 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
         });
     }
 
+    @VisibleForTesting
     @SuppressLint("NotifyDataSetChanged")
-    void fetchUserMoodEvents(String userId) {
+    public void fetchUserMoodEvents(String userId) {
         firestoreManager.getMoodEvents(isPublicMode, filterByWeek, selectedEmotion, new FirestoreManager.OnMoodEventsListener() {
             @Override
             public void onSuccess(List<MoodEvent> moodEvents) {
@@ -639,5 +642,18 @@ public class UserProfileActivity extends AppCompatActivity implements OnMapReady
         if (mapView != null) {
             mapView.onLowMemory();
         }
+    }
+
+    //for testing
+    public List<Marker> getCurrentMarkers() {
+        return currentMarkers;
+    }
+
+    public GoogleMap getGoogleMap() {
+        return googleMap;
+    }
+
+    public void setIsPublicMode(boolean isPublicMode){
+        this.isPublicMode = isPublicMode;
     }
 }

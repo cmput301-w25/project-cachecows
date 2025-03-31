@@ -17,6 +17,7 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -296,8 +297,8 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
                 });
         }
     }
-
-    void loadNearbyFollowingMoods() {
+    @VisibleForTesting
+    public void loadNearbyFollowingMoods() {
         // Clear existing markers
         clearExistingMarkers();
 
@@ -629,6 +630,19 @@ public class MoodMapActivity extends AppCompatActivity implements OnMapReadyCall
             }
             currentMarkers.clear();
         });
+    }
+
+    //for testing
+    public List<Marker> getCurrentMarkers() {
+        return currentMarkers;
+    }
+
+    public GoogleMap getGoogleMap() {
+        return googleMap;
+    }
+
+    public void setCurrentLocation(Location currentLocation){
+        this.currentLocation = currentLocation;
     }
 
     private void showNoNearbyMoodsMessage() {

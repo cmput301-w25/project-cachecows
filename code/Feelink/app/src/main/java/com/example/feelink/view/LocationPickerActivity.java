@@ -278,4 +278,35 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
             }
         }
     }
+
+    //for testing
+    public LatLng getSelectedLatLng() {
+        return selectedLatLng;
+    }
+
+    public double getSelectedLatitude() {
+        return selectedLatitude;
+    }
+
+    public double getSelectedLongitude() {
+        return selectedLongitude;
+    }
+
+    public void setSelectedLatLng(LatLng latLng) {
+        this.selectedLatLng = latLng;
+        if (latLng != null) {
+            this.selectedLatitude = latLng.latitude;
+            this.selectedLongitude = latLng.longitude;
+        } else {
+            this.selectedLatitude = 0;
+            this.selectedLongitude = 0;
+        }
+        if (mMap != null && latLng != null) {
+            if (selectedMarker == null) {
+                selectedMarker = mMap.addMarker(new MarkerOptions().position(latLng));
+            } else {
+                selectedMarker.setPosition(latLng);
+            }
+        }
+    }
 } 

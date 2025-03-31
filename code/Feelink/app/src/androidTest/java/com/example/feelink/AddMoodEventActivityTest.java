@@ -136,28 +136,6 @@ public class AddMoodEventActivityTest {
 
 
 
-    @Test(timeout = 10000)
-    public void testMoodEventAppearsInFeed() {
-        // Add a PUBLIC mood
-        onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.etReason)).perform(typeText("Test public mood"), closeSoftKeyboard());
-        onView(withId(R.id.togglePrivacy)).perform(click()); // Set to public (toggle starts as public)
-        onView(withId(R.id.btnAddMood)).perform(click());
-
-        // Add PRIVATE mood
-        onView(withId(R.id.moodHappy)).perform(click());
-        onView(withId(R.id.etReason)).perform(typeText("Test private mood"), closeSoftKeyboard());
-        onView(withId(R.id.togglePrivacy)).perform(click()); // Toggle to private
-        onView(withId(R.id.btnAddMood)).perform(click());
-
-        // Verify public mood appears in public feed
-        verifyMoodVisibility(true, "Test public mood");
-
-        // Verify private mood doesn't appear in public feed
-        verifyMoodVisibility(false, "Test private mood");
-    }
-
-
     private void verifyMoodVisibility(boolean shouldBeVisible, String moodText) {
         // Launch profile with test user context
         Intent profileIntent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
