@@ -13,7 +13,13 @@
 
 ## Project Description
 # Feelink
-Feelink is an Android application designed to help users track, share, and reflect on their moods. Built with a user-friendly interface, Feelink allows individuals to log mood events, follow friends' emotional journeys, and engage in meaningful interactions through comments and direct messaging.
+Feelink is a mobile application designed to help users track, understand, and share their emotional experiences. In today's fast-paced world, emotional well-being often takes a backseat—Feelink provides a simple yet powerful way for users to reflect on their moods, identify patterns, and connect with others who may share similar experiences.
+
+With an intuitive interface, Feelink allows users to log their emotions, add context through text or images, and optionally share their mood events with friends or keep them private. The app fosters a supportive community where users can follow each other's emotional journeys, comment on mood updates, and engage in meaningful conversations.
+
+Beyond tracking moods, Feelink enables direct messaging between users, creating a space for personal and empathetic interactions. Whether it's a moment of joy, frustration, or uncertainty, Feelink provides a safe and expressive environment to navigate one's emotions.
+
+By combining personal reflection with social connection, Feelink aims to promote mental wellness, emotional awareness, and a greater sense of community.
 
 # Features
 ## Mood Tracking
