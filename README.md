@@ -57,6 +57,6 @@ This app called FeeLink so far allows users to login, create accounts, create mo
 
 - *Wiki Link* : [https://github.com/cmput301-w25/project-cachecows.wiki.git](https://github.com/cmput301-w25/project-cachecows/wiki) 
 - *Scrum Board* : https://github.com/orgs/cmput301-w25/projects/54
-- *UI Mockups* : (https://github.com/cmput301-w25/project-cachecows/wiki/Updated-Mockup-Final)
+- *UI Mockups* : https://github.com/cmput301-w25/project-cachecows/wiki/Updated-Mockup-Final
 - *UI Storyboard*: https://github.com/cmput301-w25/project-cachecows/wiki/Updated-Storyboard-Sequence-Final
 - *UML* : https://github.com/cmput301-w25/project-cachecows/wiki/UML-FINAL
