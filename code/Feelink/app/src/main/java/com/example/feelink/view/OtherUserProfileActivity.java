@@ -26,6 +26,15 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
+/**
+ * Displays external user profiles with follow functionality
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 04.02.01 - Profile viewing</li>
+ *   <li>US 04.03.01 - Follow relationship management</li>
+ * </ul>
+ */
 
 public class OtherUserProfileActivity extends AppCompatActivity {
     private static final String TAG = "OtherUserProfileActivity";

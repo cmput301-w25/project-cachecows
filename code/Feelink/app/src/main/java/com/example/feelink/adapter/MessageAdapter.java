@@ -15,16 +15,39 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+/**
+ * Displays chat messages with sender differentiation and timestamps. Part of the app's direct
+ * messaging "Wow" factor.
+ * <p>
+ * Implements:
+ * <ul>
+ *   <li>Message bubbles styling for sent/received messages</li>
+ *   <li>Timestamp formatting for recent interactions (US 05.03.01)</li>
+ * </ul>
+ */
 
-// MessageAdapter.java
+
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
     public List<Message> messages;
     private String currentUserId;
+
+    /**
+     * Initializes adapter with message history and current user context
+     * @param messages List of chat messages to display
+     * @param currentUserId Authenticated user's ID for message alignment
+     */
 
     public MessageAdapter(List<Message> messages, String currentUserId) {
         this.messages = messages;
         this.currentUserId = currentUserId;
     }
+
+    /**
+     * Updates message list and refreshes UI
+     * @param newMessages Updated list of messages
+     *
+     * Enables real-time chat updates for US 05.03.01 (Recent social interactions)
+     */
 
     public void updateMessages(List<Message> newMessages) {
         messages = newMessages != null ? newMessages : new ArrayList<>();

@@ -35,6 +35,16 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+/**
+ * Handles user account creation and profile management operations
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 01.01.01 - New user registration workflow</li>
+ *   <li>US 01.02.01 - Profile editing capabilities</li>
+ *   <li>US 01.03.01 - Username availability checking</li>
+ * </ul>
+ */
 
 public class CreateAccount extends AppCompatActivity {
     private EditText nameEditText, usernameEditText, dobEditText,
@@ -292,6 +302,7 @@ public class CreateAccount extends AppCompatActivity {
         return false;
     }
 
+
     private void updateProfile() {
         String name = nameEditText.getText().toString().trim();
         String username = usernameEditText.getText().toString().trim();
@@ -355,6 +366,7 @@ public class CreateAccount extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
+
 
     void addUserToFirestore(FirebaseUser user, String name, String username, String dob, String email) {
         WriteBatch batch = db.batch();

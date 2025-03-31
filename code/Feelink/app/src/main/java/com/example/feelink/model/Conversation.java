@@ -3,6 +3,16 @@ package com.example.feelink.model;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Manages chat conversation metadata between users
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 04.01.01 - Direct message initiation</li>
+ *   <li>US 04.02.01 - Conversation history tracking</li>
+ * </ul>
+ */
+
 public class Conversation {
     private String id;
     private List<String> participants;

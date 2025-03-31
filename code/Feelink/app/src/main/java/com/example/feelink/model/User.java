@@ -1,6 +1,17 @@
 package com.example.feelink.model;
 
 import com.google.firebase.firestore.DocumentSnapshot;
+/**
+ * Contains user profile data and social metrics
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 01.02.01 - Profile management</li>
+ *   <li>US 03.02.01 - User search functionality</li>
+ * </ul>
+ *
+ * <p>Maintains case-insensitive username matching through lowercase variant</p>
+ */
 
 public class User {
     private String id;

@@ -1,5 +1,13 @@
 package com.example.feelink.model;
-
+/**
+ * Models system notifications for user interactions
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 05.01.01 - Follow request alerts</li>
+ *   <li>US 05.02.01 - Social interaction notifications</li>
+ * </ul>
+ */
 public class Notification {
     public enum Type { FOLLOW_REQUEST, LIKE, COMMENT }
 

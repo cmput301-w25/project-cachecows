@@ -1,6 +1,15 @@
 package com.example.feelink.model;
 
 import java.util.Date;
+/**
+ * Represents a user comment on a mood event with engagement metrics
+ *
+ * <h3>User Stories Implemented:</h3>
+ * <ul>
+ *   <li>US 05.02.01 - Commenting on mood events</li>
+ *   <li>US 05.03.01 - Displaying social interactions</li>
+ * </ul>
+ */
 
 public class Comment {
     private String id;
