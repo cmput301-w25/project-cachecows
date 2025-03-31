@@ -12,8 +12,52 @@
 | Cyril John Maliakal | cyriljo1 | cyriluoa     |
 
 ## Project Description
+Feelink
+Feelink is an Android application designed to help users track, share, and reflect on their moods. Built with a user-friendly interface, Feelink allows individuals to log mood events, follow friends' emotional journeys, and engage in meaningful interactions through comments and direct messaging.
 
-This app called FeeLink so far allows users to login, create accounts, create mood events, and view them in the feed manager. Each Mood event has a emoji (mood icon) and color associated with it and is displayed with them.
+Features
+Mood Tracking
+Add mood events with details like emotional state, reason, and social situation.
+
+Choose from predefined emotional states with expressive icons and colors.
+
+View, edit, or delete mood events at any time.
+
+Optionally attach photos or geolocation data to mood events.
+
+Mood History & Filters
+View past mood events in reverse chronological order.
+
+Filter moods by time range, emotional state, or keywords in descriptions.
+
+View mood events on a map if location data is available.
+
+Social Features
+Create a profile with a unique username.
+
+Search for and view other users' profiles.
+
+Follow other users to stay updated on their mood events.
+
+Control privacy by marking mood events as private or public.
+
+Comment on mood events and view all comments.
+
+New Feature: Direct messaging between users for private conversations.
+
+Offline Support
+Add, edit, or delete mood events while offline.
+
+Automatic synchronization once the device regains connectivity.
+
+Technology Stack
+Platform: Android (Java/Kotlin)
+
+Database: Firebase / SQLite (for offline support)
+
+Maps & Location: Google Maps API
+
+UI Framework: Material Design
 
 ## Key Features
 - Main Activity: First-time entry point to the app which gives the user the choice to either login or create an account.
