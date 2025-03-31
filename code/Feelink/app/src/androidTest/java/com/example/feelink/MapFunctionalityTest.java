@@ -150,13 +150,13 @@ public class MapFunctionalityTest {
 
         scenario.onActivity(activity -> {
             // Verify map is initialized
-            assertNotNull(activity.googleMap);
+            assertNotNull(activity.getGoogleMap());
 
             // Verify markers are displayed (should be 1 - the test user's mood)
-            assertEquals(1, activity.currentMarkers.size());
+            assertEquals(1, activity.getCurrentMarkers().size());
 
             // Verify marker has correct info
-            Marker marker = activity.currentMarkers.get(0);
+            Marker marker = activity.getCurrentMarkers().get(0);
             assertEquals("Happy", marker.getTitle());
             assertEquals("Edmonton", marker.getSnippet());
         });
@@ -179,15 +179,15 @@ public class MapFunctionalityTest {
 
         scenario.onActivity(activity -> {
             // Initially in public mode - should show only public moods
-            assertEquals(1, activity.currentMarkers.size());
+            assertEquals(1, activity.getCurrentMarkers().size());
 
             // Switch to private mode
-            activity.isPublicMode = false;
+            activity.setIsPublicMode(false);
             activity.fetchUserMoodEvents(TEST_USER_ID);
 
             // After delay, should show both public and private moods
             try { Thread.sleep(2000); } catch (InterruptedException e) {}
-            assertEquals(2, activity.currentMarkers.size());
+            assertEquals(2, activity.getCurrentMarkers().size());
         });
     }
 
@@ -205,13 +205,13 @@ public class MapFunctionalityTest {
 
         scenario.onActivity(activity -> {
             // Verify map is initialized
-            assertNotNull(activity.googleMap);
+            assertNotNull(activity.getGoogleMap());
 
             // Should show moods from followed users (1 in test data)
-            assertEquals(1, activity.currentMarkers.size());
+            assertEquals(1, activity.getCurrentMarkers().size());
 
             // Verify marker info
-            Marker marker = activity.currentMarkers.get(0);
+            Marker marker = activity.getCurrentMarkers().get(0);
             assertEquals("Sad", marker.getTitle());
             assertTrue(marker.getSnippet().contains("followedUser"));
         });
@@ -234,7 +234,7 @@ public class MapFunctionalityTest {
             Location mockLocation = new Location("test");
             mockLocation.setLatitude(53.5460);
             mockLocation.setLongitude(-113.4940);
-            activity.currentLocation = mockLocation;
+            activity.setCurrentLocation(mockLocation);
 
             // Load nearby moods
             activity.loadNearbyFollowingMoods();
@@ -242,7 +242,7 @@ public class MapFunctionalityTest {
             try { Thread.sleep(2000); } catch (InterruptedException e) {}
 
             // Should show moods within 5km radius (both test moods are nearby)
-            assertEquals(2, activity.currentMarkers.size());
+            assertEquals(2, activity.getCurrentMarkers().size());
         });
     }
 
@@ -257,14 +257,14 @@ public class MapFunctionalityTest {
         scenario.onActivity(activity -> {
             // Simulate map click at a location
             LatLng testLocation = new LatLng(53.5461, -113.4937);
-            activity.selectedLatLng = testLocation;
+            activity.setSelectedLatLng(testLocation);
 
             // Click confirm button
             activity.findViewById(R.id.btnConfirmLocation).performClick();
 
             // Verify result intent has correct location data
-            assertEquals(testLocation.latitude, activity.selectedLatitude, 0.0001);
-            assertEquals(testLocation.longitude, activity.selectedLongitude, 0.0001);
+            assertEquals(testLocation.latitude, activity.getSelectedLatitude(), 0.0001);
+            assertEquals(testLocation.longitude, activity.getSelectedLongitude(), 0.0001);
             assertNotNull(activity.getIntent().getStringExtra("locationName"));
         });
     }
@@ -288,8 +288,8 @@ public class MapFunctionalityTest {
 
         scenario.onActivity(activity -> {
             // Should show only "Sad" moods (1 in test data)
-            assertEquals(1, activity.currentMarkers.size());
-            assertEquals("Sad", activity.currentMarkers.get(0).getTitle());
+            assertEquals(1, activity.getCurrentMarkers().size());
+            assertEquals("Sad", activity.getCurrentMarkers().get(0).getTitle());
         });
     }//working
 

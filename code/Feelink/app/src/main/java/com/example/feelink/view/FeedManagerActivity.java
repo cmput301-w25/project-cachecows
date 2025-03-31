@@ -77,7 +77,7 @@ public class FeedManagerActivity extends AppCompatActivity {
     private MoodEventAdapter adapter;
     private boolean isShowingMyMood = false;
 
-    static boolean SKIP_AUTH_FOR_TESTING = false;
+    public static boolean SKIP_AUTH_FOR_TESTING = false;
     private static boolean SKIP_AUTH_FOR_TESTING_CREATE_ACCOUNT = false;
     private ConnectivityReceiver connectivityReceiver;
     private boolean showThreeMostRecent = false;
